@@ -421,7 +421,7 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr){
         }
     }
 
-  }else if(strlen(pbguid) == 32){
+  }else if(pbguid != NULL && strlen(pbguid) == 32){
 
 
     for(i = 0 ; i < current_banindex; this++, i++){
