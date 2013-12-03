@@ -27,7 +27,8 @@
 #include "scr_vm.h"
 #include "g_sv_shared.h"
 
-#ifndef scr_entref_t
+#ifndef SCR_ENTREF_DEFINED
+#define SCR_ENTREF_DEFINED
 typedef int scr_entref_t;
 #endif
 

@@ -240,8 +240,11 @@ typedef struct scr_function_s
 
 typedef byte PrecacheEntry[8192];
 typedef unsigned int sval_u;
-typedef int scr_entref_t;
 
+#ifndef SCR_ENTREF_DEFINED
+#define SCR_ENTREF_DEFINED
+typedef int scr_entref_t;
+#endif
 /**************** Additional *************************/
 
 typedef enum{

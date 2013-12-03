@@ -29,7 +29,10 @@
 
 #define g_entities ((gentity_t*)(0x841ffe0))
 
+#ifndef CLIPHANDLE_DEFINED
+#define CLIPHANDLE_DEFINED
 typedef int clipHandle_t;
+#endif
 
 typedef enum {
 	TR_STATIONARY,

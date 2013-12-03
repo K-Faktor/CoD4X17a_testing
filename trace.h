@@ -42,9 +42,10 @@ typedef struct trace_s{
 
 // trace->entityNum can also be 0 to (MAX_GENTITIES-1)
 // or ENTITYNUM_NONE, ENTITYNUM_WORLD
-
+#ifndef CLIPHANDLE_DEFINED
+#define CLIPHANDLE_DEFINED
 typedef int clipHandle_t;
-
+#endif
 
 qboolean __cdecl CM_TraceBox(const float*, const float*, const float*, float);
 clipHandle_t __cdecl CM_TempBoxModel(const float* mins, const float* maxs, int capsule);
