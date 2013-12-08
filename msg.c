@@ -1688,7 +1688,6 @@ void MSG_WriteDeltaEntity(snapshotInfo_t* snap, msg_t* msg, int time, entityStat
 	if( to->number < 64){
 		if(g_entities[snap->clnum].client->sess.sessionTeam == TEAM_FREE){
 			if(!SV_FFAPlayerCanBlock()){
-				Com_Printf("Solid: %s\n", Q_BitConv(to->solid));
 				to->solid &= ~PLAYER_SOLIDMASK;
 
 			}
