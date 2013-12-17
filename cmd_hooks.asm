@@ -58,13 +58,15 @@ Cbuf_AddText:
 
 global Cmd_Wait_f
 Cmd_Wait_f:
-    jmp 0x81111dc
+    jmp 0x8111290
 
 global Cmd_Vstr_f
 Cmd_Vstr_f:
-    jmp 0x8111290
+    jmp 0x81111dc
+
 
 global Cmd_Exec_f
 Cmd_Exec_f:
     jmp 0x81121a2
+
 

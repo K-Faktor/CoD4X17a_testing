@@ -37,7 +37,7 @@
 #define BANLIST_DEFAULT_SIZE sizeof(banList_t)*128
 #define MAX_IPBANS 32
 //Don't ban IPs for more than MAX_IPBAN_MINUTES minutes as they can be shared (Carrier-grade NAT)
-#define MAX_IPBAN_MINUTES 30
+#define MAX_IPBAN_MINUTES 75
 
 cvar_t *banlistfile;
 
