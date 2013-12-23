@@ -21,7 +21,7 @@
 
 #ifndef _SHA256_H
 #define _SHA256_H
-
+#include <tomcrypt.h>
 #ifndef uint8
 #define uint8  unsigned char
 #endif
@@ -30,7 +30,7 @@
 #define uint32 unsigned long int
 #endif
 
-typedef struct
+/*typedef struct
 {
     uint32 total[2];
     uint32 state[8];
@@ -41,7 +41,7 @@ sha256_context;
 void sha256_starts( sha256_context *ctx );
 void sha256_update( sha256_context *ctx, uint8 *input, uint32 length );
 void sha256_finish( sha256_context *ctx, uint8 digest[32] );
-
+*/
 const char* Com_SHA256(const char*);
 
 #endif /* sha256.h */

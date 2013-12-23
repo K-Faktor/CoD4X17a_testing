@@ -5,7 +5,7 @@
 #gcc -m32 -Wall -O1 -fvisibility=hidden -fno-omit-frame-pointer -c cod4_extfunc.c
 #gcc -m32 -Wall -O1 -s -fvisibility=hidden -fno-omit-frame-pointer -mtune=prescott -c cod4_extfunc.c
 echo Compiling C-code...
-gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -c *.c | more
+gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c | more
 
 #gcc -m32 -Wall -O1 -s -fvisibility=hidden -fno-omit-frame-pointer -march=core2 -c cod4_extfunc.c
 
@@ -18,6 +18,10 @@ gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -c *.c | more
 #gcc -m32 -Wall -O1 -fvisibility=hidden -fno-omit-frame-pointer -march=amdfam10 -c cod4_extfunc.c
 
 #gcc -m32 -s -shared -fvisibility=hidden -Wl,-soname,cod4x17a.so -o cod4x17a.so *.o
+
+#echo Comiling Crypto library...
+#gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c lib_tomcrypt/*.c -o crypto.o | more
+
 
 echo Compiling NASM...
 
@@ -37,7 +41,7 @@ nasm -f elf server_hooks.asm
 nasm -f elf msg_hooks.asm
 
 echo Linking...
-gcc -m32 -Wl,-ldl,-lpthread,-lm,-Tlinkerscript.ld,--dynamic-list=pluginExports.ld -o cod4x17a_dedrun *.o 
+gcc -m32 -Wl,-ldl,-lpthread,-lm,-Tlinkerscript.ld,--dynamic-list=pluginExports.ld -o cod4x17a_dedrun *.o -L./ -ltomcrypt -ltommath
 #gcc -m32 -shared -fvisibility=hidden -Wl,-soname,cod4x17a.so -o cod4x17a.so *.o
 
 rm *.o

@@ -35,7 +35,8 @@
 #include "sys_thread.h"
 #include "punkbuster.h"
 #include "server.h"
-
+#include "sec_init.h"
+#include "sec_main.h"
 #include <sys/resource.h>
 #include <libgen.h>
 #include <signal.h>
@@ -414,7 +415,7 @@ __cdecl int main(int argc, char* argv[]){
 
     int i;
     char commandLine[MAX_STRING_CHARS] = { 0 };
-
+    
     // go back to real user for config loads
     seteuid(getuid());
 
@@ -425,7 +426,7 @@ __cdecl int main(int argc, char* argv[]){
     Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
 
     Sys_LoadImage( );
-
+    Sec_Init(argv);
     Sys_TimerInit( );
 
     Sys_PlatformInit( );

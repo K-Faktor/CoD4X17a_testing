@@ -20,7 +20,7 @@
 
 #include <string.h>
 #include "sha256.h"
-
+/*
 
 #define GET_UINT32(n,b,i)                       \
 {                                               \
@@ -258,7 +258,7 @@ void sha256_finish( sha256_context *ctx, uint8 digest[32] )
     PUT_UINT32( ctx->state[7], digest, 28 );
 }
 
-/*
+*
  * those are the standard FIPS-180-2 test vectors
  */
 /*
@@ -284,18 +284,22 @@ const char* Com_SHA256( const char* string )
     int r = strlen(string);
     int i;
     static char finalsha[65];
-    sha256_context ctx;
-    unsigned char digestsha[32];
-    const char	*hex = "0123456789abcdef";
+    hash_state md;
+    //unsigned char digestsha[32];
+    //const char	*hex = "0123456789abcdef";
 
-    sha256_starts( &ctx );
+    /*sha256_starts( &ctx );
     sha256_update( &ctx, (unsigned char*)string, r );
     sha256_finish( &ctx, digestsha );
     for(i = 0, r=0; i < 32; i++) {
         finalsha[r++] = hex[digestsha[i] >> 4];
         finalsha[r++] = hex[digestsha[i] & 0xf];
     }
-    finalsha[65] = 0x00;
-
+    finalsha[65] = 0x00;*/
+    
+    sha256_desc.init(&md);
+    sha256_desc.process(&md, (const unsigned char *)string, strlen(string));
+    sha256_desc.done(&md,(unsigned char *)finalsha);
+    finalsha[64]=0;
     return finalsha;
 }
