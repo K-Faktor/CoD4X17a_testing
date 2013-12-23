@@ -310,7 +310,7 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetJump(0x808b764, ClientScr_SetSessionTeam);
 	SetJump(0x80b43c4, G_LogPrintf);
 	SetJump(0x80a8068, ClientUserinfoChanged);
-	SetJump(0x81aa0be, Info_SetValueForKey);
+	SetJump(0x81aa0be, BigInfo_SetValueForKey);
 	SetJump(0x81d6fca, Sys_Milliseconds);
 	SetJump(0x81a9f8a, va);
 

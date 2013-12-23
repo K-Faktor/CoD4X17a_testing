@@ -734,6 +734,10 @@ static void Cmd_BanPlayer_f() {
                 SV_PrintAdministrativeLog( "banned player: %s guid: %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, banreason);
                 SV_DropClient(cl.cl, va("You have got a permanent ban onto this gameserver\nYour GUID is: %s    Banning admin GUID is: %s\nReason for this ban:\n%s",
                     cl.cl->pbguid, SV_RemoteCmdGetInvokerGuid(), banreason));
+
+                if(cl.cl->authentication < 1)
+                    SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, banreason, 0, cl.cl->pbguid, 0, 0x7FFFFFFF);
+
             }
 
         }else{
@@ -893,6 +897,10 @@ static void Cmd_TempBanPlayer_f() {
                 SV_PrintAdministrativeLog( "temporarily banned player: %s guid: %s until %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, endtime, banreason);
                 SV_DropClient(cl.cl, va("You have got a temporarily ban onto this gameserver\nYour ban will expire on: %s UTC\nYour GUID is: %s    Banning admin UID is: %s\nReason for this ban:\n%s",
                     endtime, cl.cl->pbguid, SV_RemoteCmdGetInvokerGuid(), banreason));
+
+                if(cl.cl->authentication < 1)
+                    SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, banreason, 0, cl.cl->pbguid, 0, expire);
+
             }
 
         }else{
