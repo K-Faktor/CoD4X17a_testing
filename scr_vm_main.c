@@ -1044,3 +1044,35 @@ void GetPlayerFieldArray(){
 }
 
 */
+/*
+void GetHuffmanArray(){
+
+    char buffer[1024*1024];
+    char line[128];
+    int j;
+    byte* data;
+    int *number;
+
+    Com_Memset(buffer, 0, sizeof(buffer));
+
+
+
+    if(0 < FS_ReadFile("cod_mac-bin.iwd", (void**)&data)){
+
+
+        data += 0x387080;
+
+        number = (int*)data;
+
+        for(j=0; j < 256 ; j++){
+
+		Com_sprintf(line, sizeof(line), "\t%d,\t\t\t//%d\n", number[j],j);
+		Q_strcat(buffer, sizeof(buffer), line);
+
+    }
+
+    FS_WriteFile("array.txt", buffer, strlen(buffer));
+    }
+    Com_Quit_f();
+}
+*/

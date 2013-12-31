@@ -39,16 +39,16 @@ void SV_DumpCommands( client_t *client, byte *cmd, int size, qboolean cl_to_serv
 	byte buffer[20400];
 
 	MSG_Init(&msg, buffer, sizeof(buffer));
-*/
-/*	if(cl_to_servercmd){
+
+	if(cl_to_servercmd){
 		Com_sprintf((char*)buffer, sizeof(buffer), "\nDir: Cl -> Sv, Cl: %i, T: %i, NA: %i, Len %i, Msg: ", 
 			client - svs.clients, svs.time ,client->reliableSequence - client->reliableAcknowledge, size);
         }else{
 		Com_sprintf((char*)buffer, sizeof(buffer), "\nDir: Sv -> Cl, Cl: %i, T: %i, NA: %i, Len %i, Msg: ", 
 			client - svs.clients, svs.time ,client->reliableSequence - client->reliableAcknowledge, size);
         }
-*/
-/*	int lenbeginstr = strlen((char*)buffer);
+
+	int lenbeginstr = strlen((char*)buffer);
 
 	MSG_ReadBitsCompress(cmd, &buffer[lenbeginstr], size);
 
@@ -85,9 +85,9 @@ void SV_DumpCommands( client_t *client, byte *cmd, int size, qboolean cl_to_serv
 	}
 	Sys_LeaveCriticalSection(5);
 }
+
+
 */
-
-
 /*
 ==============
 SV_Netchan_Decode

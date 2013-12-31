@@ -28,6 +28,7 @@
 #include "punkbuster.h"
 #include "hl2rcon.h"
 
+
 char* SL_ConvertToString(unsigned int index)
 {
 
@@ -42,3 +43,4 @@ void AddRedirectLocations()
     Com_AddRedirect(PbCapatureConsoleOutput_wrapper);
 
 }
+

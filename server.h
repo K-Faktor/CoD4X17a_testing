@@ -171,7 +171,7 @@ typedef struct client_s {//90b4f8c
 	int			unknownUsercmd3;	//0x644
 	int			unknownUsercmd4;	//0x648
 
-	char*			var_01;		//0x64c
+	const char*		delayDropMsg;		//0x64c
 	char			userinfo[MAX_INFO_STRING];		// name, etc (0x650)
 	reliableCommands_t	reliableCommands[MAX_RELIABLE_COMMANDS];	// (0xa50)
 	int			reliableSequence;	// (0x20e50)last added reliable message, not necesarily sent or acknowledged yet
@@ -461,6 +461,7 @@ void SV_SendClientSnapshot( client_t *cl );
 
 qboolean SV_Acceptclient(int);
 
+void QDECL SV_SendServerCommand_IW(client_t *cl, int type, const char *fmt, ...);
 void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...);
 
 __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg );
@@ -505,6 +506,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from );
 __optimize3 __regparm2 void SV_ReceiveStats(netadr_t *from, msg_t* msg);
 void SV_UserinfoChanged( client_t *cl );
 void SV_DropClient( client_t *drop, const char *reason );
+void SV_DelayDropClient(client_t *client, const char *dropmsg);
 __optimize3 __regparm3 void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta );
 void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd );
 void SV_WriteDownloadToClient( client_t *cl, msg_t *msg );
@@ -573,7 +575,7 @@ void SV_RemoteCmdSetAdmin(int uid, char* guid, int power);
 void SV_RemoteCmdUnsetAdmin(int uid, char* guid);
 void SV_RemoteCmdSetPermission(char* command, int power);
 void SV_RemoteCmdListAdmins( void );
-
+__cdecl qboolean SV_GameCommand(void);
 
 extern cvar_t* sv_padPackets;
 extern cvar_t* sv_demoCompletedCmd;
@@ -618,8 +620,6 @@ void __cdecl SV_FreeClientScriptId(client_t *cl);
 void __cdecl SV_LinkEntity(gentity_t*);
 void __cdecl SV_UnlinkEntity(gentity_t*);
 
-void __cdecl SV_AddServerCommand_old(client_t *client, int unkownzeroorone, const char *);
-
 //sv_banlist.c
 void SV_InitBanlist( void );
 qboolean  SV_ReloadBanlist();
@@ -642,3 +642,4 @@ __cdecl void SV_WriteSnapshotToClient(client_t* client, msg_t* msg);
 __cdecl void SV_ClipMoveToEntity(struct moveclip_s *clip, svEntity_t *entity, struct trace_s *trace);
 
 #endif
+

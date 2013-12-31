@@ -28,12 +28,12 @@ global SV_Cmd_TokenizeString
 SV_Cmd_TokenizeString:
     jmp 0x811139c
 
-global Cmd_EndTokenizeString
-Cmd_EndTokenizeString:
+global Cmd_EndTokenizedString
+Cmd_EndTokenizedString:
     jmp 0x8110d54
 
-global SV_Cmd_EndTokenizeString
-SV_Cmd_EndTokenizeString:
+global SV_Cmd_EndTokenizedString
+SV_Cmd_EndTokenizedString:
     jmp 0x8110d8c
 
 global Cmd_ExecuteSingleCommand

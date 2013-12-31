@@ -226,9 +226,9 @@ static byte patchblock_SV_SpawnServer[] = { 0x7E, 0x4A, 0x17, 0x8,
 	0xeb, 0x19
 };
 
-static byte patchblock_SV_SendServerCommand[] = { 0x56, 0x74, 0x17, 0x8,
+/*static byte patchblock_SV_SendServerCommand[] = { 0x56, 0x74, 0x17, 0x8,
 	0xeb, 0x5c
-};
+};*/
 //NET_OutOfBandPrint prototype got changed from netadr_t to netadr_t* The remaining hooks should get fixed up by this:
 static byte patchblock_NET_OOB_CALL1[] = { 0x75, 0x50, 0x17, 0x8,
 	0xC7, 0x44, 0x24, 0x8, 0xE8, 0x18, 0x23, 0x8, 0x8D, 0x43, 0x20, 0x89, 0x44, 0x24, 0x4, 0x90, 
@@ -266,7 +266,7 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	Sys_PatchImageWithBlock(patchblock_SV_SpawnServer, sizeof(patchblock_SV_SpawnServer));  //Skip useless check for cvar: sv_dedicated
 	Com_Memset((void*)0x8174da9, 0x90, 5); //In SV_SpawnServer()  Don't overwrite sv.frameusec  (was before unknown write only variable)
 	Com_Memset((void*)0x8174db5, 0x90, 42); //In SV_SpawnServer()  Don't set cvar cl_paused as well as nextmap
-	Sys_PatchImageWithBlock(patchblock_SV_SendServerCommand, sizeof(patchblock_SV_SendServerCommand));  //Skip useless check for cvar: sv_dedicated
+//	Sys_PatchImageWithBlock(patchblock_SV_SendServerCommand, sizeof(patchblock_SV_SendServerCommand));  //Skip useless check for cvar: sv_dedicated
 	Com_Memset((void*)0x8204acf, 0x90, 16); //In ???() Skip useless check for cvar: sv_dedicated
 	Com_Memset((void*)0x8204ce9, 0x90, 16); //In ???() Skip useless check for cvar: sv_dedicated
 	Sys_PatchImageWithBlock(patchblock_NET_OOB_CALL1, sizeof(patchblock_NET_OOB_CALL1));
@@ -313,11 +313,14 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetJump(0x81aa0be, BigInfo_SetValueForKey);
 	SetJump(0x81d6fca, Sys_Milliseconds);
 	SetJump(0x81a9f8a, va);
-
+	SetJump(0x8131200, MSG_Init);
+	SetJump(0x8131320, MSG_InitReadOnly);
+	SetJump(0x8131294, MSG_InitReadOnlySplit);
 	SetJump(0x8140e9c, Sys_GetValue);
 	SetJump(0x8140efe, Sys_IsMainThread);
 	SetJump(0x81d6be4, Sys_EnterCriticalSection);
 	SetJump(0x81d6bc8, Sys_LeaveCriticalSection);
+	SetJump(0x8177402, SV_SendServerCommand_IW);
 	//ToDo build Mem_Init() on its own
 
 	*(char*)0x8215ccc = '\n'; //adds a missing linebreak

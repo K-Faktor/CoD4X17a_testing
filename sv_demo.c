@@ -25,6 +25,7 @@
 #include "qcommon_io.h"
 #include "qcommon_mem.h"
 #include "msg.h"
+#include "huffman.h"
 #include "netchan.h"
 #include "server.h"
 #include "q_platform.h"

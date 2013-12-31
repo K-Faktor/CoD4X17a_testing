@@ -190,66 +190,138 @@ not have future snapshot_t executed before it is executed
 ======================
 */
 
-/*
+void sub_5310E0(client_t *client)
+{
+	int v1;
+	int i;
 
-__cdecl void SV_AddServerCommand( client_t *client, int type, const char *cmd ) {
+	v1 = client->reliableSent + 1;
 
-//	SV_DumpReliableCommands( client, cmd);
-//	Com_Printf("C: %s\n", cmd);
-	SV_AddServerCommand_old(client, type, cmd);
-	return;
-
-
-	int index, i;
-
-	if(client->canNotReliable)
-		return;
-
-	if(client->state < CS_CONNECTED)
-		return;
-
-	if( ! *cmd )
-		return;
-
-//	extclient_t* extcl = &svse.extclients[ client - svs.clients ];
-	client->reliableSequence++;
-
-//	extcl->reliableSequence++;
-//	Com_PrintNoRedirect("CMD: %i ^5%s\n", client->reliableSequence - client->reliableAcknowledge, cmd);
-	// if we would be losing an old command that hasn't been acknowledged,
-	// we must drop the connection
-	// we check == instead of >= so a broadcast print added by SV_DropClient()
-	// doesn't cause a recursive drop client
-	if ( client->reliableSequence - client->reliableAcknowledge == MAX_RELIABLE_COMMANDS + 1 ) {
-
-		Com_PrintNoRedirect("Client: %i Reliable commandbuffer overflow\n", client - svs.clients);
-		Com_PrintNoRedirect( "Client lost reliable commands\n");
-		Com_PrintNoRedirect( "===== pending server commands =====\n" );
-		for ( i = client->reliableAcknowledge + 1 ; i <= client->reliableSequence ; i++ ) {
-//			Com_DPrintNoRedirect( "cmd %5d: %s\n", i, extcl->reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ].command );
-			Com_PrintNoRedirect( "cmd %5d: %s\n", i, client->reliableCommands[ i & (MAX_RELIABLE_COMMANDS-1) ].command );
+	for(i = client->reliableSent + 1 ; i <= client->reliableSequence; ++i)
+	{
+		if ( client->reliableCommands[i & (MAX_RELIABLE_COMMANDS - 1)].cmdType )
+		{
+			if ( (v1 & (MAX_RELIABLE_COMMANDS - 1)) != (i & (MAX_RELIABLE_COMMANDS - 1)) )
+			{
+				memcpy(&client->reliableCommands[v1 & (MAX_RELIABLE_COMMANDS - 1)], &client->reliableCommands[i & (MAX_RELIABLE_COMMANDS - 1)], sizeof(reliableCommands_t));
+			}
+			++v1;
 		}
+	}
+	client->reliableSequence = v1 - 1;
+}
 
-		Com_PrintNoRedirect("cmd: %s\n", cmd);
-		Com_PrintNoRedirect( "====================================\n" );
-		SV_DropClient( client, "Server command overflow" );
+
+
+
+int sub_530FC0(client_t *client, const char *command)
+{
+
+	int i;
+
+	for( i = client->reliableSent + 1; i <= client->reliableSequence; ++i)
+	{
+
+		if ( client->reliableCommands[i & (MAX_RELIABLE_COMMANDS - 1)].cmdType == 0 )
+			continue;	
+
+		if(client->reliableCommands[i & (MAX_RELIABLE_COMMANDS - 1)].command[0] != command[0])
+			continue;
+		
+		if ( command[0] >= 120 && command[0] <= 122 )
+			continue;
+			
+		if ( !strcmp(&command[1], &client->reliableCommands[i & (MAX_RELIABLE_COMMANDS - 1)].command[1]) )
+			return i;
+		
+
+		switch ( command[0] )
+		{
+			case 100:
+			case 118:
+				if ( !I_IsEqualUnitWSpace( (char*)&command[2], &client->reliableCommands[i & (MAX_RELIABLE_COMMANDS - 1)].command[2]))
+				{
+					continue;
+				}
+			case 67:
+			case 68:
+			case 97:
+			case 98:
+			case 111:
+			case 112:
+			case 113:
+			case 114:
+			case 116:
+				return i;
+
+			default:
+				continue;
+
+		}
+	}
+	return -1;
+}
+
+
+
+void __cdecl SV_AddServerCommand(client_t *client, int type, const char *cmd)
+{
+  int v4;
+  int i;
+  int j;
+  int index;
+
+	if ( client->canNotReliable )
 		return;
+	
+	if ( client->reliableSequence - client->reliableAcknowledge >= MAX_RELIABLE_COMMANDS / 2 || client->state != CS_ACTIVE)
+	{
+		sub_5310E0(client);
+
+		if(!type)
+			return;
 
 	}
-	index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
+	
+	v4 = sub_530FC0(client, cmd);
 
+    if ( v4 < 0 )
+    {
+        ++client->reliableSequence;
+    }
+    else
+    {
+        for ( i = v4 + 1; i <= client->reliableSequence; ++v4 )
+        {
+          memcpy(&client->reliableCommands[v4 & 0x7F], &client->reliableCommands[i++ & 0x7F], sizeof(reliableCommands_t));
+        }
+    }
 
-//	MSG_WriteReliableCommandToBuffer(cmd, extcl->reliableCommands[ index ].command, sizeof( extcl->reliableCommands[ index ].command ));
-//	extcl->reliableCommands[ index ].cmdTime = svs.time;
-//	extcl->reliableCommands[ index ].cmdType = 1;
+    if ( client->reliableSequence - client->reliableAcknowledge == (MAX_RELIABLE_COMMANDS + 1) )
+    {
+	Com_PrintNoRedirect("Client: %i lost reliable commands\n", client - svs.clients);
+        Com_PrintNoRedirect("===== pending server commands =====\n");
+        for ( j = client->reliableAcknowledge + 1; j <= client->reliableSequence; ++j )
+	{
+		Com_PrintNoRedirect("cmd %5d: %8d: %s\n", j, client->reliableCommands[j & (MAX_RELIABLE_COMMANDS - 1)].cmdTime, &client->reliableCommands[j & (MAX_RELIABLE_COMMANDS - 1)].command);
+	}
+	Com_PrintNoRedirect("cmd %5d: %8d: %s\n", j, svs.time, cmd);
 
-	MSG_WriteReliableCommandToBuffer(cmd, client->reliableCommands[ index ].command, sizeof( client->reliableCommands[ index ].command ));
-	client->reliableCommands[ index ].cmdTime = svs.time;
-	client->reliableCommands[ index ].cmdType = 1;
+	NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "disconnect" );
+	SV_DelayDropClient(client, "EXE_SERVERCOMMANDOVERFLOW");
 
-	SV_DumpReliableCommands( client, cmd);
+        type = 1;
+        cmd = va("%c \"EXE_SERVERCOMMANDOVERFLOW\"", 119);
+    }
+
+    index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
+    MSG_WriteReliableCommandToBuffer(cmd, client->reliableCommands[ index ].command, sizeof( client->reliableCommands[ index ].command ));
+    client->reliableCommands[ index ].cmdTime = svs.time;
+    client->reliableCommands[ index ].cmdType = type;
 }
-*/
+
+
+
 
 /*
 =================
@@ -266,22 +338,13 @@ A NULL client will broadcast to all clients
 "c \" ==  print bold to players screen
 "e \" ==  print to players console
 */
-void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...) {
-	va_list		argptr;
-	byte		message[MAX_MSGLEN];
+void QDECL SV_SendServerCommandString(client_t *cl, int type, char *message)
+{
 	client_t	*client;
 	int		j;
 
-	va_start (argptr,fmt);
-	Q_vsnprintf ((char *)message, sizeof(message), fmt,argptr);
-	va_end (argptr);
-
-	if ( strlen ((char *)message) > 1022 ) {
-		return;
-	}
-
 	if ( cl != NULL ){
-		SV_AddServerCommand_old(cl, 0, (char *)message );
+		SV_AddServerCommand(cl, type, (char *)message );
 		return;
 	}
 
@@ -295,8 +358,34 @@ void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...) {
 		if ( client->state < CS_PRIMED ) {
 			continue;
 		}
-		SV_AddServerCommand_old(client, 0, (char *)message );
+		SV_AddServerCommand(client, type, (char *)message );
 	}
+}
+
+void QDECL SV_SendServerCommand_IW(client_t *cl, int cmdtype, const char *fmt, ...) {
+
+	va_list		argptr;
+	byte		message[MAX_MSGLEN];
+
+
+	va_start (argptr,fmt);
+	Q_vsnprintf ((char *)message, sizeof(message), fmt,argptr);
+	va_end (argptr);
+
+	SV_SendServerCommandString(cl, cmdtype, (char *)message);
+
+}
+
+void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...) {
+	va_list		argptr;
+	byte		message[MAX_MSGLEN];
+
+	va_start (argptr,fmt);
+	Q_vsnprintf ((char *)message, sizeof(message), fmt,argptr);
+	va_end (argptr);
+
+	SV_SendServerCommandString(cl, 0, (char *)message);
+
 }
 
 
@@ -920,7 +1009,7 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 
 	} else if (!Q_strncmp("PB_", (char *) &msg->data[4], 3)) {
 		//pb_sv_process here
-		SV_Cmd_EndTokenizeString();
+		SV_Cmd_EndTokenizedString();
 
 		if(msg->data[7] == 0x43 || msg->data[7] == 0x31 || msg->data[7] == 0x4a)
 		    return;
@@ -956,7 +1045,7 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 	} else {
 		Com_DPrintf ("bad connectionless packet from %s\n", NET_AdrToString (from));
 	}
-	SV_Cmd_EndTokenizeString();
+	SV_Cmd_EndTokenizedString();
 	return;
 }
 
@@ -1232,9 +1321,9 @@ void SV_FinalMessage( const char *message, qboolean arg2 ) {
 				if ( cl->netchan.remoteAddress.type != NA_LOOPBACK ) {
 
 					if(arg2)
-						SV_SendServerCommand( cl, "%c \"%s\"", 0x77, message );
+						SV_SendServerCommand_IW( cl, 1, "%c \"%s\"", 0x77, message );
 					else
-						SV_SendServerCommand( cl, "%c \"%s^7 %s\" PB", 0x77, cl->name ,message);
+						SV_SendServerCommand_IW( cl, 1, "%c \"%s^7 %s\" PB", 0x77, cl->name ,message);
 				}
 				// force a snapshot to be sent
 				cl->nextSnapshotTime = -1;
@@ -2245,7 +2334,7 @@ void SV_MapRestart( qboolean fastRestart ){
 		else
 			j = 0;
 
-		SV_AddServerCommand_old(client, 1, va("%c",((-44 & j) + 110) ) );
+		SV_AddServerCommand(client, 1, va("%c",((-44 & j) + 110) ) );
 
 		// connect the client again, without the firstTime flag
 		denied = ClientConnect(i, client->clscriptid);

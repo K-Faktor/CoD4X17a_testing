@@ -1,6 +1,7 @@
 /*
 ===========================================================================
     Copyright (C) 2010-2013  Ninja and TheKelm of the IceOps-Team
+    Copyright (C) 1999-2005 Id Software, Inc.
 
     This file is part of CoD4X17a-Server source code.
 
@@ -19,49 +20,23 @@
 ===========================================================================
 */
 
+#include <malloc.h>
+#include <string.h>
 
 
-//This are dummy functions for the single thread server :D
+#define MEM_SIZE 140 //Megabyte
 
-#include "q_shared.h"
-#include "sys_thread.h"
-
-void __cdecl Sys_EnterCriticalSection(int section)
+void Mem_Init()
 {
 
-}
-
-void __cdecl Sys_LeaveCriticalSection(int section)
-{
-
-}
-
-void __cdecl Sys_ThreadInit( void )
-{
-
-}
-
-void __cdecl Sys_ThreadMain( void )
-{
-    Com_InitThreadData();
-}
-
-qboolean __cdecl Sys_IsMainThread( void )
-{
-	return qtrue;
-}
+    void *memory;
+    int sizeofmemory = 1024*1024*MEM_SIZE;
 
 
-#define MAX_KEYS 3
+    memory = memalign(0x1000, sizeofmemory);
+    memset(memory, 0, sizeofmemory);
+    memset((void*)0x1407e7a0, 0, 0x21C);
+    *(int**)(0x1407e7a0) = memory;
+    *(int*)(0x1407e8b8) = sizeofmemory;
 
-const void* sys_valuestoreage[MAX_KEYS];
-
-const void* __cdecl Sys_GetValue(int key)
-{
-    return sys_valuestoreage[key +1];
-}
-
-void __cdecl Sys_SetValue(int key, const void* value)
-{
-    sys_valuestoreage[key +1] = value;
 }

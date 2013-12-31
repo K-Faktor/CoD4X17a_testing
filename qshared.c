@@ -1402,3 +1402,41 @@ void COM_DefaultExtension( char *path, int maxSize, const char *extension ) {
 	Q_strncpyz( oldPath, path, sizeof( oldPath ) );
 	Com_sprintf( path, maxSize, "%s%s", oldPath, extension );
 }
+
+qboolean I_IsEqualUnitWSpace(char *cmp1, char *cmp2)
+{
+
+	while ( 1 )
+	{
+		if ( !(*cmp1) || !(*cmp2) )
+			break;
+
+		if ( *cmp1 == ' ' || *cmp2 == ' ' )
+			break;
+
+		if ( *cmp1 != *cmp2 )
+			return qfalse;
+				
+		cmp1++;
+		cmp2++;
+	}
+
+	if ( *cmp1 && *cmp1 != ' ')
+	{
+		return qfalse;
+	}
+	if ( *cmp2 && *cmp2 != ' ')
+	{
+		return qfalse;
+	}
+
+	return 1;
+}
+
+unsigned char I_CleanChar(unsigned char in)
+{
+  if(in == 146)
+    return 39;
+
+  return in;
+}

@@ -592,6 +592,14 @@ void Com_InitCvars( void ){
 }
 
 
+void Com_InitThreadData()
+{
+    static jmp_buf jmpbuf_obj;
+
+    Sys_SetValue(1, 0);
+    Sys_SetValue(2, &jmpbuf_obj);
+    Sys_SetValue(3, (const void*)0x14087620);
+}
 
 
 /*

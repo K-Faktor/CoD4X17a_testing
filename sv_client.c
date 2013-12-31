@@ -872,7 +872,6 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 	int i;
 	int clientnum;
 	char var_01[2];
-	char dropmsg[1024];
 	const char *dropreason;
 	char clientName[16];
 	challenge_t *challenge;
@@ -946,17 +945,13 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 
 	Com_Printf("Player %s^7, %i dropped: %s\n", clientName, clientnum, dropreason);
 
-	SV_SendServerCommand(NULL, "%c %d", 0x4b, clientnum);
+	SV_SendServerCommand_IW(NULL, 1, "%c %d", 0x4b, clientnum);
 
 	// add the disconnect command
 
 	drop->reliableSequence = drop->reliableAcknowledge;	//Reset unsentBuffer and Sequence to ommit the outstanding junk from beeing transmitted
 	drop->netchan.unsentFragments = qfalse;
-//	SV_SendServerCommand( drop, "%c \"%s\" PB\0", 0x77, dropreason);
-
-	Com_sprintf(dropmsg, sizeof(dropmsg), "%c \"%s\" PB\0", 0x77, dropreason);
-
-	SV_AddServerCommand_old( drop, 1, dropmsg);
+	SV_SendServerCommand_IW( drop, 1, "%c \"%s\" PB\0", 0x77, dropreason);
 
 	if(drop->netchan.remoteAddress.type == NA_BOT){
 		drop->state = CS_FREE;  // become free now
@@ -1984,7 +1979,7 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 			nServerChkSum[i] = atoi(Cmd_Argv( i ));
 		}
 		
-		Cmd_EndTokenizeString();
+		Cmd_EndTokenizedString();
 
 		// check if the number of checksums was correct
 		nChkSum1 = sv.checksumFeed;
@@ -2247,7 +2242,7 @@ void SV_ExecuteClientCommand( client_t *cl, const char *s, qboolean clientOK, qb
 	SV_Cmd_TokenizeString( s );
 
 	if(SV_Cmd_Argc() < 1){
-		SV_Cmd_EndTokenizeString( );
+		SV_Cmd_EndTokenizedString( );
 		return;
 	}
 
@@ -2258,7 +2253,7 @@ void SV_ExecuteClientCommand( client_t *cl, const char *s, qboolean clientOK, qb
 			if(!inDl || u->indlcmd){
 				u->func( cl );
 			}
-			SV_Cmd_EndTokenizeString( );
+			SV_Cmd_EndTokenizedString( );
 			return;
 		}
 	}
@@ -2270,7 +2265,7 @@ void SV_ExecuteClientCommand( client_t *cl, const char *s, qboolean clientOK, qb
 		}
 	}
 
-	SV_Cmd_EndTokenizeString( );
+	SV_Cmd_EndTokenizedString( );
 }
 
 
@@ -2354,12 +2349,18 @@ qboolean SV_ClientCommand( client_t *cl, msg_t *msg, qboolean inDl) {
 	return qtrue;       // continue procesing
 }
 
-
-
 const char* SV_GetGuid( unsigned int clnum)
 {
 	if(clnum > sv_maxclients->integer)
 		return "";
 
 	return svs.clients[clnum].pbguid;
+}
+
+void SV_DelayDropClient(client_t *client, const char *dropmsg)
+{
+	if ( client->state != CS_ZOMBIE && client->delayDropMsg == NULL)
+	{
+		client->delayDropMsg = dropmsg;
+	}
 }

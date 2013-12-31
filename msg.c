@@ -69,16 +69,48 @@ int oldsize = 0;
 
 void MSG_Init( msg_t *buf, byte *data, int length ) {
 
-	static qboolean msgInit = qfalse;
+	MSG_InitHuffman();
 
-	if (!msgInit) {
-		MSG_initHuffman();
-		msgInit = qtrue;
-	}
-	Com_Memset (buf, 0, sizeof(*buf));
 	buf->data = data;
 	buf->maxsize = length;
+	buf->overflowed = qfalse;
+	buf->cursize = 0;
+	buf->readonly = qfalse;
+	buf->var_01 = NULL;
+	buf->var_02 = 0;
+	buf->readcount = 0;
+	buf->bit = 0;
+	buf->lastRefEntity = 0;
+	buf->var_04 = 0;
 }
+
+void MSG_InitReadOnly( msg_t *buf, byte *data, int length ) {
+
+	MSG_InitHuffman();
+
+	MSG_Init( buf, data, length);
+	buf->data = data;
+	buf->cursize = length;
+	buf->readonly = qtrue;
+	buf->var_01 = NULL;
+	buf->maxsize = length;
+	buf->var_02 = 0;
+	buf->readcount = 0;
+}
+
+void MSG_InitReadOnlySplit( msg_t *buf, byte *data, int length, byte* arg4, int arg5 ) {
+
+	MSG_InitHuffman();
+
+	buf->data = data;
+	buf->cursize = length;
+	buf->readonly = qtrue;
+	buf->var_01 = arg4;
+	buf->maxsize = length + arg5;
+	buf->var_02 = arg5;
+	buf->readcount = 0;
+}
+
 
 void MSG_Clear( msg_t *buf ) {
 	buf->cursize = 0;
@@ -218,8 +250,10 @@ void MSG_WriteVector( msg_t *msg, vec3_t c ) {
 
 void MSG_WriteBit0( msg_t* msg )
 {
-	if(!((byte)msg->bit & 7)){
-		if(msg->maxsize <= msg->cursize){
+	if(!(msg->bit & 7))
+	{
+		if(msg->maxsize <= msg->cursize)
+		{
 			msg->overflowed = qtrue;
 			return;
 		}
@@ -228,67 +262,57 @@ void MSG_WriteBit0( msg_t* msg )
 		msg->cursize ++;
 	}
 	msg->bit++;
-	return;
 }
 
-/*
-void MSG_WriteBits(msg_t* msg, int value, int numBits )
+void MSG_WriteBit1(msg_t *msg)
 {
-	int		put;
-	int		fraction;
-
-	// check if the number of bits is valid
-	if ( numBits == 0 || numBits < -31 || numBits > 32 ) {
-		Com_Error( ERR_FATAL, "MSG_WriteBits: bad numBits %i", numBits );
-	}
-
-	// check for value overflows
-	// this should be an error really, as it can go unnoticed and cause either bandwidth or corrupted data transmitted
-	if ( numBits != 32 ) {
-		if ( numBits > 0 ) {
-			if ( value > ( 1 << numBits ) - 1 ) {
-				Com_PrintWarning( "MSG_WriteBits: value overflow %d %d", value, numBits );
-			} else if ( value < 0 ) {
-				Com_PrintWarning( "MSG_WriteBits: value overflow %d %d", value, numBits );
-			}
-		} else {
-			int r = 1 << ( - 1 - numBits );
-			if ( value > r - 1 ) {
-				Com_PrintWarning( "MSG_WriteBits: value overflow %d %d", value, numBits );
-			} else if ( value < -r ) {
-				Com_PrintWarning( "MSG_WriteBits: value overflow %d %d", value, numBits );
-			}
+	if ( !(msg->bit & 7) )
+	{
+		if ( msg->cursize >= msg->maxsize )
+		{
+			msg->overflowed = qtrue;
+			return;
 		}
+		msg->bit = 8 * msg->cursize;
+		msg->data[msg->cursize] = 0;
+		msg->cursize++;
 	}
+	msg->data[msg->bit >> 3] |= 1 << (msg->bit & 7);
+	msg->bit++;
+}
 
-	if ( numBits < 0 ) {
-		numBits = -numBits;
-	}
 
-	// check for msg overflow
-	if ( msg->maxsize - msg->cursize < 4 ) {
-		msg->overflowed = qtrue;
-		return;
-	}
+void MSG_WriteBits(msg_t *msg, int bits, int bitcount)
+{
+    int i;
 
-	// write the bits
-	while( numBits ) {
-//		if ( msg->bit == 0 ) {
-		if ((msg->bit & 7) == 0 ) {
-			msg->data[msg->cursize] = 0;
-			msg->cursize++;
-		}
-		put = 8 - (msg->bit & 7);
-		if ( put > numBits ) {
-			put = numBits;
-		}
-		fraction = value & ( ( 1 << put ) - 1 );
-		msg->data[msg->cursize - 1] |= fraction << (msg->bit & 7);
-		numBits -= put;
-		value >>= put;
-		msg->bit = ( msg->bit + put )*//* & 7*/;
-	/*}
-}*/
+    if ( msg->maxsize - msg->cursize < 4 )
+    {
+        msg->overflowed = 1;
+        return;
+    }
+
+    if ( bitcount )
+    {
+
+      for (i = 0 ; bitcount != i; i++)
+      {
+
+        if ( !(msg->bit & 7) )
+        {
+          msg->bit = 8 * msg->cursize;
+          msg->data[msg->cursize] = 0;
+          msg->cursize++;
+        }
+
+        if ( bits & 1 )
+          msg->data[msg->bit >> 3] |= 1 << (msg->bit & 7);
+
+        msg->bit++;
+        bits >>= 1;
+      }
+    }
+}
 
 
 //============================================================
@@ -407,7 +431,46 @@ int MSG_GetUsedBitCount( msg_t *msg ) {
 
 
 
+int MSG_ReadBits(msg_t *msg, int numBits)
+{
+  int i;
+  signed int var;
+  int retval;
 
+  retval = 0;
+
+  if ( numBits > 0 )
+  {
+
+    for(i = 0 ;numBits != i; i++)
+    {
+      if ( !(msg->bit & 7) )
+      {
+        if ( msg->readcount >= msg->var_02 + msg->cursize )
+        {
+          msg->overflowed = 1;
+          return -1;
+        }
+        msg->bit = 8 * msg->readcount;
+        msg->readcount++;
+      }
+      if ( ((msg->bit / 8)) >= msg->cursize )
+      {
+
+        if(msg->var_01 == NULL)
+            return 0;
+
+        var = msg->var_01[(msg->bit / 8) - msg->cursize];
+
+      }else
+        var = msg->data[msg->bit / 8];
+
+      retval |= ((var >> (msg->bit & 7)) & 1) << i;
+      msg->bit++;
+    }
+  }
+  return retval;
+}
 
 /*
 void MSG_NUinitHuffman() {
@@ -1957,3 +2020,30 @@ int MSG_WriteBitsNoCompress( int d, byte* src, byte* dst , int size){
 }
 
 
+void MSG_WriteReliableCommandToBuffer(const char *source, char *destination, int length)
+{
+  int i;
+  int requiredlen;
+
+  if ( *source == '\0' )
+    Com_PrintWarning("WARNING: Empty reliable command\n");
+
+  for(i = 0 ; i < (length -1) && source[i] != '\0'; i++)
+  {
+		destination[i] = I_CleanChar(source[i]);
+		if ( destination[i] == '%' )
+		{
+			destination[i] = '.';
+		}
+  }
+  destination[i] = '\0';
+
+  if ( i == length -1)
+  {
+	requiredlen = strlen(source) +1;
+	if(requiredlen > length)
+	{
+		Com_PrintWarning("WARNING: Reliable command is too long (%i/%i) and will be truncated: '%s'\n", requiredlen, length, source);
+	}
+  }
+}

@@ -373,8 +373,8 @@ __cdecl void SV_SendMessageToClient( msg_t *msg, client_t *client ) {
 
 	len = 4 + MSG_WriteBitsCompress( 0, msg->data + 4 ,(byte*)0x13f39084 ,msg->cursize - 4);
 
-	if(client->var_01){
-		SV_DropClient(client, client->var_01);
+	if(client->delayDropMsg){
+		SV_DropClient(client, client->delayDropMsg);
 	}
 
 	if(client->demorecording && !client->demowaiting)

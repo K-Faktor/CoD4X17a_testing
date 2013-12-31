@@ -248,22 +248,8 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep );
 
 void COM_DefaultExtension( char *path, int maxSize, const char *extension );
 
+qboolean I_IsEqualUnitWSpace(char *cmp1, char *cmp2);
+unsigned char I_CleanChar(unsigned char in);
+
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -69,12 +69,11 @@ typedef struct cmd_function_s
 
 #define MAX_POWERLIST 256
 
-
 void __cdecl Cmd_Init(void);
 void __cdecl Cmd_TokenizeString(const char* string);
+void __cdecl Cmd_EndTokenizedString();
 void __cdecl SV_Cmd_TokenizeString(const char* string);
-void __cdecl Cmd_EndTokenizeString();
-void __cdecl SV_Cmd_EndTokenizeString();
+void __cdecl SV_Cmd_EndTokenizedString();
 void __cdecl Cmd_ExecuteSingleCommand(int unk, int unk2, const char *cmd );
 void __cdecl Cbuf_Init(void);
 void __cdecl Cbuf_Execute(int, int);

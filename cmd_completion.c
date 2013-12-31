@@ -218,7 +218,7 @@ void Field_CompleteCommand( char *cmd, qboolean doCommands, qboolean doCvars )
 		shortestMatch[ 0 ] = 0;
 		
 		if( strlen( completionString ) == 0 ){
-			Cmd_EndTokenizeString( );
+			Cmd_EndTokenizedString( );
 			return;
 		}
 
@@ -238,7 +238,7 @@ void Field_CompleteCommand( char *cmd, qboolean doCommands, qboolean doCvars )
 				Cvar_ForEach(Cvar_CommandCompletionPrint, NULL);
 		}
 	}
-	Cmd_EndTokenizeString( );
+	Cmd_EndTokenizedString( );
 }
 
 /*

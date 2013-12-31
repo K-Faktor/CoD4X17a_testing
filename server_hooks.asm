@@ -108,3 +108,7 @@ SV_UnlinkEntity:
 global SV_AddServerCommand_old
 SV_AddServerCommand_old:
     jmp 0x817664c
+
+global SV_GameCommand
+SV_GameCommand:
+    jmp 0x817c674

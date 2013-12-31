@@ -55,7 +55,6 @@ __cdecl int PbSvSendToAddrPort(char* netdest, unsigned short port, int msgsize, 
             return 0;
     }
 
-
     NET_StringToAdr(va("%s:%i", netdest, port), &netadr, NA_UNSPEC);
 
     netadr.sock = 0;

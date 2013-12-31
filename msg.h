@@ -43,7 +43,7 @@ typedef struct {
 	qboolean	overflowed;		//0x00
 	qboolean	readonly;		//0x04
 	byte		*data;			//0x08
-	int		var_01;			//0x0c
+	byte*		var_01;			//0x0c
 	int		maxsize;		//0x10
 	int		cursize;		//0x14
 	int		var_02;			//0x18
@@ -59,7 +59,9 @@ struct playerState_s;
 struct usercmd_s;
 
 
-void MSG_Init( msg_t *buf, byte *data, int length ) ;
+void MSG_Init( msg_t *buf, byte *data, int length );
+void MSG_InitReadOnly( msg_t *buf, byte *data, int length );
+void MSG_InitReadOnlySplit( msg_t *buf, byte *data, int length, byte*, int );
 void MSG_Clear( msg_t *buf ) ;
 void MSG_BeginReading( msg_t *msg ) ;
 void MSG_Copy(msg_t *buf, byte *data, int length, msg_t *src);
@@ -81,18 +83,20 @@ void MSG_WriteBit0( msg_t *msg ) ;
 int MSG_WriteBitsNoCompress( int d, byte* src, byte* dst , int size);
 void MSG_WriteVector( msg_t *msg, vec3_t c );
 
-int __cdecl MSG_ReadBits( msg_t *msg, int numBits);
+
+void MSG_WriteBit1(msg_t*);
+void MSG_WriteBits(msg_t*, int bits, int bitcount);
+int MSG_ReadBits(msg_t *msg, int numBits);
+void MSG_WriteReliableCommandToBuffer(const char *source, char *destination, int length);
+
 int __cdecl GetMinBitCount( unsigned int number );
 void __cdecl MSG_WriteDeltaClient(struct snapshotInfo_s*, msg_t*, int, struct clientState_s*, struct clientState_s*, int);
 void __regparm3 MSG_WriteDeltaField(struct snapshotInfo_s* , msg_t* , int, unsigned const char*, unsigned const char*, const void* netfield, int, unsigned char);
 void __cdecl MSG_WriteDeltaPlayerstate(struct snapshotInfo_s* , msg_t* , int , struct playerState_s* , struct playerState_s*);
 void __cdecl MSG_WriteEntityIndex(struct snapshotInfo_s*, msg_t*, int, int);
-void __cdecl MSG_WriteBit1(msg_t*);
-void __cdecl MSG_WriteBits(msg_t*, int bits, int bitcount);
 void __cdecl MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, struct usercmd_s *from, struct usercmd_s *to );
 void __cdecl MSG_SetDefaultUserCmd( struct playerState_s *ps, struct usercmd_s *ucmd );
-int __cdecl MSG_WriteBitsCompress( char dummy, const byte *datasrc, byte *buffdest, int bytecount);
-void __cdecl MSG_WriteReliableCommandToBuffer( const char* source, char* destination,int length);
 
 #endif
+
 

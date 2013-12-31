@@ -78,14 +78,6 @@ typedef struct {
 	int			unsentBufferSize;
 } netchan_t;
 
-/*
-typedef struct{
-	char command[MAX_STRING_CHARS];
-	int cmdTime;
-	int cmdType;
-}reliableCommands_t;
-*/
-
 
 void Netchan_Init( int port );
 void Netchan_Setup( netsrc_t sock, netchan_t *chan, netadr_t adr, int qport , byte* unsentBuffer, int unsentBufferSize, byte* fragmentBuffer, int fragmentBufferSize);

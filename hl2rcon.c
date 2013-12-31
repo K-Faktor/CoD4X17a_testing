@@ -402,7 +402,7 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 
 	Com_Printf("Rcon login from: %s Name: %s\n", NET_AdrToString (from), login->username);
 
-	Cmd_EndTokenizeString();
+	Cmd_EndTokenizedString();
 
 	for(i = 0, user = sourceRcon.activeRconUsers; i < MAX_RCONUSERS; i++, user++){
 		if(user->remote.type == NA_BAD)
@@ -435,7 +435,7 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 
 
 badrcon:
-	Cmd_EndTokenizeString();
+	Cmd_EndTokenizedString();
 	Com_Printf ("Bad rcon from %s (TCP)\n", NET_AdrToString (from) );
 	//Don't allow another attempt for 20 seconds
 	SV_PlayerAddBanByip(from, "Bad rcon", 0, NULL, 0, Com_GetRealtime() + 20);

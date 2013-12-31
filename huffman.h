@@ -35,10 +35,10 @@ typedef struct nodetype {
 //	struct  nodetype **head; /* highest ranked node in block */
 	int weight;
 	int symbol; //0x10
-	struct  nodetype *next, *prev; /* doubly-linked list */
-	struct  nodetype **head; /* highest ranked node in block */
+//	struct  nodetype *next, *prev; /* doubly-linked list */
+//	struct  nodetype **head; /* highest ranked node in block */
 
-} node_t;
+} node_t; //Length: 20
 
 #define HMAX 256 /* Maximum symbol */
 
@@ -47,33 +47,18 @@ typedef struct {
 	int blocPtrs;
 
 	node_t*     tree;
-	node_t*     lhead;
-	node_t*     ltail;
 	node_t*     loc[HMAX + 1];
 	node_t**    freelist;
 
 	node_t nodeList[768];
 	node_t*     nodePtrs[768];
+
 } huff_t;
+/* size 19476*/
 
-typedef struct {
-	huff_t compressor;
-	huff_t decompressor;
-} huffman_t;
-
-void    Huff_Compress( msg_t *buf, int offset );
-void    Huff_Decompress( msg_t *buf, int offset );
-void    Huff_Init( huffman_t *huff );
-void    Huff_addRef( huff_t* huff, byte ch );
-int     Huff_Receive( node_t *node, int *ch, byte *fin );
-void    Huff_transmit( huff_t *huff, int ch, byte *fout );
-//void    Huff_offsetReceive( node_t *node, int *ch, byte *fin, int *offset );
-void    Huff_offsetTransmit( huff_t *huff, int ch, byte *fout, int *offset );
-void    Huff_putBit( int bit, byte *fout, int *offset );
-int     Huff_getBit( byte *fout, int *offset );
 int MSG_ReadBitsCompress(const byte* input, byte* outputBuf, int readsize);
-void MSG_initHuffman();
-
-//extern huffman_t clientHuffTables;
+int MSG_WriteBitsCompress( char dummy, const byte *datasrc, byte *buffdest, int bytecount);
+void MSG_InitHuffman();
 
 #endif
+

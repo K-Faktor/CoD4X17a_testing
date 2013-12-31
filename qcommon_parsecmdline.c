@@ -60,13 +60,13 @@ void Com_StartupVariable( const char *match ) {
 		{
 			if ( !strcmp( Cmd_Argv(0), "set" )){
 				Cvar_Set_f();
-				Cmd_EndTokenizeString();
+				Cmd_EndTokenizedString();
 				continue;
 			}else if( !strcmp( Cmd_Argv(0), "seta" ) ) {
 				Cvar_SetA_f();
 			}
 		}
-		Cmd_EndTokenizeString();
+		Cmd_EndTokenizedString();
 	}
 }
 
