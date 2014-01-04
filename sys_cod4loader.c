@@ -381,6 +381,16 @@ void Sys_LoadImage( ){
         _exit(1);
 
     }
+    
+    
+    if((int)(dlsym(dl, "_init") - (void*)0xA1A4) != 0x8040000)
+    {
+        printf("The module %s got loaded to an invalid image base address: 0x%X\n", module, (int)(dlsym(dl, "_init") - (void*)0xA1A4));
+        printf("It is expected that this image base address is located at 0x%X\n", 0x804000);
+        printf("Can not continue.\n");
+        _exit(1);
+    }
+    
     /* No retrieving of symbols where none are :( */
 
     if(!Sys_PatchImage())
