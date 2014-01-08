@@ -82,6 +82,38 @@ void PlayerCmd_GetUid(scr_entref_t arg){
 }
 
 
+void PlayerCmd_GetPower(scr_entref_t arg){
+
+    gentity_t* gentity;
+    int entityNum = 0;
+    int power;
+    client_t *cl;
+
+    if(HIWORD(arg)){
+
+        Scr_ObjectError("Not an entity");
+
+    }else{
+
+        entityNum = LOWORD(arg);
+        gentity = &g_entities[entityNum];
+
+        if(!gentity->client){
+            Scr_ObjectError(va("Entity: %i is not a player", entityNum));
+        }
+    }
+    if(Scr_GetNumParam()){
+        Scr_Error("Usage: self getPower()\n");
+    }
+    cl = &svs.clients[entityNum];
+
+    power = SV_RemoteCmdGetClPower(cl);
+
+    Scr_AddInt(power);
+}
+
+
+
 /*
 ============
 PlayerCmd_GetUserinfo
