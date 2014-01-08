@@ -62,6 +62,11 @@ Returns the current measured scoreboard ping of this player.
 Usage: int = self getPing();
 
 
+GetPower
+============================
+Returns the admin power for this player. Default is 1
+Usage: int = self getPower();
+
 
 GetGeoLocation
 ============================
