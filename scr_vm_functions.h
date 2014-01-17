@@ -33,6 +33,7 @@ typedef int scr_entref_t;
 #endif
 
 void PlayerCmd_GetUid(scr_entref_t arg);
+void PlayerCmd_GetPower(scr_entref_t arg);
 void PlayerCmd_GetUserinfo(scr_entref_t arg);
 void PlayerCmd_GetPing(scr_entref_t arg);
 void PlayerCmd_SetGravity(scr_entref_t arg);

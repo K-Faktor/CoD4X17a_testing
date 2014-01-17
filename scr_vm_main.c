@@ -162,6 +162,7 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("earthquake", (void*)0x80c112e, 0);
 	Scr_AddFunction("newhudelem", GScr_NewHudElem, 0);
 	Scr_AddFunction("newclienthudelem", GScr_NewClientHudElem, 0);
+	Scr_AddFunction("getpower", PlayerCmd_GetPower, 0);
 	Scr_AddFunction("newteamhudelem", (void*)0x808f95e, 0);
 	Scr_AddFunction("resettimeout", (void*)0x815d050, 0);
 	Scr_AddFunction("weaponfiretime", (void*)0x80bda62, 0);
