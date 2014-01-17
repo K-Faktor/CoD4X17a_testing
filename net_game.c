@@ -108,6 +108,10 @@ tcpclientstate_t NET_TCPAuthPacketEvent(netadr_t* from, byte* bufData, int len, 
 
         for(i = 0; i < MAX_TCPEVENTS; i++)
         {
+
+            if(tcpevents[i].tcpauthevent == NULL)
+                continue;
+
             ret = tcpevents[i].tcpauthevent(from, &msg, socketfd, connectionId);
             if(ret != TCP_AUTHNOTME)
             {
