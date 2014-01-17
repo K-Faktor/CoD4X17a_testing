@@ -169,7 +169,6 @@ then buffer them and make sure they get sent in correct order
 ================
 */
 qboolean SV_Netchan_Transmit( client_t *client, byte *data, int cursize) {   //int length, const byte *data ) {
-
 	qboolean nt_ret;
 	int i;
 
@@ -206,7 +205,6 @@ then buffer them and make sure they get sent in correct order
 ================
 */
 __cdecl qboolean SV_Netchan_TransmitNextFragment( client_t *client ) {   //int length, const byte *data ) {
-
 	int i;
 
 	Netchan_TransmitNextFragment( &client->netchan );

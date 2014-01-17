@@ -65,6 +65,9 @@ cvar_t* com_maxFrameTime;
 cvar_t* com_animCheck;
 cvar_t* com_developer;
 
+char com_errorMessage[MAXPRINTMSG];
+qboolean com_errorEntered;
+
 /*
 ========================================================================
 
@@ -557,7 +560,7 @@ void Com_InitCvars( void ){
 
     char* s;
 
-    com_dedicated = Cvar_RegisterEnum("dedicated", dedicatedEnum, 2, 0x40, "True if this is a dedicated server");
+    com_dedicated = Cvar_RegisterEnum("dedicated", dedicatedEnum, 2, CVAR_INIT, "True if this is a dedicated server");
     com_timescale = Cvar_RegisterFloat("timescale", 1.0, 0.0, 1000.0, CVAR_CHEAT | CVAR_SYSTEMINFO, "Scale time of each frame");
     com_fixedtime = Cvar_RegisterInt("fixedtime", 0, 0, 1000, 0x80, "Use a fixed time rate for each frame");
     com_maxFrameTime = Cvar_RegisterInt("com_maxFrameTime", 100, 50, 1000, 0, "Time slows down if a frame takes longer than this many milliseconds");
@@ -602,6 +605,22 @@ void Com_InitThreadData()
 }
 
 
+
+void Com_PatchError()
+{
+	*(char**)0x8121C28 = com_errorMessage;
+	*(char**)0x81225C5 = com_errorMessage;
+	*(char**)0x812262C = com_errorMessage;
+	*(char**)0x812265A = com_errorMessage;
+	*(char**)0x8123CFB = com_errorMessage;
+	*(char**)0x8123D45 = com_errorMessage;
+	*(char**)0x8123DAB = com_errorMessage;
+	*(char**)0x8123E40 = com_errorMessage;
+	*(char**)0x8123EBA = com_errorMessage;
+	*(char**)0x8123F1E = com_errorMessage;
+	*(char**)0x81240A3 = com_errorMessage;
+}
+
 /*
 =================
 Com_Init
@@ -609,8 +628,6 @@ Com_Init
 The games main initialization
 =================
 */
-
-
 
 void Com_Init(char* commandLine){
 
@@ -623,7 +640,7 @@ void Com_Init(char* commandLine){
     jmp_buf* abortframe = (jmp_buf*)Sys_GetValue(2);
 
     if(setjmp(*abortframe)){
-        Sys_Error(va("Error during Initialization:\n%s\n", com_lastError));
+        Sys_Error(va("Error during Initialization:\n%s\n", com_errorMessage));
     }
     Com_Printf("%s %s %s build %i %s\n", GAME_STRING,Q3_VERSION,PLATFORM_STRING, BUILD_NUMBER, __DATE__);
 
@@ -796,9 +813,9 @@ void Com_Init(char* commandLine){
     abortframe = (jmp_buf*)Sys_GetValue(2);
 
     if(setjmp(*abortframe)){
-        Sys_Error(va("Error during Initialization:\n%s\n", com_lastError));
+        Sys_Error(va("Error during Initialization:\n%s\n", com_errorMessage));
     }
-    if(com_errorEntered) Com_ErrorCleanup();
+    if(com_errorEntered) Com_Error(ERR_FATAL,"Recursive error");
 
 
     HL2Rcon_Init();
@@ -890,7 +907,7 @@ __optimize3 void Com_Frame( void ) {
             Sys_EnterCriticalSection(2);
 
             if(com_errorEntered)
-                Com_ErrorCleanup();
+                Com_Error(ERR_FATAL,"Recursive error");
 
             Sys_LeaveCriticalSection(2);
         }
@@ -1034,4 +1051,230 @@ __optimize3 void Com_Frame( void ) {
             Com_ErrorCleanup();
 
         Sys_LeaveCriticalSection(2);
+}
+
+
+
+
+
+
+
+
+
+/*
+============
+Com_StringContains
+============
+*/
+char *Com_StringContains( char *str1, char *str2, int casesensitive ) {
+	int len, i, j;
+
+	len = strlen( str1 ) - strlen( str2 );
+	for ( i = 0; i <= len; i++, str1++ ) {
+		for ( j = 0; str2[j]; j++ ) {
+			if ( casesensitive ) {
+				if ( str1[j] != str2[j] ) {
+					break;
+				}
+			} else {
+				if ( toupper( str1[j] ) != toupper( str2[j] ) ) {
+					break;
+				}
+			}
+		}
+		if ( !str2[j] ) {
+			return str1;
+		}
+	}
+	return NULL;
+}
+
+
+
+
+/*
+============
+Com_Filter
+============
+*/
+int Com_Filter( char *filter, char *name, int casesensitive ) {
+	char buf[MAX_TOKEN_CHARS];
+	char *ptr;
+	int i, found;
+
+	while ( *filter ) {
+		if ( *filter == '*' ) {
+			filter++;
+			for ( i = 0; *filter; i++ ) {
+				if ( *filter == '*' || *filter == '?' ) {
+					break;
+				}
+				buf[i] = *filter;
+				filter++;
+			}
+			buf[i] = '\0';
+			if ( strlen( buf ) ) {
+				ptr = Com_StringContains( name, buf, casesensitive );
+				if ( !ptr ) {
+					return qfalse;
+				}
+				name = ptr + strlen( buf );
+			}
+		} else if ( *filter == '?' )      {
+			filter++;
+			name++;
+		} else if ( *filter == '[' && *( filter + 1 ) == '[' )           {
+			filter++;
+		} else if ( *filter == '[' )      {
+			filter++;
+			found = qfalse;
+			while ( *filter && !found ) {
+				if ( *filter == ']' && *( filter + 1 ) != ']' ) {
+					break;
+				}
+				if ( *( filter + 1 ) == '-' && *( filter + 2 ) && ( *( filter + 2 ) != ']' || *( filter + 3 ) == ']' ) ) {
+					if ( casesensitive ) {
+						if ( *name >= *filter && *name <= *( filter + 2 ) ) {
+							found = qtrue;
+						}
+					} else {
+						if ( toupper( *name ) >= toupper( *filter ) &&
+							 toupper( *name ) <= toupper( *( filter + 2 ) ) ) {
+							found = qtrue;
+						}
+					}
+					filter += 3;
+				} else {
+					if ( casesensitive ) {
+						if ( *filter == *name ) {
+							found = qtrue;
+						}
+					} else {
+						if ( toupper( *filter ) == toupper( *name ) ) {
+							found = qtrue;
+						}
+					}
+					filter++;
+				}
+			}
+			if ( !found ) {
+				return qfalse;
+			}
+			while ( *filter ) {
+				if ( *filter == ']' && *( filter + 1 ) != ']' ) {
+					break;
+				}
+				filter++;
+			}
+			filter++;
+			name++;
+		} else {
+			if ( casesensitive ) {
+				if ( *filter != *name ) {
+					return qfalse;
+				}
+			} else {
+				if ( toupper( *filter ) != toupper( *name ) ) {
+					return qfalse;
+				}
+			}
+			filter++;
+			name++;
+		}
+	}
+	return qtrue;
+}
+
+/*
+============
+Com_FilterPath
+============
+*/
+int Com_FilterPath( char *filter, char *name, int casesensitive ) {
+	int i;
+	char new_filter[MAX_QPATH];
+	char new_name[MAX_QPATH];
+
+	for ( i = 0; i < MAX_QPATH - 1 && filter[i]; i++ ) {
+		if ( filter[i] == '\\' || filter[i] == ':' ) {
+			new_filter[i] = '/';
+		} else {
+			new_filter[i] = filter[i];
+		}
+	}
+	new_filter[i] = '\0';
+	for ( i = 0; i < MAX_QPATH - 1 && name[i]; i++ ) {
+		if ( name[i] == '\\' || name[i] == ':' ) {
+			new_name[i] = '/';
+		} else {
+			new_name[i] = name[i];
+		}
+	}
+	new_name[i] = '\0';
+	return Com_Filter( new_filter, new_name, casesensitive );
+}
+
+/*
+=============
+Com_Error
+
+Both client and server can use this, and it will
+do the appropriate thing.
+=============
+*/
+void QDECL Com_Error( int code, const char *fmt, ... ) {
+	va_list		argptr;
+	static int	lastErrorTime;
+	static int	errorCount;
+	int		currentTime;
+	jmp_buf*	abortframe;
+
+	if(com_developer && com_developer->integer > 1)
+		__asm__("int $3");
+
+	if(com_errorEntered)
+		Sys_Error("recursive error after: %s", com_errorMessage);
+
+	com_errorEntered = qtrue;
+
+	Cvar_RegisterInt("com_errorCode", code, code, code, CVAR_ROM, "The last calling error code");
+
+	// if we are getting a solid stream of ERR_DROP, do an ERR_FATAL
+	currentTime = Sys_Milliseconds();
+	if ( currentTime - lastErrorTime < 400 ) {
+		if ( ++errorCount > 3 ) {
+			code = ERR_FATAL;
+		}
+	} else {
+		errorCount = 0;
+	}
+
+	lastErrorTime = currentTime;
+	abortframe = (jmp_buf*)Sys_GetValue(2);
+
+	va_start (argptr,fmt);
+	Q_vsnprintf (com_errorMessage, sizeof(com_errorMessage),fmt,argptr);
+	va_end (argptr);
+
+	if (code != ERR_DISCONNECT && code != ERR_NEED_CD)
+		Cvar_RegisterString("com_errorMessage", com_errorMessage, CVAR_ROM, "The last calling error message");
+
+	if (code == ERR_DISCONNECT || code == ERR_SERVERDISCONNECT) {
+		SV_Shutdown( "Server disconnected" );
+		// make sure we can get at our local stuff
+		/*FS_PureServerSetLoadedPaks("", "");*/
+		com_errorEntered = qfalse;
+		longjmp(*abortframe, -1);
+	} else if (code == ERR_DROP) {
+		Com_Printf ("********************\nERROR: %s\n********************\n", com_errorMessage);
+		SV_Shutdown (va("Server crashed: %s",  com_errorMessage));
+		/*FS_PureServerSetLoadedPaks("", "");*/
+		com_errorEntered = qfalse;
+		longjmp (*abortframe, -1);
+	} else {
+		SV_Shutdown(va("Server fatal crashed: %s", com_errorMessage));
+	}
+	NET_Shutdown();
+	Com_CloseLogFiles( );
+	Sys_Error ("%s", com_errorMessage);
 }

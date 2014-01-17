@@ -94,7 +94,7 @@ int Scr_FS_ReadLine( void *buffer, int len, fileHandle_t f ) {
 	char		*read;
 	char		*buf;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
@@ -159,7 +159,7 @@ qboolean Scr_FS_FOpenFile( const char *filename, fsMode_t mode, scr_fileHandle_t
 	char *ospath;
 	f->fh = NULL;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -243,7 +243,7 @@ fileHandle_t Scr_OpenScriptFile( char* qpath, scr_fileHandleType_t ft, fsMode_t 
     int i;
     char filename[MAX_QPATH];
 
-    if ( !fs_searchpaths ) {
+    if ( !FS_Initialized() ) {
         Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
     }
 
@@ -275,7 +275,7 @@ fileHandle_t Scr_OpenScriptFile( char* qpath, scr_fileHandleType_t ft, fsMode_t 
 
 qboolean Scr_CloseScriptFile( fileHandle_t fh){
 
-    if ( !fs_searchpaths ) {
+    if ( !FS_Initialized() ) {
         Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
     }
 
@@ -327,7 +327,7 @@ int Scr_FS_Read( void *buffer, int len, fileHandle_t f ) {
 	byte		*buf;
 	int		tries;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -379,7 +379,7 @@ int Scr_FS_Write( const void *buffer, int len, fileHandle_t h ) {
 	int		tries;
 	FILE	*f;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -427,7 +427,7 @@ Scr_FS_Seek
 int Scr_FS_Seek( fileHandle_t f, long offset, int origin ) {
 	int		_origin;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 		return -1;
 	}

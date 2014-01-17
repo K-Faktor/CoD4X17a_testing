@@ -33,6 +33,7 @@
 #include "server.h"
 #include "scr_vm_functions.h"
 #include "sys_thread.h"
+#include "filesystem.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -181,7 +182,7 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
 }
 
 
-
+void Com_PatchError(void);
 
 
 static void Sys_PatchImageData( void )
@@ -321,12 +322,16 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetJump(0x81d6be4, Sys_EnterCriticalSection);
 	SetJump(0x81d6bc8, Sys_LeaveCriticalSection);
 	SetJump(0x8177402, SV_SendServerCommand_IW);
-	//ToDo build Mem_Init() on its own
+	SetJump(0x818e73c, FS_Restart);
+	SetJump(0x818726c, FS_FCloseFile);
+
 
 	*(char*)0x8215ccc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebd = '\0'; //adds a missing linebreak
 
+	FS_PatchFileHandleData();
+	Com_PatchError();
 }
 
 
@@ -381,6 +386,15 @@ void Sys_LoadImage( ){
         _exit(1);
 
     }
+
+    if((int)(dlsym(dl, "_init") - (void*)0xA1A4) != 0x8040000)
+    {
+        printf("The module %s got loaded to an invalid image base address: 0x%X\n", module, (int)(dlsym(dl, "_init") - (void*)0xA1A4));
+        printf("It is expected that this image base address is located at 0x%X\n", 0x804000);
+        printf("Can not continue.\n");
+        _exit(1);
+    }
+
     /* No retrieving of symbols where none are :( */
 
     if(!Sys_PatchImage())

@@ -64,7 +64,6 @@ void R_Init(){
         DB_LoadXAssets(&XZoneInfoStack[0],XAssetscount,0);
 
         Cmd_AddCommand("XAssetUsage", XAssetUsage_f);
-
 }
 
 #define NUM_ASSETTYPES 33

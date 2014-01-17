@@ -383,7 +383,7 @@ FS_FOpenDemoFileWrite
 qboolean FS_FOpenDemoFileWrite( const char *filename, fileHandleData_t *fh ) {
 	char *ospath;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 

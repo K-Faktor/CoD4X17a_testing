@@ -24,7 +24,7 @@ qboolean Sec_MakeCertificate(rsa_key *key, const char *commonName, const char *c
     char hash[257];
     size_t len;
     
-    struct ltc_hash_descriptor *desc = &sha256_desc;
+    const struct ltc_hash_descriptor *desc = &sha256_desc;
     
     
     memset(out,0,sizeof(sec_certificate_t));

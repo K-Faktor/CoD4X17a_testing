@@ -599,7 +599,8 @@ __optimize3 __regparm3 static leakyBucket_t *SVC_BucketForAddress( netadr_t *add
 SVC_RateLimit
 ================
 */
-/*__optimize3*/ __attribute__((always_inline)) static qboolean SVC_RateLimit( leakyBucket_t *bucket, int burst, int period ) {
+/*__optimize3 __attribute__((always_inline)) */
+static qboolean SVC_RateLimit( leakyBucket_t *bucket, int burst, int period ) {
 	if ( bucket != NULL ) {
 		unsigned long long now = com_uFrameTime;
 		int interval = now - bucket->lastTime;
@@ -855,7 +856,7 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 	}
 	Info_SetValueForKey( infostring, "hw", "1");
 
-        if(fs_game->string[0] == '\0' || sv_showasranked->boolean){
+        if(fs_gameDirVar->string[0] == '\0' || sv_showasranked->boolean){
 	    Info_SetValueForKey( infostring, "mod", "0");
 	}else{
 	    Info_SetValueForKey( infostring, "mod", "1");
@@ -867,8 +868,8 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 		Info_SetValueForKey( infostring, "sv_maxPing", va("%i", sv_maxPing->integer) );
 	}
 
-	if( fs_game->string[0] != '\0' ) {
-		Info_SetValueForKey( infostring, "game", fs_game->string );
+	if( fs_gameDirVar->string[0] != '\0' ) {
+		Info_SetValueForKey( infostring, "game", fs_gameDirVar->string );
 	}
 
 	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
@@ -1704,6 +1705,8 @@ void SV_InitCvarsOnce(void){
 	sv_consayname = Cvar_RegisterString("sv_consayname", "^2Server: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 	sv_contellname = Cvar_RegisterString("sv_contellname", "^5Server^7->^5PM: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 
+	Cvar_RegisterString("test", "test", CVAR_SYSTEMINFO, "test var");
+
 	sv_master[0] = Cvar_RegisterString("sv_master1", "", CVAR_ARCHIVE, "A masterserver name");
 	sv_master[1] = Cvar_RegisterString("sv_master2", "", CVAR_ARCHIVE, "A masterserver name");
 	sv_master[2] = Cvar_RegisterString("sv_master3", "", CVAR_ARCHIVE, "A masterserver name");
@@ -1959,9 +1962,7 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 			if(edi+1 == ebx){
 
 				MSG_WriteBit1(msg);
-
 			}else{
-
 				MSG_WriteBit0(msg);
 				MSG_WriteBits(msg, ebx, 12);
 			}
@@ -1970,7 +1971,6 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 	}
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	clnum = cl - svs.clients;
-
 	// baselines
 	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
 		base = &sv.svEntities[i].baseline;
@@ -1986,7 +1986,6 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 
 		MSG_WriteDeltaEntity( &snapInfo, msg, 0, &nullstate, base, qtrue );
 	}
-
 	MSG_WriteByte( msg, svc_EOF );
 }
 
@@ -2205,9 +2204,9 @@ qboolean SV_Map( const char *levelname ) {
 		}
 	}
 
-	if(!DB_FileExists(mapname, 0) && (!fs_game->string[0] || !DB_FileExists(mapname, 2))){
+	if(!DB_FileExists(mapname, 0) && (!fs_gameDirVar->string[0] || !DB_FileExists(mapname, 2))){
 		Com_PrintError("Can't find map %s\n", mapname);
-		if(!fs_game->string[0])
+		if(!fs_gameDirVar->string[0])
 			Com_PrintError("A mod is required to run custom maps\n");
 		return qfalse;
 	}

@@ -26,6 +26,7 @@
 #define __SERVER_H__
 
 #include "q_shared.h"
+#include "qcommon.h"
 #include "sys_net.h"
 #include "netchan.h"
 #include "entity.h"
@@ -73,14 +74,6 @@
 #define	PORT_SERVER		28960
 
 #define CLIENT_BASE_ADDR 0x90b4f8C
-
-#define	MAX_RELIABLE_COMMANDS	128	// max string commands buffered for restransmit
-#define MAX_DOWNLOAD_WINDOW	8	// max of eight download frames
-#define MAX_DOWNLOAD_BLKSIZE	2048	// 2048 byte block chunks
-#define MAX_PACKET_USERCMDS	32
-
-#define	PACKET_BACKUP		32
-#define PACKET_MASK ( PACKET_BACKUP - 1 )
 
 
 typedef enum {

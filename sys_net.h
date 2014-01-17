@@ -76,8 +76,6 @@ typedef struct {
 	};
 }netadr_t;
 
-typedef int SOCKET; // Moved from sys_net.c
-
 void		NET_Init( void );
 void		NET_Shutdown( void );
 void		NET_Restart_f( void );

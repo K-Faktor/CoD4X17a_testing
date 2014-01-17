@@ -112,3 +112,7 @@ SV_AddServerCommand_old:
 global SV_GameCommand
 SV_GameCommand:
     jmp 0x817c674
+
+global FS_GetMapBaseName
+FS_GetMapBaseName:
+    jmp  0x8127e0c

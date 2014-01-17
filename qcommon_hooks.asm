@@ -21,10 +21,6 @@
 
 SECTION .text
 
-global Com_Error
-Com_Error:
-    jmp 0x812257c
-
 global Com_InitParse
 Com_InitParse:
     jmp 0x81a7a78
@@ -77,14 +73,6 @@ global Z_Malloc
 Z_Malloc:
     jmp 0x8196d6e
 
-global Com_Filter
-Com_Filter:
-    jmp 0x819837e
-
-;global Mem_Init
-;Mem_Init:
-;    jmp 0x81a75e6
-
 global Mem_BeginAlloc
 Mem_BeginAlloc:
     jmp 0x81a74d0
@@ -100,3 +88,4 @@ TempMalloc:
 global Com_DvarDump
 Com_DvarDump:
     jmp 0x8126764
+;0x819680e

@@ -281,14 +281,16 @@ static char *val[] =
 */
 const char* Com_SHA256( const char* string )
 {
-    int r = strlen(string);
-    int i;
+/*    int r = strlen(string);
+    int i;*/
     static char finalsha[65];
     hash_state md;
-    //unsigned char digestsha[32];
-    //const char	*hex = "0123456789abcdef";
 
-    /*sha256_starts( &ctx );
+/*
+    unsigned char digestsha[32];
+    const char	*hex = "0123456789abcdef";
+
+    sha256_starts( &ctx );
     sha256_update( &ctx, (unsigned char*)string, r );
     sha256_finish( &ctx, digestsha );
     for(i = 0, r=0; i < 32; i++) {

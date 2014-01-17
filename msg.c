@@ -32,7 +32,7 @@
 #include "qcommon_io.h"
 #include "net_game_conf.h"
 #include "huffman.h"
-
+#include "server.h"
 
 #ifndef	MAX_MSGLEN
 #define	MAX_MSGLEN	0x20000		// max length of a message, which may

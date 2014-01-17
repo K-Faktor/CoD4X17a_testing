@@ -128,7 +128,7 @@ typedef enum {qfalse, qtrue}	qboolean;
 #define	MAX_INFO_STRING		1024
 #define	MAX_INFO_KEY		1024
 #define	MAX_INFO_VALUE		1024
-
+#define	MAX_TOKEN_CHARS		1024
 
 #define	MAX_STRING_CHARS	1024	// max length of a string passed to Cmd_TokenizeString
 #define	MAX_NAME_LENGTH		16	// max length of a client name

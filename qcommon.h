@@ -35,7 +35,6 @@ void __cdecl Com_WriteConfig_f(void);
 void __cdecl Com_WriteDefaults_f(void);
 void __cdecl Com_DvarDump(int, int);
 void __cdecl Com_Close(void);
-void QDECL Com_Error( int level, const char *error, ...);
 int __cdecl Com_Filter( char* filter, char *name, int casesensitive);
 
 void Com_Frame(void);
@@ -43,6 +42,7 @@ void Com_Init(char* cmdline);
 void Com_UpdateRealtime();
 time_t Com_GetRealtime();
 int QDECL Com_AddTimedEvent( int delay, void *function, unsigned int argcount, ...);
+int Com_FilterPath( char *filter, char *name, int casesensitive );
 
 void Com_RandomBytes( byte *string, int len );
 int Com_HashKey( char *string, int maxlen );
@@ -56,6 +56,15 @@ extern cvar_t* com_dedicated;
 extern cvar_t* com_timescale;
 
 int Com_IsDeveloper();
+
+#define MAXPRINTMSG 4096
+#define	MAX_RELIABLE_COMMANDS	128	// max string commands buffered for restransmit
+#define MAX_DOWNLOAD_WINDOW	8	// max of eight download frames
+#define MAX_DOWNLOAD_BLKSIZE	2048	// 2048 byte block chunks
+#define MAX_PACKET_USERCMDS	32
+
+#define	PACKET_BACKUP		32
+#define PACKET_MASK ( PACKET_BACKUP - 1 )
 
 
 #endif

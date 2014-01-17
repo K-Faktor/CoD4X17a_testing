@@ -98,7 +98,7 @@ static qboolean	winsockInitialized = qfalse;
 #	define ioctlsocket		ioctl
 typedef int	ioctlarg_t;
 #	define socketError		errno
-
+typedef int SOCKET;
 #endif
 
 #define	MAX_IPS		32

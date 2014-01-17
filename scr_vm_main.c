@@ -1042,8 +1042,39 @@ void GetPlayerFieldArray(){
     FS_WriteFile("array.txt", buffer, strlen(buffer));
     Com_Quit_f();
 }
-
 */
+#include <string.h>
+void GetEntityFieldArray(){
+
+    char buffer[1024*1024];
+    char line[128];
+    scrEntityFields_t *ptr;
+    int j;
+
+    Com_Memset(buffer, 0, sizeof(buffer));
+
+    Com_sprintf(line, sizeof(line), "entity_fields_t entityField[]");
+    Q_strcat(buffer, sizeof(buffer), line);
+    Com_Printf("%s\n", line);
+
+
+    for(j=0, ptr = (scrEntityFields_t*)0x82202a0; ptr->name != NULL; ptr++, j++){
+
+	Com_sprintf(line, sizeof(line), "\t{ \"%s\", %d, %d, (void*)%p) },\n", ptr->name, ptr->val1, ptr->val2, ptr->setfun);
+	Q_strcat(buffer, sizeof(buffer), line);
+	Com_Printf("%s\n", line);
+    }
+
+    Com_sprintf(line, sizeof(line), "};\n");
+    Q_strcat(buffer, sizeof(buffer), line);
+    Com_Printf("%s\n", line);
+
+
+    FS_WriteFile("array.txt", buffer, strlen(buffer));
+    Com_Quit_f();
+}
+
+
 /*
 void GetHuffmanArray(){
 

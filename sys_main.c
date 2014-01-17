@@ -390,6 +390,16 @@ char *Sys_DefaultInstallPath(void)
 
 /*
 =================
+Sys_DefaultCDPath
+=================
+*/
+char *Sys_DefaultCDPath(void)
+{
+	return "";
+}
+
+/*
+=================
 Sys_DefaultAppPath
 =================
 */
@@ -397,7 +407,6 @@ char *Sys_DefaultAppPath(void)
 {
 	return Sys_BinaryPath();
 }
-
 
 
 #ifndef DEFAULT_BASEDIR
@@ -415,7 +424,7 @@ __cdecl int main(int argc, char* argv[]){
 
     int i;
     char commandLine[MAX_STRING_CHARS] = { 0 };
-    
+
     // go back to real user for config loads
     seteuid(getuid());
 
@@ -454,17 +463,17 @@ __cdecl int main(int argc, char* argv[]){
         Q_strcat( commandLine, sizeof( commandLine ), " " );
     }
 
-
     CON_Init();
+
+/*    Sys_ImageFindConstant();   */
 
     Sys_InitCrashDumps();
 
     Com_Init( commandLine );
 
-
     signal( SIGILL, Sys_SigHandler );
     signal( SIGFPE, Sys_SigHandler );
-    signal( SIGSEGV, Sys_SigHandler );
+/*    signal( SIGSEGV, Sys_SigHandler );  No corefiles get generated with it */
     signal( SIGTERM, Sys_SigHandler );
     signal( SIGINT, Sys_SigHandler );
 
@@ -482,5 +491,3 @@ __cdecl int main(int argc, char* argv[]){
     }
 
 }
-
-

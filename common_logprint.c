@@ -165,12 +165,20 @@ This function should close all opened non Zip files
 */
 void Com_CloseLogFiles()
 {
-	if(adminlogfile)
+	if(adminlogfile){
 		FS_FCloseFile( adminlogfile );
-	if(logfile)
+		adminlogfile = 0;
+	}
+	if(logfile){
 		FS_FCloseFile( logfile );
-	if(debuglogfile)
+		logfile = 0;
+	}
+	if(debuglogfile){
 		FS_FCloseFile( debuglogfile );
-	if(enterleavelogfile)
+		debuglogfile = 0;
+	}
+	if(enterleavelogfile){
 		FS_FCloseFile( enterleavelogfile );
+		enterleavelogfile = 0;
+	}
 }

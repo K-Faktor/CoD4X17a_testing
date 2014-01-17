@@ -29,7 +29,7 @@
 #include "qcommon_mem.h"
 #include "qcommon.h"
 #include "filesystem.h"
-
+#include "server.h"
 
 cmd_function_t **cmd_functions_addr = (cmd_function_t**)(0x887eb98);
 #define cmd_functions *cmd_functions_addr

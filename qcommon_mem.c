@@ -22,7 +22,7 @@
 
 #include <malloc.h>
 #include <string.h>
-
+#include "qcommon_mem.h"
 
 #define MEM_SIZE 140 //Megabyte
 
@@ -39,4 +39,24 @@ void Mem_Init()
     *(int**)(0x1407e7a0) = memory;
     *(int*)(0x1407e8b8) = sizeofmemory;
 
+}
+
+
+/*
+========================
+CopyString
+
+ NOTE:	never write over the memory CopyString returns because
+		memory from a memstatic_t might be returned
+========================
+*/
+char *CopyString( const char *in ) {
+	char    *out;
+
+	if ( !in[0] )
+		return "";
+
+	out = Z_Malloc( strlen( in ) + 1 );
+	strcpy( out, in );
+	return out;
 }

@@ -53,9 +53,6 @@ qboolean Com_IsDeveloper( void ){ return qtrue; }
 #pragma message "Undefined function: Com_IsDeveloper"
 #endif
 
-
-#define MAXPRINTMSG 1024
-
 //============================================================================
 static char	*rd_buffer;
 static int	rd_buffersize;

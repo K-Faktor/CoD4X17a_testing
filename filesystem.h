@@ -26,24 +26,9 @@
 #define __FILESYSTEM_H__
 
 #include "q_shared.h"
+#include "cvar.h"
 
-
-#define fs_game getcvaradr(0x13f9da18)
-#define fs_debug getcvaradr(0x13f9da00)
-#define fs_basepath getcvaradr(0x13f9da08)
-#define fs_homepath getcvaradr(0x13f9da04)
-#define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
-
-
-#define fsh_ADDR 0x13f9da40
-#define fs_loadStack_ADDR 0x13f9d8e4
-#define fs_gamedir_ADDR 0x13f9d900
-
-#define fsh ((fileHandleData_t*)(fsh_ADDR))
-#define fs_loadStack (*((int*)(fs_loadStack_ADDR)))
-#define fs_gamedir ((char*)(fs_gamedir_ADDR))
-
-#define fs_searchpaths (searchpath_t*)*((int*)(0x13f9da28))
+/* #define fs_searchpaths (searchpath_t*)*((int*)(0x13f9da28)) */
 
 #define	DEMOGAME			"demota"
 
@@ -71,7 +56,7 @@
 #define	MAX_SEARCH_PATHS	4096
 #define MAX_FILEHASH_SIZE	1024
 //#define MAX_OSPATH 256
-#define MAX_FILE_HANDLES 48
+#define MAX_FILE_HANDLES 64
 
 typedef int	fileHandle_t;
 typedef void*	unzFile;
@@ -95,8 +80,8 @@ typedef enum {
 
 
 typedef struct fileInPack_s {
-	char			*name;		// name of the file
 	unsigned long		pos;		// file info position in zip
+	char			*name;		// name of the file
 	struct	fileInPack_s*	next;		// next file in the hash
 } fileInPack_t;
 
@@ -107,6 +92,7 @@ typedef struct {	//Verified
 	unzFile			handle;						// handle to zip file +0x300
 	int			checksum;					// regular checksum
 	int			pure_checksum;				// checksum for pure
+	int			unk1;
 	int			numfiles;					// number of files in pk3
 	int			referenced;					// referenced file flags
 	int			hashSize;					// hash table size (power of 2)		+0x318
@@ -121,9 +107,12 @@ typedef struct {	//Verified
 
 typedef struct searchpath_s {	//Verified
 	struct searchpath_s *next;
-
 	pack_t		*pack;		// only one of pack / dir will be non NULL
 	directory_t	*dir;
+	qboolean	localized;
+	int		val_2;
+	int		val_3;
+	int		langIndex;
 } searchpath_t;
 
 typedef union qfile_gus {
@@ -139,22 +128,22 @@ typedef struct qfile_us {
 //Added manual buffering as the stdio file buffering has corrupted the written files
 
 typedef struct {
-	qfile_ut	handleFiles;
+	qfile_ut		handleFiles;
 	union{
 		qboolean	handleSync;
 		void*		writebuffer;
 	};
 	union{
-		int	baseOffset;
-		int	bufferSize;
+		int		baseOffset;
+		int		bufferSize;
 	};
 	union{
-		int	zipFilePos;
-		int	bufferPos; //For buffered writes
+		int		zipFilePos;
+		int		bufferPos; //For buffered writes
 	};
-	qboolean	zipFile;
-	qboolean	streamed;
-	char		name[MAX_ZPATH];
+	qboolean		zipFile;
+	qboolean		streamed;
+	char			name[MAX_ZPATH];
 } fileHandleData_t; //0x11C (284) Size
 
 
@@ -162,27 +151,25 @@ typedef struct {
 // wether we did a reorder on the current search path when joining the server
 
 // last valid game folder used
-char lastValidBase[MAX_OSPATH];
-char lastValidGame[MAX_OSPATH];
 
 #ifdef FS_MISSING
 FILE*		missingFiles = NULL;
 #endif
 
+extern cvar_t*	fs_homepath;
+extern cvar_t*	fs_debug;
+extern cvar_t*	fs_basepath;
+extern cvar_t*	fs_gameDirVar;
+
+
+
 void FS_CopyFile(char* FromOSPath,char* ToOSPath);
 int FS_Read(void* data, int length, fileHandle_t);
-int FS_FOpenFileRead(const char* filename,fileHandle_t* returnhandle);
+long FS_FOpenFileRead(const char* filename, fileHandle_t* returnhandle);
 fileHandle_t FS_FOpenFileWrite(const char* filename);
 fileHandle_t FS_FOpenFileAppend(const char* filename);
 qboolean FS_Initialized();
 int FS_filelength( fileHandle_t f );
-
-unzFile unzOpen(const char* path);
-int unzOpenCurrentFile(unzFile file);
-int unzSetOffset(unzFile file, unsigned long pos);
-int unzReadCurrentFile(unzFile file, void *buf, unsigned len);
-int unzClose( unzFile file );
-int unzCloseCurrentFile( unzFile file );
 
 char *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 qboolean FS_HomeRemove( const char *path );
@@ -229,5 +216,10 @@ const char* __cdecl FS_LoadedIwdPureChecksums(void);
 char* __cdecl FS_GetMapBaseName( const char* mapname );
 qboolean FS_CreatePath (char *OSPath);
 void FS_SV_HomeCopyFile(char* from, char* to);
+void FS_Restart(int checksumfeed);
 
+void __cdecl FS_Startup(const char* game);
+unsigned Com_BlockChecksumKey32( void *buffer, int length, int key );
+void FS_PatchFileHandleData();
+int FS_LoadStack();
 #endif

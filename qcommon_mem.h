@@ -39,6 +39,7 @@ void __cdecl Mem_Init(void);
 void __cdecl Mem_BeginAlloc(const char*, qboolean);
 void __cdecl Mem_EndAlloc(const char*, int);
 void* __cdecl TempMalloc( int );
+char *CopyString( const char *in );
 
 #define Z_Free free
 

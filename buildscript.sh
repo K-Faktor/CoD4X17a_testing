@@ -1,23 +1,6 @@
-#gcc -m32 -Wall -O1 -g -c -s -fvisibility=hidden cod4_extfunc.c
-#gcc -m32 -Wall  -fvisibility=hidden -mfpmath=sse -march=atom -c cod4_extfunc.c
-#gcc -m32 -Wall  -fvisibility=hidden -march=atom -c cod4_extfunc.c
-
-#gcc -m32 -Wall -O1 -fvisibility=hidden -fno-omit-frame-pointer -c cod4_extfunc.c
-#gcc -m32 -Wall -O1 -s -fvisibility=hidden -fno-omit-frame-pointer -mtune=prescott -c cod4_extfunc.c
+#-fvisibility=hidden -mfpmath=sse -march=corei7 -march=atom -march=amdfam10 -march=core2 -fno-omit-frame-pointer -mtune=prescott -march=core2 -mcx16 -msahf -mpopcnt -msse4.2 --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=256
 echo Compiling C-code...
-gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c | more
-
-#gcc -m32 -Wall -O1 -s -fvisibility=hidden -fno-omit-frame-pointer -march=core2 -c cod4_extfunc.c
-
-
-#gcc -m32 -Wall -O1 -s -fvisibility=hidden -fno-omit-frame-pointer -march=core2 -mcx16 -msahf -mpopcnt -msse4.2 --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=256 -c cod4_extfunc.c
-
-
-#gcc -m32 -Wall -O1 -g -fvisibility=hidden -fno-omit-frame-pointer -march=corei7 -c cod4_extfunc.c
-#gcc -m32 -Wall -O1 -g -fvisibility=hidden -fno-omit-frame-pointer -mfpmath=sse -march=atom -c cod4_extfunc.c
-#gcc -m32 -Wall -O1 -fvisibility=hidden -fno-omit-frame-pointer -march=amdfam10 -c cod4_extfunc.c
-
-#gcc -m32 -s -shared -fvisibility=hidden -Wl,-soname,cod4x17a.so -o cod4x17a.so *.o
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c | more
 
 #echo Comiling Crypto library...
 #gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c lib_tomcrypt/*.c -o crypto.o | more
@@ -42,7 +25,6 @@ nasm -f elf msg_hooks.asm
 
 echo Linking...
 gcc -m32 -Wl,-ldl,-lpthread,-lm,-Tlinkerscript.ld,--dynamic-list=pluginExports.ld -o cod4x17a_dedrun *.o -L./ -ltomcrypt -ltommath
-#gcc -m32 -shared -fvisibility=hidden -Wl,-soname,cod4x17a.so -o cod4x17a.so *.o
 
 rm *.o
 

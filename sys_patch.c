@@ -26,8 +26,8 @@
 
 #include "sys_patch.h"
 #include <string.h>
-/*
 
+#if 0
 #include <stdlib.h>
 void Sys_RetriveData(){
 
@@ -69,7 +69,43 @@ void Sys_RetriveData(){
     exit(0);
 }
 
-*/
+#endif
+#include <stdlib.h>
+void Sys_ImageFindConstant(){
+
+    #define startADR 0x804ac20
+    #define endADR 0x8209dc4
+    #define constant 0x88a6220
+
+    FILE * fdout;
+    byte* adr;
+    int i;
+
+    adr = (byte*)(startADR);
+
+    char buf[1024];
+
+    fdout=fopen("const_addr.txt", "w");
+    if(fdout){
+
+
+        for(i = 0; i < endADR; i++, adr++)
+        {
+            if(constant == *(int*)adr)
+            {
+                printf("Found at: %x\n", (int)adr);
+                Com_sprintf(buf, sizeof(buf), "\t*(char**)0x%X = com_errorMessage;\n", (int)adr);
+                fwrite(buf, 1, strlen(buf) ,fdout);
+
+            }
+
+        }
+        fclose(fdout);
+    }
+
+    exit(0);
+}
+
 
 void Sys_PatchImageWithBlock(byte *block, int blocksize)
 {
