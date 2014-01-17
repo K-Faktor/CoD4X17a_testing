@@ -1468,25 +1468,23 @@ static void SV_MapRotate_f( void ) {
 
 	char map[MAX_QPATH];
 	char gametype[MAX_QPATH];
+	char map_rotationbuf[8192];
+	char* maplist;
 	int len;
-	char  *maplist;
 
 	// DHM - Nerve :: Check for invalid gametype
 	Com_Printf("map_rotate...\n");
 	Com_Printf("\"sv_mapRotation\" is: \"%s\"\n\n", sv_mapRotation->string);
 	Com_Printf("\"sv_mapRotationCurrent\" is: \"%s\"\n\n", sv_mapRotationCurrent->string);
 
-	maplist = sv_mapRotationCurrent->string;
-	Com_ParseReset();
-	maplist = Com_ParseGetToken(maplist);
-
-	if(maplist == NULL){
+	if(sv_mapRotationCurrent->string[0] == '\0')
+	{
 		Cvar_SetString(sv_mapRotationCurrent, sv_mapRotation->string);
-
-		maplist = sv_mapRotationCurrent->string;
-		Com_ParseReset();
-		maplist = Com_ParseGetToken(maplist);
 	}
+
+	Q_strncpyz(map_rotationbuf, sv_mapRotationCurrent->string, sizeof(map_rotationbuf));
+	Com_ParseReset();
+	maplist = Com_ParseGetToken(map_rotationbuf);
 
 	if(maplist == NULL){
 		if(com_sv_running->boolean){
