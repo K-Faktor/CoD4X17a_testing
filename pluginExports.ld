@@ -5,7 +5,7 @@
     
     
     Com_Printf;
-    Com_PrtinWarning;
+    Com_PrintWarning;
     Com_PrintError;
     Com_DPrintf;
     Com_ParseGetToken;
