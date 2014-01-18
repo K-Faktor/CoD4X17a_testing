@@ -425,8 +425,16 @@ __cdecl int main(int argc, char* argv[]){
     int i;
     char commandLine[MAX_STRING_CHARS] = { 0 };
 
+
+    uid_t uid = getuid();
+    if( uid == 0 || uid != geteuid() ) { // warn user that he/she's operating as a privliged user
+        printf( "********************************************************\n" );    
+        printf( "***** RUNNING SERVER AS A ROOT IS GENERALLY UNSAFE *****\n" );
+        printf( "********************************************************\n\n" );  
+    }
+    
     // go back to real user for config loads
-    seteuid(getuid());
+    seteuid( uid );
 
     Sys_ParseArgs( argc, argv );
 
