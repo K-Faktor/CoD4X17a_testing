@@ -44,7 +44,28 @@
 
 
 #define ELF_TYPEOFFSET 16
+#define ELF_INITOFFSET 8612
+#define ELF_FINIOFFSET 1842628
+#define ELF_RELOCOFFSET 2280980
+#define ELF_RELOC2OFFSET 2281020
+#define ELF_SECTIONSTRINGOFFSET 0
+#define ELF_SECTIONTYPEOFFSET 4
 #define DLLMOD_FILESIZE 2281820
+
+
+static qboolean Sys_ModBinaryFile(FILE* fp, int offset, byte newval)
+{
+    if(fseek(fp, offset, SEEK_SET) != 0)
+    {
+        printf("Seek error on file cod4_lnxded.so opened for writing - Error: %s\n", strerror(errno));
+        return qfalse;
+    }
+    if(fputc(newval, fp) == newval)
+    {
+        return qtrue;
+    }
+    return qfalse;
+}
 
 static qboolean Sys_LoadImagePrepareFile(const char* path)
 {
@@ -121,9 +142,9 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
         fp = fopen(path, "rb");
         if(fp)
         {
-            if( !fseek(fp, 0, SEEK_END) && ftell(fp) == DLLMOD_FILESIZE && !fseek(fp, ELF_TYPEOFFSET, SEEK_SET))
+            if( !fseek(fp, 0, SEEK_END) && ftell(fp) == DLLMOD_FILESIZE && !fseek(fp, ELF_INITOFFSET, SEEK_SET))
             {
-                if(fgetc(fp) == 3)
+                if(fgetc(fp) == 0xc3)
                 { //The elf type is shared library already
                     fclose(fp);
                     return qtrue;
@@ -158,22 +179,50 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
         fp = fopen(path, "rb+");
         if(fp)
         {
-            if(fseek(fp, ELF_TYPEOFFSET, SEEK_SET) != 0)
+            /* Turning ELF file into a shared library object */
+            if(Sys_ModBinaryFile(fp, ELF_TYPEOFFSET, 3) == qfalse)
             {
-                printf("Seek error on file %s opened for writing - Error: %s\n", path, strerror(errno));
                 fclose(fp);
                 return qfalse;
             }
-
-            if(fputc(3, fp) == 3)
+            /* kill function _init to prevent Segmentation fault if image is relocated. So we can give a proper error message instead SigSegV */
+            if(Sys_ModBinaryFile(fp, ELF_INITOFFSET, 0xc3) == qfalse)
             {
                 fclose(fp);
-                return qtrue;
+                return qfalse;
             }
-
-            printf("Failed to write to file %s - Error: %s\n", path, strerror(errno));
+            /* kill function _fini to prevent Segmentation fault if image is relocated. */
+            if(Sys_ModBinaryFile(fp, ELF_FINIOFFSET, 0xc3) == qfalse)
+            {
+                fclose(fp);
+                return qfalse;
+            }
+            /* kill relocation section (.rel.dyn) name to "" */
+            if(Sys_ModBinaryFile(fp, ELF_RELOCOFFSET + ELF_SECTIONSTRINGOFFSET, 0x5b) == qfalse)
+            {
+                fclose(fp);
+                return qfalse;
+            }
+            /* kill relocation section (.rel.plt) name to "" */
+            if(Sys_ModBinaryFile(fp, ELF_RELOC2OFFSET + ELF_SECTIONSTRINGOFFSET, 0x64) == qfalse)
+            {
+                fclose(fp);
+                return qfalse;
+            }
+            /* change relocation section (.rel.dyn) type to null */
+            if(Sys_ModBinaryFile(fp, ELF_RELOCOFFSET + ELF_SECTIONTYPEOFFSET, 0x0) == qfalse)
+            {
+                fclose(fp);
+                return qfalse;
+            }
+            /* change relocation section (.rel.plt) type to null */
+            if(Sys_ModBinaryFile(fp, ELF_RELOC2OFFSET + ELF_SECTIONTYPEOFFSET, 0x0) == qfalse)
+            {
+                fclose(fp);
+                return qfalse;
+            }
             fclose(fp);
-            return qfalse;
+            return qtrue;
         }
 
         printf("Failed to open file %s for writing - Error: %s\n", path, strerror(errno));
