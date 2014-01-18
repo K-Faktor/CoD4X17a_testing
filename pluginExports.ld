@@ -38,6 +38,36 @@
     NET_StringToAdr;
     
     Sys_Milliseconds;
+
+
+    Scr_AddEntity;
+    Scr_AllocArray;
+    Scr_GetNumParam;
+    Scr_GetInt;
+    Scr_GetFloat;
+    Scr_GetString;
+    Scr_GetEntity;
+    Scr_GetConstString;
+    Scr_GetType;
+    Scr_GetVector;
+    Scr_Error;
+    Scr_ParamError;
+    Scr_ObjectError;
+    Scr_AddInt;
+    Scr_AddFloat;
+    Scr_AddBool;
+    Scr_AddString;
+    Scr_AddUndefined;
+    Scr_AddVector;
+    Scr_AddArray;
+    Scr_MakeArray;
+    Scr_Notify;
+    Scr_NotifyNum;
+    Scr_ExecEntThread;
+    Scr_ExecThread;
+    Scr_FreeThread;
+
+
   };
 };
 

@@ -518,12 +518,25 @@ void Scr_AddStockMethods(){
 
 void Scr_InitFunctions()
 {
+
+    static qboolean initialized = qfalse;
+
+/*
+    No longer
+
     //Reset everything 1st
+
     Scr_ClearFunctions();
     Scr_ClearMethods();
+*/
     //Then add everything again
-    Scr_AddStockFunctions();
-    Scr_AddStockMethods();
+
+    if(!initialized)
+    {
+        Scr_AddStockFunctions();
+        Scr_AddStockMethods();
+        initialized = qtrue;
+    }
 }
 
 int GScr_LoadScriptAndLabel(const char* scriptName, const char* labelName, qboolean mandatory ){

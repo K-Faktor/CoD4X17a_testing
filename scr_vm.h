@@ -226,7 +226,7 @@ typedef struct{
 	short   tag_gunner_pov;
 }stringIndex_t;
 
-typedef void *xfunction_t;
+typedef void (*xfunction_t)();
 
 typedef struct scr_function_s
 {

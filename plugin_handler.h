@@ -100,8 +100,6 @@ typedef struct{
     void (*OnUnload)();    // De-initialization function
 
     pluginCmd_t cmd[20];
-    pluginCmd_t scriptFunction[32];
-    pluginCmd_t scriptMethod[32];
     int cmds;
     int scriptfunctions;
     int scriptmethods;

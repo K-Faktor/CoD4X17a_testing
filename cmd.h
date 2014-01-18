@@ -49,7 +49,7 @@ cmd_t cmd_text;
 byte cmd_text_buf[MAX_CMD_BUFFER];
 */
 
-typedef void *xcommand_t;
+typedef void (*xcommand_t)();
 typedef void (*completionFunc_t)( char *args, int argNum );
 
 typedef struct cmd_function_s
