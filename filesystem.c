@@ -205,7 +205,6 @@ or configs will never get loaded from disk!
 #include "q_platform.h"
 #include "qcommon_parsecmdline.h"
 #include "sys_main.h"
-#include "unzip.h"
 #include "cmd.h"
 
 #include <sys/stat.h>

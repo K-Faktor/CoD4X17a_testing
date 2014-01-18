@@ -27,7 +27,7 @@
 
 #include "q_shared.h"
 #include "cvar.h"
-
+#include "unzip.h"
 /* #define fs_searchpaths (searchpath_t*)*((int*)(0x13f9da28)) */
 
 #define	DEMOGAME			"demota"
@@ -59,7 +59,6 @@
 #define MAX_FILE_HANDLES 64
 
 typedef int	fileHandle_t;
-typedef void*	unzFile;
 
 // mode parm for FS_FOpenFile
 typedef enum {
