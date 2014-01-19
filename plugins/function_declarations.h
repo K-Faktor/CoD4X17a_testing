@@ -15,7 +15,7 @@
 
 
     //      == Common ==
-    
+    __cdecl void G_LogPrintf( const char *fmt, ... );
     __cdecl void Com_Printf( const char *fmt, ...);                // Print to a correct place (rcon, player console, logs)
     __cdecl void Com_PrintWarning( const char *fmt, ...);          // Print to a correct place (rcon, player console, logs)
     __cdecl void Com_PrintError( const char *fmt, ...);            // Print to a correct place (rcon, player console, logs)
@@ -70,7 +70,7 @@
     __cdecl void Plugin_AddCommand(char *name, xcommand_t command, int defaultpower); // Add a server command
     __cdecl void *Plugin_Malloc(size_t size);                                // Same as stdlib.h function malloc
     __cdecl void Plugin_Free(void *ptr);                                     // Same as stdlib.h function free
-    __cdecl void Plugin_Error(int code, char *string);                       // Notify the server of an error, action depends on code parameter
+    __cdecl void Plugin_Error(int code, const char *fmt, ...);                       // Notify the server of an error, action depends on code parameter
     __cdecl int Plugin_GetLevelTime();                                       // Self explanatory
     __cdecl int Plugin_GetServerTime();                                      // Self explanatory
 

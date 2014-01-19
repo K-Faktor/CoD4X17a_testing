@@ -263,7 +263,7 @@ P_P_F void PHandler_Error(int pID,int code,char *string)
             break;
         case P_ERROR_TERMINATE:
             Com_Printf("Plugin #%d ('%s') reported a critical error, the server will be terminated. Error string: \"%s\".\n",pID,pluginFunctions.plugins[pID].name,string);
-            Com_Error(ERR_FATAL,string);
+            Com_Error(ERR_FATAL, "%s", string);
             break;
         default:
             Com_DPrintf("Plugin #%d ('%s') reported an unknown error! Error string: \"%s\", error code: %d.\n",pID,pluginFunctions.plugins[pID].name,string,code);

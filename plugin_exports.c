@@ -59,14 +59,23 @@ P_P_F void Plugin_Free(void *ptr)
     }
     PHandler_Free(pID,ptr);
 }
-P_P_F void Plugin_Error(int code, char *string)
+P_P_F void Plugin_Error(int code, const char *fmt, ...)
 {
+    va_list argptr;
+    char msg[1024];
+
     volatile int pID = PHandler_CallerID();
+
     if(pID<0){
         Com_PrintError("Plugin Error called from unknown plugin!\n");
         return;
     }
-    PHandler_Error(pID,code,string);
+
+    va_start (argptr,fmt);
+    Q_vsnprintf(msg, sizeof(msg), fmt, argptr);
+    va_end (argptr);
+
+    PHandler_Error(pID,code,msg);
 }
 P_P_F int Plugin_ClientToSlot(client_t *client)
 {
