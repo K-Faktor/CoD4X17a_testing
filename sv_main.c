@@ -1705,8 +1705,6 @@ void SV_InitCvarsOnce(void){
 	sv_consayname = Cvar_RegisterString("sv_consayname", "^2Server: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 	sv_contellname = Cvar_RegisterString("sv_contellname", "^5Server^7->^5PM: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 
-	Cvar_RegisterString("test", "test", CVAR_SYSTEMINFO, "test var");
-
 	sv_master[0] = Cvar_RegisterString("sv_master1", "", CVAR_ARCHIVE, "A masterserver name");
 	sv_master[1] = Cvar_RegisterString("sv_master2", "", CVAR_ARCHIVE, "A masterserver name");
 	sv_master[2] = Cvar_RegisterString("sv_master3", "", CVAR_ARCHIVE, "A masterserver name");

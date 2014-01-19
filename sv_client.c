@@ -1786,9 +1786,6 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 	decompressMsg.cursize = MSG_ReadBitsCompress(msg->data + msg->readcount, decompressMsg.data, msg->cursize - msg->readcount);
 
 
-//	SV_DumpToFile(&decompressMsg);
-
-
 	serverId = cl->serverId;
 
 	if ( serverId != sv_serverId && !cl->wwwDl_var01 && !cl->wwwDownloadStarted && !cl->wwwDl_var02 )
@@ -1798,7 +1795,6 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 			while(qtrue)
 			{
 				c = MSG_ReadBits(&decompressMsg, 3);
-				Com_DPrintf("Received A Message- Len: %d Command: %d\n", decompressMsg.cursize, c);
 				if(c == clc_clientCommand)
 				{
 					if ( !SV_ClientCommand( cl, &decompressMsg, 1 ) || cl->state == CS_ZOMBIE)
@@ -1827,7 +1823,6 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 	while(qtrue)
 	{
 		c = MSG_ReadBits(&decompressMsg, 3);
-		Com_DPrintf("Received B Message- Len: %d Command: %d\n", decompressMsg.cursize, c);
 		if(c == clc_clientCommand){ //2
 				if ( !SV_ClientCommand( cl, &decompressMsg, 0 ) || cl->state == CS_ZOMBIE ) {
 					return; // we couldn't execute it because of the flood protection
