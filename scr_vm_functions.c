@@ -37,6 +37,7 @@
 
 #include <string.h>
 #include <time.h>
+#include "plugin_handler.h"
 /*
 ============
 PlayerCmd_GetUid
@@ -1804,6 +1805,7 @@ void HECmd_SetText(scr_entref_t entnum){
     element->hudTextConfigStringIndex = G_LocalizedStringIndex(buffer);
 
 }
+
 
 /*
 void ScrCmd_SetStance(scr_entref_t arg){

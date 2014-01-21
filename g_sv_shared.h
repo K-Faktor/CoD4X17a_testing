@@ -49,7 +49,6 @@ __cdecl void GScr_LoadScripts(void);
 //This defines Cvars directly related to executable file
 #define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
 
-#define g_gametype getcvaradr(0x13ed89bc)
 #define g_gravity getcvaradr(0x84bcff4)
 #define g_TeamName_Allies getcvaradr(0x84bd090)
 #define g_TeamName_Axis getcvaradr(0x84bd094)

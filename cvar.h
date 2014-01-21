@@ -137,25 +137,9 @@ void Cvar_Init(void);
 
 
 
-
-
-
-
-
 //This defines Cvars directly related to executable file
 #define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
 
-#define sv_mapname getcvaradr(0x13ed8974)
-#define sv_maxclients getcvaradr(0x13ed8960)
-#define com_sv_running getcvaradr(0x88a61a8)
-#define sv_maxRate getcvaradr(0x13ed897c)
-#define g_gametype getcvaradr(0x13ed89bc)
-#define sv_pure getcvaradr(0x13ed89d0)
-#define sv_fps getcvaradr(0x13ed8950)
-#define useFastfiles getcvaradr(0x88a6170)
-#define com_logfile getcvaradr(0x88a61b0)
-#define com_developer_script getcvaradr(0x88a6188)
-#define sv_packet_info getcvaradr(0x13ed89f0)
 #define g_gravity getcvaradr(0x84bcff4)
 #define jump_height getcvaradr(0x8278060)
 #define jump_stepSize getcvaradr(0x8278070)
@@ -166,8 +150,6 @@ void Cvar_Init(void);
 //#define com_playerProfile getcvaradr(0x88e7394)
 
 #define g_allowVote getcvaradr(0x84bd05c)
-#define sv_serverid getcvaradr(0x13ed8978)
-#define sv_floodProtect getcvaradr(0x13ed89e4)
 
 #endif
 

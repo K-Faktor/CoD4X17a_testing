@@ -590,6 +590,14 @@ extern cvar_t* sv_mapRotationCurrent;
 extern cvar_t* sv_cheats;
 extern cvar_t* sv_consayname;
 extern cvar_t* sv_contellname;
+extern cvar_t* sv_maxclients;
+extern cvar_t* sv_g_gametype;
+extern cvar_t* sv_pure;
+extern cvar_t* sv_fps;
+extern cvar_t* sv_serverid;
+extern cvar_t* sv_maxRate;
+extern cvar_t* sv_mapname;
+extern cvar_t* sv_floodProtect;
 
 void __cdecl SV_StringUsage_f(void);
 void __cdecl SV_ScriptUsage_f(void);

@@ -91,6 +91,29 @@ cvar_t	*sv_master[MAX_MASTER_SERVERS];	// master server ip address
 cvar_t	*g_mapstarttime;
 cvar_t	*sv_uptime;
 
+cvar_t* sv_g_gametype;
+cvar_t* sv_mapname;
+cvar_t* sv_maxclients;
+cvar_t* sv_clientSideBullets;
+cvar_t* sv_maxRate;
+cvar_t* sv_floodProtect;
+cvar_t* sv_showcommands;
+cvar_t* sv_iwds;
+cvar_t* sv_iwdNames;
+cvar_t* sv_referencedIwds;
+cvar_t* sv_referencedIwdNames;
+cvar_t* sv_FFCheckSums;
+cvar_t* sv_FFNames;
+cvar_t* sv_referencedFFCheckSums;
+cvar_t* sv_referencedFFNames;
+cvar_t* sv_serverid;
+cvar_t* sv_pure;
+cvar_t* sv_fps;
+cvar_t* sv_showAverageBPS;
+cvar_t* sv_botsPressAttackBtn;
+cvar_t* sv_debugRate;
+cvar_t* sv_debugReliableCmds;
+cvar_t* sv_clientArchive;
 
 serverStaticExt_t	svse;	// persistant server info across maps
 permServerStatic_t	psvs;	// persistant even if server does shutdown
@@ -102,7 +125,7 @@ permServerStatic_t	psvs;	// persistant even if server does shutdown
 cvar_t	*sv_fps = NULL;			// time rate for running non-clients
 cvar_t	*sv_timeout;			// seconds without any message
 cvar_t	*sv_zombietime;			// seconds to sink messages after disconnect
-cvar_t	*sv_maxclients;
+
 cvar_t	*sv_showloss;			// report when usercmds are lost
 
 
@@ -110,11 +133,10 @@ cvar_t	*sv_mapname;
 cvar_t	*sv_mapChecksum;
 cvar_t	*sv_serverid;
 cvar_t	*sv_minRate;
-cvar_t	*sv_maxRate;
 
-cvar_t	*sv_gametype;
+
 cvar_t	*sv_pure;
-cvar_t	*sv_floodProtect;
+
 cvar_t	*sv_lanForceRate; // dedicated 1 (LAN) server forces local client rates to 99999 (bug #491)
 #ifndef STANDALONE
 cvar_t	*sv_strictAuth;
@@ -829,7 +851,7 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 	Info_SetValueForKey( infostring, "clients", va("%i", count) );
 	Info_SetValueForKey( infostring, "g_humanplayers", va("%i", humans));
 	Info_SetValueForKey( infostring, "sv_maxclients", va("%i", sv_maxclients->integer - sv_privateClients->integer ) );
-	Info_SetValueForKey( infostring, "gametype", g_gametype->string );
+	Info_SetValueForKey( infostring, "gametype", sv_g_gametype->string );
 	Info_SetValueForKey( infostring, "pure", va("%i", sv_pure->boolean ) );
 	Info_SetValueForKey( infostring, "build", va("%i", BUILD_NUMBER));
 	Info_SetValueForKey( infostring, "shortversion", Q3_VERSION );
@@ -1483,7 +1505,7 @@ void	serverStatus_Write(){
     XML_Init(&xmlbase,outputbuffer,sizeof(outputbuffer), "ISO-8859-1");
     XML_OpenTag(&xmlbase,"B3Status",1,"Time",timestr);
 
-        XML_OpenTag(&xmlbase,"Game",9,"CapatureLimit","", "FragLimit","", "Map",sv_mapname->string, "MapTime","", "Name","cod4", "RoundTime","", "Rounds","", "TimeLimit","", "Type",g_gametype->string);
+        XML_OpenTag(&xmlbase,"Game",9,"CapatureLimit","", "FragLimit","", "Map",sv_mapname->string, "MapTime","", "Name","cod4", "RoundTime","", "Rounds","", "TimeLimit","", "Type",sv_g_gametype->string);
             Cvar_ForEach(serverStatus_WriteCvars, &xmlbase);
         XML_CloseTag(&xmlbase);
 
@@ -1646,12 +1668,37 @@ void SV_InitServerId(){
     psvs.masterServer_challengepassword[2] = '\0';
 }
 
+void SV_CopyCvars()
+{
+
+	*(cvar_t**)0x13ed89bc = sv_g_gametype;
+	*(cvar_t**)0x13ed8974 = sv_mapname;
+	*(cvar_t**)0x13ed8960 = sv_maxclients;
+	*(cvar_t**)0x13ed89c8 = sv_clientSideBullets;
+	*(cvar_t**)0x13ed897c = sv_maxRate;
+	*(cvar_t**)0x13ed89e4 = sv_floodProtect;
+	*(cvar_t**)0x13ed89ec = sv_showcommands;
+	*(cvar_t**)0x13ed899c = sv_iwds;
+	*(cvar_t**)0x13ed89a0 = sv_iwdNames;
+	*(cvar_t**)0x13ed89a4 = sv_referencedIwds;
+	*(cvar_t**)0x13ed89a8 = sv_referencedIwdNames;
+	*(cvar_t**)0x13ed89ac = sv_FFCheckSums;
+	*(cvar_t**)0x13ed89b0 = sv_FFNames;
+	*(cvar_t**)0x13ed89b4 = sv_referencedFFCheckSums;
+	*(cvar_t**)0x13ed89b8 = sv_referencedFFNames;
+	*(cvar_t**)0x13ed8978 = sv_serverid;
+	*(cvar_t**)0x13ed89d0 = sv_pure;
+	*(cvar_t**)0x13ed8950 = sv_fps;
+	*(cvar_t**)0x13ed89f4 = sv_showAverageBPS;
+	*(cvar_t**)0x13ed8a04 = sv_botsPressAttackBtn;
+	*(cvar_t**)0x13ed89c0 = sv_debugRate;
+	*(cvar_t**)0x13ed89c4 = sv_debugReliableCmds;
+	*(cvar_t**)0x13f19004 = sv_clientArchive;
+}
 
 
 
 void SV_InitCvarsOnce(void){
-
-	cvar_t** tmp;
 
 	sv_paused = Cvar_RegisterBool("sv_paused", qfalse, CVAR_ROM, "True if the server is paused");
 	sv_killserver = Cvar_RegisterBool("sv_killserver", qfalse, CVAR_ROM, "True if the server getting killed");
@@ -1719,57 +1766,33 @@ void SV_InitCvarsOnce(void){
 	sv_master[6] = Cvar_RegisterString("sv_master7", MASTER_SERVER_NAME, CVAR_ROM, "Default masterserver name");
 	sv_master[7] = Cvar_RegisterString("sv_master8", MASTER_SERVER_NAME2, CVAR_ROM, "Default masterserver name");
 
-	tmp = (cvar_t**)(0x13ed89bc);
-	*tmp = Cvar_RegisterString("g_gametype", "war", 0x24, "Current game type");
-	tmp = (cvar_t**)(0x13ed8974);
-	*tmp = Cvar_RegisterString("mapname", "", 0x44, "Current map name");
-	tmp = (cvar_t**)(0x13ed8960);
-
-	*tmp = Cvar_RegisterInt("sv_maxclients", 32, 1, 64, 0x25, "Maximum number of clients that can connect to a server");
-	(*tmp)->max = (*tmp)->integer; //Don't allow to rise the slotcount above the initial value
-
-	tmp = (cvar_t**)(0x13ed89c8);
-	*tmp = Cvar_RegisterBool("sv_clientSideBullets", qtrue, 8, "If true, clients will synthesize tracers and bullet impacts");
-	tmp = (cvar_t**)(0x13ed897c);
-	*tmp = Cvar_RegisterInt("sv_maxRate", 100000, 0, 100000, 5, "Maximum allowed bitrate per client");
-	tmp = (cvar_t**)(0x13ed89e4);
-	*tmp = Cvar_RegisterInt("sv_floodprotect", 4, 0, 100000, 5, "Prevent malicious lagging by flooding the server with commands. Is the number of client commands allowed to process");
-	tmp = (cvar_t**)(0x13ed89ec);
-	*tmp = Cvar_RegisterBool("sv_showcommands", qfalse, 0, "Print all client commands");
-	tmp = (cvar_t**)(0x13ed899c);
-	*tmp = Cvar_RegisterString("sv_iwds", "", 0x48, "IWD server checksums");
-	tmp = (cvar_t**)(0x13ed89a0);
-	*tmp = Cvar_RegisterString("sv_iwdNames", "", 0x48, "Names of IWD files used by the server");
-	tmp = (cvar_t**)(0x13ed89a4);
-	*tmp = Cvar_RegisterString("sv_referencedIwds", "", 0x48, "Checksums of all referenced IWD files");
-	tmp = (cvar_t**)(0x13ed89a8);
-	*tmp = Cvar_RegisterString("sv_referencedIwdNames", "", 0x48, "Names of all referenced IWD files used by the server");
-	tmp = (cvar_t**)(0x13ed89ac);
-	*tmp = Cvar_RegisterString("sv_FFCheckSums", "", 0x48, "FastFile server checksums");
-	tmp = (cvar_t**)(0x13ed89b0);
-	*tmp = Cvar_RegisterString("sv_FFNames", "", 0x48, "Names of FastFiles used by the server");
-	tmp = (cvar_t**)(0x13ed89b4);
-	*tmp = Cvar_RegisterString("sv_referencedFFCheckSums", "", 0x48, "Checksums of all referenced FastFiles");
-	tmp = (cvar_t**)(0x13ed89b8);
-	*tmp = Cvar_RegisterString("sv_referencedFFNames", "", 0x48, "Names of all referenced FastFiles used by the server");
-	tmp = (cvar_t**)(0x13ed8978);
-	*tmp = Cvar_RegisterInt("sv_serverid", 0, 0x80000000, 0x7fffffff, 0x48, "Voice quality");
-	tmp = (cvar_t**)(0x13ed89d0);
-	*tmp = Cvar_RegisterBool("sv_pure", qtrue, 0xc, "Cannot use modified IWD files");
-	tmp = (cvar_t**)(0x13ed8950);
-	*tmp = Cvar_RegisterInt("sv_fps", 20, 1, 250, 0, "Server frames per second");
-	tmp = (cvar_t**)(0x13ed89f4);
-	*tmp = Cvar_RegisterBool("sv_showAverageBPS", qfalse, 0, "Show average bytes per second for net debugging");
-	tmp = (cvar_t**)(0x13ed8a04);
-	*tmp = Cvar_RegisterBool("sv_botsPressAttackBtn", qtrue, 0, "Allow testclients to press attack button");
-	tmp = (cvar_t**)(0x13ed89c0);
-	*tmp = Cvar_RegisterBool("sv_debugRate", qfalse, 0, "Enable snapshot rate debugging info");
-	tmp = (cvar_t**)(0x13ed89c4);
-	*tmp = Cvar_RegisterBool("sv_debugReliableCmds", qfalse, 0, "Enable debugging information for reliable commands");
-	tmp = (cvar_t**)(0x13f19004);
-	*tmp = Cvar_RegisterBool("sv_clientArchive", qtrue, 0, "Have the clients archive data to save bandwidth on the server");
-
+	sv_g_gametype = Cvar_RegisterString("g_gametype", "war", 0x24, "Current game type");
+	sv_mapname = Cvar_RegisterString("mapname", "", 0x44, "Current map name");
+	sv_maxclients = Cvar_RegisterInt("sv_maxclients", 32, 1, 64, 0x25, "Maximum number of clients that can connect to a server");
+	sv_maxclients->max = sv_maxclients->integer; //Don't allow to rise the slotcount above the initial value
+	sv_clientSideBullets = Cvar_RegisterBool("sv_clientSideBullets", qtrue, 8, "If true, clients will synthesize tracers and bullet impacts");
+	sv_maxRate = Cvar_RegisterInt("sv_maxRate", 100000, 0, 100000, 5, "Maximum allowed bitrate per client");
+	sv_floodProtect = Cvar_RegisterInt("sv_floodprotect", 4, 0, 100000, 5, "Prevent malicious lagging by flooding the server with commands. Is the number of client commands allowed to process");
+	sv_showcommands = Cvar_RegisterBool("sv_showcommands", qfalse, 0, "Print all client commands");
+	sv_iwds = Cvar_RegisterString("sv_iwds", "", 0x48, "IWD server checksums");
+	sv_iwdNames = Cvar_RegisterString("sv_iwdNames", "", 0x48, "Names of IWD files used by the server");
+	sv_referencedIwds = Cvar_RegisterString("sv_referencedIwds", "", 0x48, "Checksums of all referenced IWD files");
+	sv_referencedIwdNames = Cvar_RegisterString("sv_referencedIwdNames", "", 0x48, "Names of all referenced IWD files used by the server");
+	sv_FFCheckSums = Cvar_RegisterString("sv_FFCheckSums", "", 0x48, "FastFile server checksums");
+	sv_FFNames = Cvar_RegisterString("sv_FFNames", "", 0x48, "Names of FastFiles used by the server");
+	sv_referencedFFCheckSums = Cvar_RegisterString("sv_referencedFFCheckSums", "", 0x48, "Checksums of all referenced FastFiles");
+	sv_referencedFFNames = Cvar_RegisterString("sv_referencedFFNames", "", 0x48, "Names of all referenced FastFiles used by the server");
+	sv_serverid = Cvar_RegisterInt("sv_serverid", 0, 0x80000000, 0x7fffffff, 0x48, "Voice quality");
+	sv_pure = Cvar_RegisterBool("sv_pure", qtrue, 0xc, "Cannot use modified IWD files");
+	sv_fps = Cvar_RegisterInt("sv_fps", 20, 1, 250, 0, "Server frames per second");
+	sv_showAverageBPS = Cvar_RegisterBool("sv_showAverageBPS", qfalse, 0, "Show average bytes per second for net debugging");
+	sv_botsPressAttackBtn = Cvar_RegisterBool("sv_botsPressAttackBtn", qtrue, 0, "Allow testclients to press attack button");
+	sv_debugRate = Cvar_RegisterBool("sv_debugRate", qfalse, 0, "Enable snapshot rate debugging info");
+	sv_debugReliableCmds = Cvar_RegisterBool("sv_debugReliableCmds", qfalse, 0, "Enable debugging information for reliable commands");
+	sv_clientArchive = Cvar_RegisterBool("sv_clientArchive", qtrue, 0, "Have the clients archive data to save bandwidth on the server");
+	SV_CopyCvars();
 }
+
 
 
 
@@ -2193,7 +2216,7 @@ qboolean SV_Map( const char *levelname ) {
 	Q_strncpyz(mapname, map, sizeof(mapname));
 	Q_strlwr(mapname);
 
-	if(!useFastfiles->integer)
+	if(!com_useFastfiles->integer)
 	{
 		Com_sprintf(expanded, sizeof(expanded), "maps/mp/%s.d3dbsp", mapname);
 		if ( FS_ReadFile( expanded, NULL ) == -1 ) {
@@ -2251,10 +2274,10 @@ void SV_MapRestart( qboolean fastRestart ){
 
 	// DHM - Nerve :: Check for invalid gametype
 	SV_SetGametype();
-	if(Q_stricmp(sv.gametype, g_gametype->string)){
+	if(Q_stricmp(sv.gametype, sv_g_gametype->string)){
 		fastRestart = qfalse; //No fastrestart if we have changed gametypes
 	}
-	Q_strncpyz(sv.gametype, g_gametype->string, sizeof(sv.gametype));
+	Q_strncpyz(sv.gametype, sv_g_gametype->string, sizeof(sv.gametype));
 	int pers = G_GetSavePersist();
 
 

@@ -598,7 +598,7 @@ void GScr_LoadGameTypeScript(void){
 /**************** Mandatory *************************/
     char gametype_path[64];
 
-    Com_sprintf(gametype_path, sizeof(gametype_path), "maps/mp/gametypes/%s", g_gametype->string);
+    Com_sprintf(gametype_path, sizeof(gametype_path), "maps/mp/gametypes/%s", sv_g_gametype->string);
 
     g_scr_data.gametype = GScr_LoadScriptAndLabel(gametype_path, "main", 1);
     g_scr_data.startgametype = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_StartGameType", 1);

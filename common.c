@@ -64,6 +64,13 @@ cvar_t* com_fixedtime;
 cvar_t* com_maxFrameTime;
 cvar_t* com_animCheck;
 cvar_t* com_developer;
+cvar_t* com_useFastfiles;
+cvar_t* com_developer;
+cvar_t* com_developer_script;
+cvar_t* com_logfile;
+cvar_t* com_sv_running;
+
+
 
 char com_errorMessage[MAXPRINTMSG];
 qboolean com_errorEntered;
@@ -570,26 +577,16 @@ void Com_InitCvars( void ){
     com_version = Cvar_RegisterString ("version", s, CVAR_ROM | CVAR_SERVERINFO , "Game version");
     com_shortversion = Cvar_RegisterString ("shortversion", Q3_VERSION, CVAR_ROM | CVAR_SERVERINFO , "Short game version");
 
-
     Cvar_RegisterString ("build", va("%i", BUILD_NUMBER), CVAR_ROM | CVAR_SERVERINFO , "");
-
-    cvar_t** tmp;
-    tmp = (cvar_t**)(0x88a6170);
-    *tmp = Cvar_RegisterBool ("useFastFils", qtrue, 16, "Enables loading data from fast files");
+    com_useFastfiles = Cvar_RegisterBool ("useFastFils", qtrue, 16, "Enables loading data from fast files");
     //MasterServer
     //AuthServer
     //MasterServerPort
     //AuthServerPort
     com_developer = Cvar_RegisterInt("developer", 0, 0, 2, 0, "Enable development options");
-    tmp = (cvar_t**)(0x88a6184);
-    *tmp = com_developer;
-
-    tmp = (cvar_t**)(0x88a6188);
-    *tmp = Cvar_RegisterBool ("developer_script", qfalse, 16, "Enable developer script comments");
-    tmp = (cvar_t**)(0x88a61b0);
-    *tmp = Cvar_RegisterEnum("logfile", logfileEnum, 0, 0, "Write to logfile");
-    tmp = (cvar_t**)(0x88a61a8);
-    *tmp = Cvar_RegisterBool("sv_running", qfalse, 64, "Server is running");
+    com_developer_script = Cvar_RegisterBool ("developer_script", qfalse, 16, "Enable developer script comments");
+    com_logfile = Cvar_RegisterEnum("logfile", logfileEnum, 0, 0, "Write to logfile");
+    com_sv_running = Cvar_RegisterBool("sv_running", qfalse, 64, "Server is running");
 
 
 }
@@ -605,6 +602,15 @@ void Com_InitThreadData()
 }
 
 
+void Com_CopyCvars()
+{
+    *(cvar_t**)0x88a6170 = com_useFastfiles;
+    *(cvar_t**)0x88a6184 = com_developer;
+    *(cvar_t**)0x88a6188 = com_developer_script;
+    *(cvar_t**)0x88a61b0 = com_logfile;
+    *(cvar_t**)0x88a61a8 = com_sv_running;
+
+}
 
 void Com_PatchError()
 {
@@ -661,12 +667,13 @@ void Com_Init(char* commandLine){
     Com_StartupVariable(NULL);
 
     Com_InitCvars();
+    Com_CopyCvars();
 
     Cvar_Init();
 
     CSS_InitConstantConfigStrings();
 
-    if(useFastfiles->integer){
+    if(com_useFastfiles->integer){
 
         Mem_Init();
 
@@ -688,7 +695,7 @@ void Com_Init(char* commandLine){
 
     Com_StartupVariable(NULL);
 
-    if(!useFastfiles->integer) SEH_UpdateLanguageInfo();
+    if(!com_useFastfiles->integer) SEH_UpdateLanguageInfo();
 
     Com_InitHunkMemory();
 
@@ -796,7 +803,7 @@ void Com_Init(char* commandLine){
     DB_SetInitializing( qfalse );
     Com_Printf("end $init %d ms\n", Sys_Milliseconds() - msec);
 
-    if(useFastfiles->integer)
+    if(com_useFastfiles->integer)
         R_Init();
 
     Com_DvarDump(6,0);

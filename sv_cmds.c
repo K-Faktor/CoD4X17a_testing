@@ -1513,7 +1513,7 @@ static void SV_MapRotate_f( void ) {
 				Com_PrintWarning("Oversize gametype name length at: %s\n", maplist);
 			}
 			Q_strncpyz(gametype, maplist, len+1);
-			Cvar_SetString(g_gametype, gametype);
+			Cvar_SetString(sv_g_gametype, gametype);
 			maplist = Com_ParseGetToken(maplist); //Pop off the gametype argument
 
 		}else if(!Q_stricmpn(maplist, "map ", 4)){
