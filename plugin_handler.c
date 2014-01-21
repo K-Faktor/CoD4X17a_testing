@@ -148,7 +148,7 @@ void PHandler_Load(char* name, size_t size) // Load a plugin, safe for use
     lib_handle = dlopen(realpath, RTLD_NOW);
     error = dlerror();
     if (!lib_handle || error != NULL){
-        Com_PrintError("Failed to load the plugin! Error string: '%s'.\n",dll,error);
+        Com_PrintError("Failed to load the plugin %s! Error string: '%s'.\n", dll, error);
         return;
     }
     Com_DPrintf("Plugin OK! Loading...\n");
