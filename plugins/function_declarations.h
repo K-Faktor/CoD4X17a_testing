@@ -64,8 +64,8 @@
     __cdecl int Plugin_GetPlayerUid(int slot);                               // Get UID of a plyer
     __cdecl int Plugin_GetSlotCount();                                       // Get number of server slots
     __cdecl qboolean Plugin_IsSvRunning();                                   // Is server running?
-    __cdecl void Plugin_ChatPrintf(int slot, char *fmt, ...);                  // Print to player's chat (-1 for all)
-    __cdecl void Plugin_BoldPrintf(int slot, char *fmt, ...);                  // Print to the player's screen (-1 for all)
+    __cdecl void Plugin_ChatPrintf(int slot, const char *fmt, ...);          // Print to player's chat (-1 for all)
+    __cdecl void Plugin_BoldPrintf(int slot, const char *fmt, ...);          // Print to the player's screen (-1 for all)
     __cdecl char *Plugin_GetPlayerName(int slot);                            // Get a name of a player
     __cdecl void Plugin_AddCommand(char *name, xcommand_t command, int defaultpower); // Add a server command
     __cdecl void *Plugin_Malloc(size_t size);                                // Same as stdlib.h function malloc

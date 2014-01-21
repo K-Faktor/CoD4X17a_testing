@@ -181,7 +181,7 @@ void PHandler_Load(char* name, size_t size) // Load a plugin, safe for use
         return;
     }
     Com_DPrintf("Executing plugin's OnInit...\n");
-    if((*pluginFunctions.plugins[i].OnInit)(/*mainFunctions*/)<0){
+    if((*pluginFunctions.plugins[i].OnInit)()<0){
         Com_Printf("Error in plugin's OnInit function!\nPlugin load failed.\n");
         pluginFunctions.plugins[i].loaded = qfalse;
         pluginFunctions.initializing_plugin = qfalse;
@@ -306,5 +306,4 @@ void PHandler_Event(int eventID,...) // Fire a plugin event, safe for use
             (*pluginFunctions.plugins[i].OnEvent[eventID])(arg_0, arg_1, arg_2, arg_3, arg_4, arg_5);
     }
 }
-
 

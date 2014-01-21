@@ -152,23 +152,3 @@ void Cvar_Init(void);
 #define g_allowVote getcvaradr(0x84bd05c)
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

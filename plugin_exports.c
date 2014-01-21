@@ -443,3 +443,42 @@ P_P_F void Plugin_ScrReplaceMethod(char *name, xfunction_t function)
     }
     pluginFunctions.plugins[pID].scriptmethods ++;
 }
+
+P_P_F void Plugin_ChatPrintf(int slot, const char *fmt, ... )
+{
+    //int ebp,*ptr;
+    char str[256];
+    client_t *cl;
+    va_list vl;
+
+    if(slot < 0)
+        cl = NULL;
+    else if( slot < sv_maxclients->integer)
+        cl = &svs.clients[slot];
+    else
+        return;
+
+    va_start(vl,fmt);
+    Q_vsnprintf(str, sizeof(str), fmt,vl);
+    va_end(vl);
+    SV_SendServerCommand(cl, "h \"%s\"", str);
+}
+
+P_P_F void Plugin_BoldPrintf(int slot, const char *fmt, ... )
+{
+    char str[256];
+    client_t *cl;
+    va_list vl;
+
+    if(slot < 0)
+        cl = NULL;
+    else if( slot < sv_maxclients->integer)
+        cl = &svs.clients[slot];
+    else
+        return;
+
+    va_start(vl,fmt);
+    Q_vsnprintf(str, sizeof(str), fmt, vl);
+    va_end(vl);
+    SV_SendServerCommand(cl, "c \"%s\"", str);
+}
