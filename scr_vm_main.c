@@ -64,10 +64,10 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("isdefined", (void*)0x80bbf2c, 0);
 	Scr_AddFunction("isstring", (void*)0x80bbf06, 0);
 	Scr_AddFunction("isalive", (void*)0x80bbeaa, 0);
-	Scr_AddFunction("getdvar", (void*)0x80bf5ec, 0);
-	Scr_AddFunction("getdvarint", (void*)0x80bf5a8, 0);
-	Scr_AddFunction("getdvarfloat", (void*)0x80bf56c, 0);
-	Scr_AddFunction("setdvar", (void*)0x80c07ce, 0);
+	Scr_AddFunction("getdvar", GScr_GetCvar, 0);
+	Scr_AddFunction("getdvarint", GScr_GetCvarInt, 0);
+	Scr_AddFunction("getdvarfloat", GScr_GetCvarFloat, 0);
+	Scr_AddFunction("setdvar", GScr_SetCvar, 0);
 	Scr_AddFunction("gettime", (void*)0x80bb514, 0);
 	Scr_AddFunction("getentbynum", (void*)0x80bbf96, 0);
 	Scr_AddFunction("getweaponmodel", (void*)0x80bf490, 0);
@@ -203,7 +203,7 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("addtestclient", GScr_SpawnBot, 0);
 	Scr_AddFunction("removetestclient", GScr_RemoveBot, 0);
 	Scr_AddFunction("removealltestclients", GScr_RemoveAllBots, 0);
-	Scr_AddFunction("makedvarserverinfo", (void*)0x80c05bc, 0);
+	Scr_AddFunction("makedvarserverinfo", GScr_MakeCvarServerInfo, 0);
 	Scr_AddFunction("setarchive", (void*)0x80bb034, 0);
 	Scr_AddFunction("allclientsprint", (void*)0x80bbc8c, 0);
 	Scr_AddFunction("clientprint", (void*)0x80bbc20, 0);

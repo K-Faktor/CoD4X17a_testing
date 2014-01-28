@@ -124,7 +124,7 @@ void SV_RemoteCmdInit(){
     Cmd_SetPower("setcmdminpower", 95);
     Cmd_SetPower("setadmin", 95);
     Cmd_SetPower("unsetadmin", 95);
-    Cbuf_AddText(0, "addCommand gametype \"set g_gametype $arg; map_restart\"");
+    Cbuf_AddText( "addCommand gametype \"set g_gametype $arg; map_restart\"");
     Cmd_SetPower("gametype", 60);
 
     cmdInvoker.currentCmdPower = 100; //Set the default to 100 to prevent any blocking on local system. If a command gets remotely executed it will be set temporarely to the expected power

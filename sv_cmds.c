@@ -1181,7 +1181,7 @@ static void Cmd_ExecuteTranslatedCommand_f(){
 
     *tmp = 0;
     Com_DPrintf("String to Execute: %s\n", outstr);
-    Cbuf_AddText(EXEC_NOW, outstr);
+    Cbuf_AddText( outstr);
 }
 
 
@@ -1401,7 +1401,7 @@ Examine the serverinfo string
 */
 static void SV_Serverinfo_f( void ) {
 	Com_Printf( "Server info settings:\n" );
-	Info_Print( Cvar_InfoString( 0, CVAR_SERVERINFO ) );
+	Info_Print( Cvar_InfoString( CVAR_SERVERINFO ) );
 }
 
 
@@ -1414,7 +1414,7 @@ Examine or change the serverinfo string
 */
 static void SV_Systeminfo_f( void ) {
 	Com_Printf( "System info settings:\n" );
-	Info_Print( Cvar_InfoString( 0, CVAR_SYSTEMINFO ) );
+	Info_Print( Cvar_InfoString( CVAR_SYSTEMINFO ) );
 }
 
 //===========================================================
@@ -1844,6 +1844,30 @@ static void SV_ListAdmins_f()
 
 }
 
+static void SV_ShowConfigstring_f()
+{
+    char buffer[8192];
+    int index;
+
+    buffer[0] = 0;
+
+    if ( Cmd_Argc() != 2 ) {
+	Com_Printf( "Usage: showconfigstring <index>\n" );
+	return;
+    }
+
+    index = atoi(Cmd_Argv(1));
+    SV_GetConfigstring(index, buffer, sizeof(buffer));
+    Com_Printf("Configstring is: %s\n", buffer);
+}
+
+static void SV_Test_f()
+{
+    Com_Printf("Serverinfo is: %s\n", Cvar_InfoString(CVAR_SERVERINFO));
+}
+
+
+
 
 void SV_AddOperatorCommands(){
 
@@ -1904,13 +1928,21 @@ void SV_AddOperatorCommands(){
 
 	Cmd_AddCommand ("stoprecord", SV_StopRecord_f);
 	Cmd_AddCommand ("record", SV_Record_f);
-
+	Cmd_AddCommand ("test", SV_Test_f);
 
 	if(Com_IsDeveloper()){
-
+		Cmd_AddCommand ("showconfigstring", SV_ShowConfigstring_f);
 		Cmd_AddCommand ("devmap", SV_Map_f);
 
 	}
 
 }
+
+
+
+
+
+
+
+
 

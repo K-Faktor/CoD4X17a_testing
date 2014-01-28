@@ -377,4 +377,10 @@ int Scr_FS_Read( void *buffer, int len, fileHandle_t f );
 int Scr_FS_Write( const void *buffer, int len, fileHandle_t h );
 int Scr_FS_Seek( fileHandle_t f, long offset, int origin );
 
+void GScr_MakeCvarServerInfo(void);
+void GScr_SetCvar();
+void GScr_GetCvarFloat();
+void  GScr_GetCvarInt();
+void  GScr_GetCvar();
+
 #endif

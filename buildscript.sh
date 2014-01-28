@@ -1,6 +1,6 @@
 #-fvisibility=hidden -mfpmath=sse -march=corei7 -march=atom -march=amdfam10 -march=core2 -fno-omit-frame-pointer -mtune=prescott -march=core2 -mcx16 -msahf -mpopcnt -msse4.2 --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=256
 echo Compiling C-code...
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c | more
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c
 
 #echo Comiling Crypto library...
 #gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c lib_tomcrypt/*.c -o crypto.o | more

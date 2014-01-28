@@ -27,6 +27,7 @@
 
 #include <time.h>
 #include "cvar.h"
+#include "qcommon_io.h"
 
 void __cdecl Com_InitParse( void );
 void __cdecl Com_InitCvars(void);

@@ -713,7 +713,7 @@ __optimize3 __regparm1 void SVC_Status( netadr_t *from ) {
 	if(strlen(SV_Cmd_Argv(1)) > 128)
 		return;
 
-	strcpy( infostring, Cvar_InfoString( 0, (CVAR_SERVERINFO | CVAR_NORESTART)) );
+	strcpy( infostring, Cvar_InfoString( CVAR_SERVERINFO | CVAR_NORESTART) );
 	// echo back the parameter to status. so master servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
 	Info_SetValueForKey( infostring, "challenge", SV_Cmd_Argv( 1 ) );
@@ -861,19 +861,19 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 	else
 	    Info_SetValueForKey( infostring, "pswrd", "0");
 
-        if(g_cvar_valueforkey("scr_team_fftype")){
-	    Info_SetValueForKey( infostring, "ff", va("%i", g_cvar_valueforkey("scr_team_fftype")));
+        if(Cvar_GetVariantString("scr_team_fftype")){
+	    Info_SetValueForKey( infostring, "ff", va("%i", Cvar_GetVariantString("scr_team_fftype")));
 	}
 
-        if(g_cvar_valueforkey("scr_game_allowkillcam")){
+        if(Cvar_GetVariantString("scr_game_allowkillcam")){
 	    Info_SetValueForKey( infostring, "ki", "1");
 	}
 
-        if(g_cvar_valueforkey("scr_hardcore")){
+        if(Cvar_GetVariantString("scr_hardcore")){
 	    Info_SetValueForKey( infostring, "hc", "1");
 	}
 
-        if(g_cvar_valueforkey("scr_oldschool")){
+        if(Cvar_GetVariantString("scr_oldschool")){
 	    Info_SetValueForKey( infostring, "od", "1");
 	}
 	Info_SetValueForKey( infostring, "hw", "1");
@@ -1018,8 +1018,7 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 	SV_Cmd_TokenizeString( s );
 
 	c = SV_Cmd_Argv(0);
-
-	Com_DPrintf ("SV packet %s : %s\n", NET_AdrToString(from), c);
+	Com_DPrintf ("SV packet %s: %s\n", NET_AdrToString(from), s);
 	//Most sensitive OOB commands first
         if (!Q_stricmp(c, "getstatus")) {
 		SVC_Status( from );
@@ -1767,9 +1766,9 @@ void SV_InitCvarsOnce(void){
 	sv_master[7] = Cvar_RegisterString("sv_master8", MASTER_SERVER_NAME2, CVAR_ROM, "Default masterserver name");
 
 	sv_g_gametype = Cvar_RegisterString("g_gametype", "war", 0x24, "Current game type");
-	sv_mapname = Cvar_RegisterString("mapname", "", 0x44, "Current map name");
+	sv_mapname = Cvar_RegisterString("mapname", "", CVAR_ROM | CVAR_SERVERINFO, "Current map name");
 	sv_maxclients = Cvar_RegisterInt("sv_maxclients", 32, 1, 64, 0x25, "Maximum number of clients that can connect to a server");
-	sv_maxclients->max = sv_maxclients->integer; //Don't allow to rise the slotcount above the initial value
+	sv_maxclients->imax = sv_maxclients->integer; //Don't allow to rise the slotcount above the initial value
 	sv_clientSideBullets = Cvar_RegisterBool("sv_clientSideBullets", qtrue, 8, "If true, clients will synthesize tracers and bullet impacts");
 	sv_maxRate = Cvar_RegisterInt("sv_maxRate", 100000, 0, 100000, 5, "Maximum allowed bitrate per client");
 	sv_floodProtect = Cvar_RegisterInt("sv_floodprotect", 4, 0, 100000, 5, "Prevent malicious lagging by flooding the server with commands. Is the number of client commands allowed to process");
@@ -2008,6 +2007,7 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 		MSG_WriteDeltaEntity( &snapInfo, msg, 0, &nullstate, base, qtrue );
 	}
 	MSG_WriteByte( msg, svc_EOF );
+
 }
 
 /*
@@ -2031,7 +2031,7 @@ void SV_WriteRconStatus( msg_t* msg ) {
 	if(!com_sv_running->boolean)
             return;
 
-	strcpy( infostring, Cvar_InfoString( 0, (CVAR_SERVERINFO | CVAR_NORESTART)));
+	strcpy( infostring, Cvar_InfoString( CVAR_SERVERINFO | CVAR_NORESTART));
 	// echo back the parameter to status. so master servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
 	if(*sv_password->string)

@@ -97,6 +97,20 @@ static void PrintMatches( const char *s ) {
 	}
 }
 
+/*
+===============
+PrintCvarMatches
+
+===============
+*/
+static void PrintCvarMatches( const char *s ) {
+	char value[ TRUNCATE_LENGTH ];
+
+	if ( !Q_stricmpn( s, shortestMatch, strlen( shortestMatch ) ) ) {
+		Com_TruncateLongString( value, Cvar_VariableString( s ) );
+		Com_Printf( "    %s = \"%s\"\n", s, value );
+	}
+}
 
 
 /*
@@ -226,7 +240,7 @@ void Field_CompleteCommand( char *cmd, qboolean doCommands, qboolean doCvars )
 			Cmd_CommandCompletion( FindMatches );
 
 		if( doCvars )
-			Cvar_ForEach(Cvar_CommandCompletionFind, NULL);
+			Cvar_CommandCompletion( FindMatches );
 
 		if( !Field_Complete( ) )
 		{
@@ -235,7 +249,7 @@ void Field_CompleteCommand( char *cmd, qboolean doCommands, qboolean doCvars )
 				Cmd_CommandCompletion( PrintMatches );
 
 			if( doCvars )
-				Cvar_ForEach(Cvar_CommandCompletionPrint, NULL);
+				Cvar_CommandCompletion( PrintCvarMatches );
 		}
 	}
 	Cmd_EndTokenizedString( );
@@ -255,34 +269,3 @@ void Field_AutoComplete( field_t *field )
 	Field_CompleteCommand( completionField->buffer, qtrue, qtrue );
 }
 
-
-/*
-============
-Cvar_CommandCompletion
-============
-*/
-void	Cvar_CommandCompletionPrint( cvar_t const *cvar, void* none) {
-		PrintMatches( cvar->name );
-}
-
-void	Cvar_CommandCompletionFind( cvar_t const *cvar, void* none) {
-		FindMatches( cvar->name );
-}
-
-
-/*
-==================
-Cvar_CompleteCvarName
-==================
-*/
-void Cvar_CompleteCvarName( char *args, int argNum )
-{
-	if( argNum == 2 )
-	{
-		// Skip "<cmd> "
-		char *p = Com_SkipTokens( args, 1, " " );
-
-		if( p > args )
-			Field_CompleteCommand( p, qfalse, qtrue );
-	}
-}

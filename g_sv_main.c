@@ -59,13 +59,13 @@ __cdecl void ExitLevel( void ) {
 
 	if(*g_votedMapName->string){
 		if(*g_votedGametype->string)
-			Cbuf_AddText( EXEC_NOW, va("set g_gametype %s; map %s; set g_votedGametype \"\"; set g_votedMapName \"\"\n", g_votedGametype->string, g_votedMapName->string));
+			Cbuf_AddText( va("set g_gametype %s; map %s; set g_votedGametype \"\"; set g_votedMapName \"\"\n", g_votedGametype->string, g_votedMapName->string));
 		else
-			Cbuf_AddText( EXEC_NOW, va("map %s; set g_votedMapName \"\"\n", g_votedMapName->string));
+			Cbuf_AddText( va("map %s; set g_votedMapName \"\"\n", g_votedMapName->string));
 	}else if(*SV_GetNextMap()){
-		Cbuf_AddText( EXEC_NOW, "vstr nextmap\n" );
+		Cbuf_AddText( "vstr nextmap\n" );
 	}else{
-		Cbuf_AddText( EXEC_NOW, "map_rotate\n" );
+		Cbuf_AddText( "map_rotate\n" );
 	}
 
 	// reset all the scores so we don't enter the intermission again

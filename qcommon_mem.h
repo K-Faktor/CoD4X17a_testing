@@ -42,6 +42,7 @@ void* __cdecl TempMalloc( int );
 char *CopyString( const char *in );
 
 #define Z_Free free
+#define S_Malloc Z_Malloc
 
 #endif
 

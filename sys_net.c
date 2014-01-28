@@ -101,6 +101,10 @@ typedef int	ioctlarg_t;
 typedef int SOCKET;
 #endif
 
+
+#define IPEFF_EF 0b10111000
+
+
 #define	MAX_IPS		32
 
 #ifndef MAX_MSGLEN
@@ -1030,6 +1034,7 @@ int NET_IPSocket( char *net_interface, int port, int *err, qboolean tcp) {
 	struct sockaddr_in		address;
 	ioctlarg_t			_true = 1;
 	int				i = 1;
+	int				tos = IPEFF_EF;
 
 	*err = 0;
 
@@ -1067,6 +1072,9 @@ int NET_IPSocket( char *net_interface, int port, int *err, qboolean tcp) {
 	// make it broadcast capable
 		if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 			Com_PrintWarning( "NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
+		}
+		if( setsockopt( newsocket, IPPROTO_IP, IP_TOS, &tos, sizeof(tos) ) == SOCKET_ERROR ) {
+			Com_PrintWarning( "NET_IPSocket: setsockopt IP_TOS: %s\n", NET_ErrorString() );
 		}
 	}
 

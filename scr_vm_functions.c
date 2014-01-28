@@ -1092,7 +1092,7 @@ void GScr_CbufAddText(){
         Scr_Error("Usage: exec(<string>)\n");
     }
     Com_sprintf(string, sizeof(string), "%s\n",Scr_GetString(0));
-    Cbuf_AddText(EXEC_NOW, string);
+    Cbuf_AddText( string);
 }
 
 
@@ -1805,6 +1805,118 @@ void HECmd_SetText(scr_entref_t entnum){
     element->hudTextConfigStringIndex = G_LocalizedStringIndex(buffer);
 
 }
+
+void GScr_MakeCvarServerInfo(void)
+{
+	const char *var_name;
+	cvar_t *var;
+	const char *newstringval;
+	signed int i;
+	int num_args;
+	char buffer_out[1024];
+	char buffer[1024];
+
+	var_name = Scr_GetString(0);
+	var = Cvar_FindVar(var_name);
+	if ( var )
+	{
+		Cvar_AddFlags(var, 0x100u);
+		return;
+	}
+
+    if ( Scr_GetType(1) == 3 )
+    {
+		num_args = Scr_GetNumParam();
+		Scr_ConstructMessageString(1, num_args - 1, "Dvar Value", buffer, sizeof(buffer));
+		newstringval = buffer;
+    }
+    else
+    {
+		newstringval = Scr_GetString(1);
+    }
+	for(i = 0; i < sizeof(buffer) -1 && newstringval[i]; i++)
+    {
+		buffer_out[i] = I_CleanChar(newstringval[i]);
+		if ( buffer_out[i] == '\"' )
+			buffer_out[i] = '\'';
+    }
+    buffer_out[i] = 0;
+    Cvar_RegisterString(var_name, newstringval, 0x4100u, "Script defined user info cvar");
+}
+
+void GScr_SetCvar()
+{
+  const char *newstringval;
+  const char *var_name;
+  char buffer[1024];
+
+  var_name = Scr_GetString(0);
+  if ( Scr_GetType(1) == 3 )
+  {
+    Scr_ConstructMessageString(1, Scr_GetNumParam() - 1, "Dvar Value", buffer, 0x400u);
+    newstringval = buffer;
+  }
+  else
+  {
+    newstringval = Scr_GetString(1);
+  }
+  if (Cvar_ValidateString(var_name) )
+  {
+    Cvar_SetAllowCheatOnly(var_name, newstringval);
+    if ( Scr_GetNumParam() > 2 && Scr_GetInt(2) )
+    {
+      Cvar_AddFlagsByName(var_name, 0x400u);
+    }
+  }
+  else
+  {
+    Scr_Error(va("Cvar %s has an invalid cvar name", var_name));
+  }
+}
+
+
+void GScr_GetCvarFloat()
+{
+  const char *stringval;
+
+  if(Scr_GetNumParam() != 1)
+  {
+	Scr_Error("Usage: getcvarfloat <cvarname>");
+  }
+  stringval = Cvar_GetVariantString(Scr_GetString(0));
+  Scr_AddFloat(atof(stringval));
+}
+
+void  GScr_GetCvarInt()
+{
+  const char *stringval;
+  
+  if(Scr_GetNumParam() != 1)
+  {
+	Scr_Error("Usage: getcvarint <cvarname>");
+  }
+  stringval = Cvar_GetVariantString(Scr_GetString(0));
+  Scr_AddInt(atoi(stringval));
+}
+
+
+void  GScr_GetCvar()
+{
+  const char *stringval;
+
+  if(Scr_GetNumParam() != 1)
+  {
+	Scr_Error("Usage: getcvar <cvarname>");
+  }
+  stringval = Cvar_GetVariantString(Scr_GetString(0));
+  Scr_AddString(stringval);
+}
+
+
+
+
+
+
 
 
 /*

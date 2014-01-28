@@ -72,8 +72,8 @@ void PHandler_Init() // Initialize the Plugin Handler's data structures and add 
     Cmd_AddCommand("unloadPlugin", PHandler_UnLoadPlugin_f);
     Cmd_AddCommand("plugins", PHandler_PluginList_f);
     Cmd_AddCommand("pluginInfo", PHandler_PluginInfo_f);
-    
-    Com_Printf("PHandler_Init: Plugins initialization successfull.\n");
+
+    Com_Printf("-------- Plugins initialization completed --------\n");
 }
 void PHandler_Load(char* name, size_t size) // Load a plugin, safe for use
 {

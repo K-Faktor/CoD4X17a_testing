@@ -35,50 +35,20 @@ typedef enum {
 	EXEC_APPEND			// add to end of the command buffer (normal case)
 } cbufExec_t;
 
-#define MAX_CMD_BUFFER  16384
-#define MAX_CMD_LINE    1024
-/*
-typedef struct {
-	byte    *data;
-	int maxsize;
-	int cursize;
-} cmd_t;
-
-int cmd_wait;
-cmd_t cmd_text;
-byte cmd_text_buf[MAX_CMD_BUFFER];
-*/
-
-typedef void (*xcommand_t)();
+typedef void (*xcommand_t)(void);
 typedef void (*completionFunc_t)( char *args, int argNum );
-
-typedef struct cmd_function_s
-{
-	struct cmd_function_s   *next;
-	char                    *name;
-	int			minPower;
-	completionFunc_t	complete;
-	xcommand_t function;
-} cmd_function_t;
-
-
-//static int cmd_argc;
-//static char        *cmd_argv[MAX_STRING_TOKENS];        // points into cmd_tokenized
-//static char cmd_tokenized[BIG_INFO_STRING + MAX_STRING_TOKENS];         // will have 0 bytes inserted
-//static char cmd_cmd[BIG_INFO_STRING];         // the original command we received (no token processing)
-
-#define MAX_POWERLIST 256
-
-void __cdecl Cmd_Init(void);
-void __cdecl Cmd_TokenizeString(const char* string);
-void __cdecl Cmd_EndTokenizedString();
-void __cdecl SV_Cmd_TokenizeString(const char* string);
-void __cdecl SV_Cmd_EndTokenizedString();
-void __cdecl Cmd_ExecuteSingleCommand(int unk, int unk2, const char *cmd );
-void __cdecl Cbuf_Init(void);
-void __cdecl Cbuf_Execute(int, int);
-void __cdecl Cbuf_ExecuteBuffer(int, int, char* buf);
-void __cdecl Cbuf_AddText(int dummy, const char* text);
+void Cmd_Init(void);
+void Cmd_TokenizeString(const char* string);
+void Cmd_EndTokenizedString();
+void Cmd_ExecuteSingleCommand(int unk, int unk2, const char *cmd );
+void Cmd_ExecuteString(const char *cmd );
+void Cbuf_Init(void);
+void Cbuf_Execute();
+void Cbuf_ExecuteText(int exec_when, const char* text);
+void __cdecl Cbuf_Execute_WrapperIW(int, int);
+void Cbuf_ExecuteBuffer(int, int, const char* buf);
+void Cbuf_AddText(const char* text);
+void __cdecl Cbuf_AddText_WrapperIW(int dummy, const char* text);
 
 qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function );
 qboolean Cmd_RemoveCommand( const char *cmd_name );
@@ -86,13 +56,24 @@ qboolean Cmd_SetPower(const char *cmd_name, int power);
 int Cmd_GetPower(const char *cmd_name);
 void	Cmd_ResetPower();
 
-int	SV_Cmd_Argc( void );
+
+
+/*
+#define SV_Cmd_TokenizeString Cmd_TokenizeString
+#define SV_Cmd_EndTokenizedString Cmd_EndTokenizedString
+#define SV_Cmd_Argc Cmd_Argc
+#define SV_Cmd_Argv Cmd_Argv
+#define SV_Cmd_ArgvBuffer Cmd_ArgvBuffer
+*/
+void SV_Cmd_TokenizeString(const char* string);
+void SV_Cmd_EndTokenizedString();
+
+
 int	Cmd_Argc( void );
-char	*SV_Cmd_Argv( int arg );
-void	SV_Cmd_ArgvBuffer( int arg, char *buffer, int bufferLength );
 char	*Cmd_Argv( int arg );
 char	*Cmd_Args( char* buff, int bufsize );
 char	*Cmd_Argsv( int arg, char* buff, int bufsize );
+void	Cmd_ArgvBuffer( int arg, char *buffer, int bufferLength );
 void	Cmd_CommandCompletion( void(*callback)(const char *s) );
 void	Cmd_CompleteArgument( const char *command, char *args, int argNum );
 void	Cmd_SetCommandCompletionFunc( const char *command, completionFunc_t complete );

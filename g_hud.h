@@ -29,17 +29,6 @@
 #define HUDELEM_ADDR 0x8335620
 #define MAX_HUDELEMS 1024
 
-
-
-
-typedef struct
-{
-    byte red;
-    byte green;
-    byte blue;
-    byte alpha;
-}ucolor_t;
-
 typedef enum{
     HUDFONT_DEFAULT,
     HUDFONT_BIGFIXED,

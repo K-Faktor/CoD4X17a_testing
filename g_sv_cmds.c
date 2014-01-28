@@ -145,7 +145,7 @@ __cdecl void Cmd_CallVote_f( gentity_t *ent ) {
 	// if there is still a vote to be executed
 	if ( level.voteExecuteTime ) {
 		level.voteExecuteTime = 0;
-		Cbuf_AddText( EXEC_NOW, va( "%s\n", level.voteString ) );
+		Cbuf_AddText( va( "%s\n", level.voteString ) );
 	}
 
 	// special case for g_gametype, check for bad values

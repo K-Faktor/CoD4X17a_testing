@@ -372,8 +372,8 @@ void Com_EventLoop( void ) {
 			switch(ev->evType)
 			{
 				case SE_CONSOLE:
-					Cbuf_AddText( 0,(char *)ev->evPtr );
-					Cbuf_AddText(0,"\n");
+					Cbuf_AddText( (char *)ev->evPtr );
+					Cbuf_AddText("\n");
 				break;
 				default:
 					Com_Error( ERR_FATAL, "Com_EventLoop: bad event type %i", ev->evType );
@@ -559,11 +559,12 @@ void Com_Quit_f( void ) {
 	}
 	Sys_Quit ();
 }
-
+cvar_t *test1;
+cvar_t *test2;
 
 void Com_InitCvars( void ){
-    static char* dedicatedEnum[] = {"listen server", "dedicated LAN server", "dedicated internet server", NULL};
-    static char* logfileEnum[] = {"disabled", "async file write", "sync file write", NULL};
+    static const char* dedicatedEnum[] = {"listen server", "dedicated LAN server", "dedicated internet server", NULL};
+    static const char* logfileEnum[] = {"disabled", "async file write", "sync file write", NULL};
 
     char* s;
 
@@ -587,8 +588,6 @@ void Com_InitCvars( void ){
     com_developer_script = Cvar_RegisterBool ("developer_script", qfalse, 16, "Enable developer script comments");
     com_logfile = Cvar_RegisterEnum("logfile", logfileEnum, 0, 0, "Write to logfile");
     com_sv_running = Cvar_RegisterBool("sv_running", qfalse, 64, "Server is running");
-
-
 }
 
 
@@ -690,7 +689,7 @@ void Com_Init(char* commandLine){
 
     Con_InitChannels();
 
-    Cbuf_AddText(0, "exec default_mp.cfg\n");
+    Cbuf_AddText( "exec default_mp.cfg\n");
     Cbuf_Execute(0,0); // Always execute after exec to prevent text buffer overflowing
 
     Com_StartupVariable(NULL);

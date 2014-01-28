@@ -570,6 +570,8 @@ void SV_RemoteCmdSetPermission(char* command, int power);
 void SV_RemoteCmdListAdmins( void );
 __cdecl qboolean SV_GameCommand(void);
 
+void SV_GetConfigstring( int index, char *buffer, int bufferSize );
+
 extern cvar_t* sv_padPackets;
 extern cvar_t* sv_demoCompletedCmd;
 extern cvar_t* sv_wwwBaseURL;
@@ -643,4 +645,5 @@ __cdecl void SV_WriteSnapshotToClient(client_t* client, msg_t* msg);
 __cdecl void SV_ClipMoveToEntity(struct moveclip_s *clip, svEntity_t *entity, struct trace_s *trace);
 
 #endif
+
 

@@ -34,6 +34,7 @@
 #include "scr_vm_functions.h"
 #include "sys_thread.h"
 #include "filesystem.h"
+#include "misc.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -186,11 +187,13 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
                 return qfalse;
             }
             /* kill function _init to prevent Segmentation fault if image is relocated. So we can give a proper error message instead SigSegV */
+#if 0
             if(Sys_ModBinaryFile(fp, ELF_INITOFFSET, 0xc3) == qfalse)
             {
                 fclose(fp);
                 return qfalse;
             }
+
             /* kill function _fini to prevent Segmentation fault if image is relocated. */
             if(Sys_ModBinaryFile(fp, ELF_FINIOFFSET, 0xc3) == qfalse)
             {
@@ -221,6 +224,8 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
                 fclose(fp);
                 return qfalse;
             }
+
+#endif
             fclose(fp);
             return qtrue;
         }
@@ -232,7 +237,7 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
 
 
 void Com_PatchError(void);
-
+void Cvar_PatchModifiedFlags();
 
 static void Sys_PatchImageData( void )
 {
@@ -374,6 +379,38 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetJump(0x818e73c, FS_Restart);
 	SetJump(0x818726c, FS_FCloseFile);
 
+	SetJump(0x81a2944, Cvar_RegisterString);
+	SetJump(0x81a2d94, Cvar_RegisterBool);
+	SetJump(0x81a2cc6, Cvar_RegisterInt);
+	SetJump(0x81a2860, Cvar_RegisterEnum);
+	SetJump(0x81a2e6c, Cvar_RegisterFloat);
+	SetJump(0x81a2bea, Cvar_RegisterVec2);
+	SetJump(0x81a2b08, Cvar_RegisterVec3);
+	SetJump(0x81a2550, Cvar_RegisterColor);
+
+	SetJump(0x81a14fa, Cvar_SetString);
+	SetJump(0x81a1c6c, Cvar_SetBool);
+	SetJump(0x81a20c4, Cvar_SetInt);
+	SetJump(0x81a1fe0, Cvar_SetFloat);
+	SetJump(0x81a14c2, Cvar_SetColor);
+	SetJump(0x81a3422, Cvar_SetStringByName);
+	SetJump(0x81a3020, Cvar_SetFloatByName);
+	SetJump(0x81a3178, Cvar_SetIntByName);
+	SetJump(0x81a32dc, Cvar_SetBoolByName);
+	SetJump(0x81a3f66, Cvar_Set);
+
+	SetJump(0x819e7c0, Cvar_GetBool);
+	SetJump(0x819e810, Cvar_GetString);
+	SetJump(0x819e90a, Cvar_GetInt);
+
+	SetJump(0x819e6d0, Cvar_FindVar);
+
+
+	SetJump(0x819f328, Cvar_ForEach);
+
+	SetJump(0x81264f4, Cvar_InfoString_IW_Wrapper);
+
+	SetJump(0x81a1cc4, Com_LoadDvarsFromBuffer);
 
 	*(char*)0x8215ccc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebc = '\n'; //adds a missing linebreak
@@ -381,6 +418,7 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 
 	FS_PatchFileHandleData();
 	Com_PatchError();
+	Cvar_PatchModifiedFlags();
 }
 
 
@@ -451,3 +489,4 @@ void Sys_LoadImage( ){
         _exit(1);
     }
 }
+

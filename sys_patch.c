@@ -75,7 +75,7 @@ void Sys_ImageFindConstant(){
 
     #define startADR 0x804ac20
     #define endADR 0x8209dc4
-    #define constant 0x88a6220
+    #define constant 0x1402c060
 
     FILE * fdout;
     byte* adr;
@@ -94,7 +94,7 @@ void Sys_ImageFindConstant(){
             if(constant == *(int*)adr)
             {
                 printf("Found at: %x\n", (int)adr);
-                Com_sprintf(buf, sizeof(buf), "\t*(char**)0x%X = com_errorMessage;\n", (int)adr);
+                Com_sprintf(buf, sizeof(buf), "\t*(int**)0x%X = &cvar_modifiedFlags;\n", (int)adr);
                 fwrite(buf, 1, strlen(buf) ,fdout);
 
             }

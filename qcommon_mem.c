@@ -53,9 +53,9 @@ CopyString
 char *CopyString( const char *in ) {
 	char    *out;
 
-	if ( !in[0] )
+/*	if ( !in[0] )
 		return "";
-
+*/
 	out = Z_Malloc( strlen( in ) + 1 );
 	strcpy( out, in );
 	return out;

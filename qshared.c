@@ -1440,3 +1440,141 @@ unsigned char I_CleanChar(unsigned char in)
 
   return in;
 }
+
+
+/*
+=====================================================================
+
+ Functions to verify the variable type of string
+
+=====================================================================
+*/
+
+
+
+qboolean isFloat(const char* string, int size)
+{
+    const char* ptr;
+    int i;
+    qboolean dot = qfalse;
+    qboolean sign = qfalse;
+    qboolean whitespaceended = qfalse;
+
+    if(size == 0) //If we have given a length compare the whole string
+        size = 0x10000;
+
+    for(i = 0, ptr = string; i < size && *ptr != '\0' && *ptr != '\n'; i++, ptr++){
+
+        if(*ptr == ' ')
+        {
+            if(whitespaceended == qfalse)
+                continue;
+            else
+                return qtrue;
+        }
+        whitespaceended = qtrue;
+
+        if(*ptr == '-' && sign ==0)
+        {
+            sign = qtrue;
+            continue;
+        }
+        if(*ptr == '.' && dot == 0)
+        {
+            dot = qtrue;
+            continue;
+        }
+        if(*ptr < '0' || *ptr > '9') return qfalse;
+    }
+    return qtrue;
+}
+
+
+qboolean isInteger(const char* string, int size)
+{
+    const char* ptr;
+    int i;
+    qboolean sign = qfalse;
+    qboolean whitespaceended = qfalse;
+
+    if(size == 0) //If we have given a length compare the whole string
+        size = 0x10000;
+
+    for(i = 0, ptr = string; i < size && *ptr != '\0' && *ptr != '\n'; i++, ptr++){
+
+        if(*ptr == ' ')
+        {
+            if(whitespaceended == qfalse)
+                continue;
+            else 
+                return qtrue;
+        }
+        whitespaceended = qtrue;
+
+        if(*ptr == '-' && sign ==0)
+        {
+            sign = qtrue;
+            continue;
+        }
+        if(*ptr < '0' || *ptr > '9') return qfalse;
+    }
+    return qtrue;
+}
+
+qboolean isVector(const char* string, int size, int dim)
+{
+    const char* ptr;
+    int i;
+
+    if(size == 0) //If we have given a length compare the whole string
+        size = 0x10000;
+
+    for(i = 0, ptr = string; i < size && *ptr != '\0' && *ptr != '\n' && dim > 0; i++, ptr++){
+
+        if(*ptr == ' ')
+        {
+            continue;
+        }
+        dim = dim -1;
+
+        if(isFloat(ptr, size -i) == qfalse)
+            return qfalse;
+
+        while(*ptr != ' ' && *ptr != '\0' && *ptr != '\n' && i < size)
+        {
+            ptr++; i++;
+        }
+    }
+    if(dim != 0)
+        return qfalse;
+
+    return qtrue;
+}
+
+
+qboolean strToVect(const char* string, float *vect, int dim)
+{
+    const char* ptr;
+    int i;
+
+    for(ptr = string, i = 0; *ptr != '\0' && *ptr != '\n' && i < dim; ptr++){
+
+        if(*ptr == ' ')
+        {
+            continue;
+        }
+
+        vect[i] = atof(ptr);
+
+        i++;
+
+        while(*ptr != ' ' && *ptr != '\0' && *ptr != '\n')
+        {
+            ptr++;
+        }
+    }
+    if(i != dim)
+        return qfalse;
+
+    return qtrue;
+}
