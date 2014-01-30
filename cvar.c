@@ -2223,9 +2223,9 @@ void Cvar_Init (void)
 	Cmd_AddCommand ("seta", Cvar_SetA_f);
 	Cmd_SetCommandCompletionFunc( "seta", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("setfromcvar", Cvar_SetFromCvar_f);
-	Cmd_SetCommandCompletionFunc( "setfromdvar", Cvar_CompleteCvarName );
+	Cmd_SetCommandCompletionFunc( "setfromcvar", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("setcvartotime", Cvar_SetToTime_f);
-	Cmd_SetCommandCompletionFunc( "setdvartotime", Cvar_CompleteCvarName );
+	Cmd_SetCommandCompletionFunc( "setcvartotime", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("reset", Cvar_Reset_f);
 	Cmd_SetCommandCompletionFunc( "reset", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("setu", Cvar_SetU_f);
