@@ -58,7 +58,7 @@ static qboolean Sys_ModBinaryFile(FILE* fp, int offset, byte newval)
 {
     if(fseek(fp, offset, SEEK_SET) != 0)
     {
-        printf("Seek error on file cod4_lnxded.so opened for writing - Error: %s\n", strerror(errno));
+        Com_PrintError("Seek error on file cod4_lnxded.so opened for writing - Error: %s\n", strerror(errno));
         return qfalse;
     }
     if(fputc(newval, fp) == newval)
@@ -86,19 +86,19 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
         //Test directory permissions:
         if(access(dir, F_OK) != 0)
         {
-            printf("Error directory %s seems not to exist: %s\n", dir, strerror(errno));
+            Com_PrintError("Directory %s seems not to exist: %s\n", dir, strerror(errno));
             return qfalse;
         }
 
         if(access(dir, R_OK) != 0)
         {
-            printf("Read access to directory %s is denied: %s\n", dir, strerror(errno));
+            Com_PrintError("Read access to directory %s is denied: %s\n", dir, strerror(errno));
             return qfalse;
         }
 
         if(access(dir, W_OK) != 0)
         {
-            printf("Write access to directory %s is denied: %s\n", dir, strerror(errno));
+            Com_PrintError("Write access to directory %s is denied: %s\n", dir, strerror(errno));
             return qfalse;
         }
 
@@ -106,22 +106,22 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
 
         if(access(path, F_OK) != 0)
         {
-            printf("The file %s seems not to exist\n", path);
+            Com_Printf("The file %s seems not to exist\n", path);
 
         dl_again:
-            printf("Trying to download...\n");
+            Com_Printf("Trying to download...\n");
 
             Com_sprintf(cmdline, sizeof(cmdline), "wget -O %s %s", path, "http://update.iceops.in/cod4_lnxded.so");
             rval = system( cmdline );
             if(rval != 0)
             {
-                printf("Failed to download cod4_lnxded.so\nPlease make sure you are connected to the internet or install this file manually: %s\n", path);
+                Com_PrintError("Failed to download cod4_lnxded.so\nPlease make sure you are connected to the internet or install this file manually: %s\n", path);
                 return qfalse;
             }
 
             if(access(path, F_OK) != 0)
             {
-                printf("Failed to install cod4_lnxded.so\nPlease try to install this file manually: %s\n", path);
+                Com_PrintError("Failed to install cod4_lnxded.so\nPlease try to install this file manually: %s\n", path);
                 return qfalse;
 
             }
@@ -129,13 +129,13 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
 
         if(access(path, R_OK) != 0)
         {
-            printf("Read access to file %s is denied: %s\n", path, strerror(errno));
+            Com_PrintError("Read access to file %s is denied: %s\n", path, strerror(errno));
             return qfalse;
         }
 
         if(access(path, W_OK) != 0)
         {
-            printf("Write access to file %s is denied: %s\n", path, strerror(errno));
+            Com_PrintError("Write access to file %s is denied: %s\n", path, strerror(errno));
             return qfalse;
         }
 
@@ -156,13 +156,13 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
             }else{
                 //The file can not be read or the size is wrong
                 fclose(fp);
-                printf("The file %s can not be read or has a wrong size.\n", path);
+                Com_PrintError("The file %s can not be read or has a wrong size.\n", path);
                 if(trys < 1)
                 {
-                    printf("Deleting file: %s\n", path);
+                    Com_PrintError("Deleting file: %s\n", path);
                     if(remove(path) != 0)
                     {
-                        printf("Couldn't delete file %s Error: %s\n", path, strerror(errno));
+                        Com_PrintError("Couldn't delete file %s Error: %s\n", path, strerror(errno));
                         return qfalse;
                     }
                     trys++;
@@ -172,7 +172,7 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
             }
 
         }else{
-            printf("Failed to open file %s for reading - Error: %s\n", path, strerror(errno));
+            Com_PrintError("Failed to open file %s for reading - Error: %s\n", path, strerror(errno));
             return qfalse;
         }
 
@@ -230,7 +230,7 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
             return qtrue;
         }
 
-        printf("Failed to open file %s for writing - Error: %s\n", path, strerror(errno));
+        Com_PrintError("Failed to open file %s for writing - Error: %s\n", path, strerror(errno));
         return qfalse;
 
 }
@@ -450,7 +450,7 @@ Sys_LoadImage
 
 =============
 */
-void Sys_LoadImage( ){
+qboolean Sys_LoadImage( ){
 
     void *dl;
     char *error;
@@ -460,8 +460,8 @@ void Sys_LoadImage( ){
 
     if(!Sys_LoadImagePrepareFile( module ))
     {
-        printf("An error has occurred. Exiting...\n");
-        _exit(1);
+        Com_PrintError("An error has occurred. Can not startup\n");
+        return qfalse;
     }
 
     dl = dlopen(module, RTLD_LAZY);
@@ -469,24 +469,25 @@ void Sys_LoadImage( ){
     if(dl == NULL)
     {
         error = dlerror();
-        printf("Failed to load required module: %s Error: %s\n", module, error);
-        _exit(1);
+        Com_PrintError("Failed to load required module: %s Error: %s\n", module, error);
+        return qfalse;
 
     }
 
     if((int)(dlsym(dl, "_init") - (void*)0xA1A4) != 0x8040000)
     {
-        printf("The module %s got loaded to an invalid image base address: 0x%X\n", module, (int)(dlsym(dl, "_init") - (void*)0xA1A4));
-        printf("It is expected that this image base address is located at 0x%X\n", 0x804000);
-        printf("Can not continue.\n");
-        _exit(1);
+        Com_PrintError("The module %s got loaded to an invalid image base address: 0x%X\n", module, (int)(dlsym(dl, "_init") - (void*)0xA1A4));
+        Com_Printf("^1It is expected that this image base address is located at 0x%X\n", 0x804000);
+        Com_Printf("^1Can not continue!\n");
+        return qfalse;
     }
 
     /* No retrieving of symbols where none are :( */
     if(!Sys_PatchImage())
     {
-        printf("Failed to patch module: %s\n", module);
-        _exit(1);
+        Com_PrintError("Failed to patch module: %s\n", module);
+        return qfalse;
     }
+    return qtrue;
 }
 

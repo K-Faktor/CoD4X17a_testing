@@ -1789,7 +1789,6 @@ void SV_InitCvarsOnce(void){
 	sv_debugRate = Cvar_RegisterBool("sv_debugRate", qfalse, 0, "Enable snapshot rate debugging info");
 	sv_debugReliableCmds = Cvar_RegisterBool("sv_debugReliableCmds", qfalse, 0, "Enable debugging information for reliable commands");
 	sv_clientArchive = Cvar_RegisterBool("sv_clientArchive", qtrue, 0, "Have the clients archive data to save bandwidth on the server");
-	SV_CopyCvars();
 }
 
 
@@ -1797,7 +1796,7 @@ void SV_InitCvarsOnce(void){
 
 void SV_Init(){
 
-        SV_AddOperatorCommands();
+        SV_AddSafeCommands();
         SV_InitCvarsOnce();
         SVC_RateLimitInit( );
         SV_InitBanlist();
@@ -2211,6 +2210,12 @@ qboolean SV_Map( const char *levelname ) {
 	char        *map;
 	char mapname[MAX_QPATH];
 	char expanded[MAX_QPATH];
+
+	if(gamebinary_initialized == qfalse)
+	{
+		if(Com_LoadBinaryImage() == qfalse)
+			return qtrue;
+        }
 
 	map = FS_GetMapBaseName(levelname);
 	Q_strncpyz(mapname, map, sizeof(mapname));
@@ -2657,6 +2662,9 @@ __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 		SV_Map( mapname );
 		return qtrue;
 	}
+
+	SetAnimCheck(com_animCheck->boolean);
+
 
         if( svs.time > svse.frameNextSecond){	//This runs each second
 	    svse.frameNextSecond = svs.time+1000;

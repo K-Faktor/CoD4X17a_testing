@@ -2195,7 +2195,7 @@ static pack_t *FS_LoadZipFile( char *zipfile, const char *basename ) {
 
 
 
-void FS_CopyVars()
+void FS_CopyCvars()
 {
     //SEH
     *(cvar_t**)0x13f9a1e0 = loc_language;
@@ -2248,7 +2248,6 @@ void FS_InitFilesystem()
   Q_strncpyz(lastValidBase, fs_basepath->string, sizeof(lastValidBase));
   Q_strncpyz(lastValidGame, fs_gameDirVar->string, sizeof(lastValidGame));
 
-  FS_CopyVars();
 }
 
 

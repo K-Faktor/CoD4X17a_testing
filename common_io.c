@@ -354,14 +354,6 @@ void Com_PrintRedirect(char* msg, int msglen)
 }
 
 
-/*
-    To Add:
-    PbCapatureConsoleOutput(msg, MAXPRINTMSG);
-    HL2Rcon_SourceRconSendConsole( msg, msglen);
-    Com_PrintUDP( msg, msglen );
-*/
-
-
 void Com_AddRedirect(void (*rd_dest)(const char *, int))
 {
     int i;

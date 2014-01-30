@@ -37,7 +37,7 @@
 #include <dlfcn.h>
 #include <dirent.h>
 #include <sys/stat.h>
-
+#include <pwd.h>
 
 /*
 ==================
@@ -439,3 +439,18 @@ void Sys_FreeFileList( char **list )
 	Z_Free( list );
 }
 
+/*
+================
+Sys_GetUsername
+================
+*/
+const char* Sys_GetUsername()
+{
+        struct passwd *passwdstr = getpwuid(getuid());
+
+        if(passwdstr == NULL)
+            return "player";
+
+        return passwdstr->pw_name;
+
+}

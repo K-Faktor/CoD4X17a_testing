@@ -631,7 +631,7 @@ char* SV_PlayerBannedByip(netadr_t *netadr);	//Gets called in SV_DirectConnect
 void SV_PlayerAddBanByip(netadr_t *remote, char *reason, int uid, char* guid, int adminuid, int expire);		//Gets called by future implemented ban-commands and if a prior ban got enforced again - This function can also be used to unset bans by setting 0 bantime
 qboolean SV_RemoveBan(int uid, char* guid, char* name);
 void SV_DumpBanlist( void );
-
+void SV_AddSafeCommands();
 extern	serverStaticExt_t	svse;	// persistant server info across maps
 extern	permServerStatic_t	psvs;	// persistant even if server does shutdown
 
@@ -643,7 +643,8 @@ __cdecl void SV_UpdateServerCommandsToClient( client_t *client, msg_t *msg );
 __cdecl void SV_SendMessageToClient( msg_t *msg, client_t *client );
 __cdecl void SV_WriteSnapshotToClient(client_t* client, msg_t* msg);
 __cdecl void SV_ClipMoveToEntity(struct moveclip_s *clip, svEntity_t *entity, struct trace_s *trace);
-
+void SV_Cmd_Init();
+void SV_CopyCvars();
 #endif
 
 

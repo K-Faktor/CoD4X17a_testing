@@ -154,9 +154,9 @@ __cdecl char* PbSvGameQuery(int para_01, char* string){
     }
 }
 
-void PbCapatureConsoleOutput_wrapper(const char *msg, int msglen)
+void PbCaptureConsoleOutput_wrapper(const char *msg, int msglen)
 {
-    PbCapatureConsoleOutput(msg, 4096);
+    PbCaptureConsoleOutput(msg, 4096);
 
 }
 

@@ -10,11 +10,8 @@ echo Compiling NASM...
 
 nasm -f elf qcommon_hooks.asm
 nasm -f elf cmd_hooks.asm
-nasm -f elf cvar_hooks.asm
 nasm -f elf filesystem_hooks.asm
-nasm -f elf sys_thread_hooks.asm
 nasm -f elf punkbuster_hooks.asm
-nasm -f elf sys_main_hooks.asm
 nasm -f elf xassets_hooks.asm
 nasm -f elf trace_hooks.asm
 nasm -f elf misc_hooks.asm

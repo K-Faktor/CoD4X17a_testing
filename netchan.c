@@ -89,13 +89,6 @@ void Netchan_Init( int port ) {
 	showpackets = Cvar_RegisterBool( "showpackets", qfalse, CVAR_TEMP, "Show all sent and received packets");
 	showdrop = Cvar_RegisterBool( "showdrop", qfalse, CVAR_TEMP, "Show dropped packets");
 	qport = Cvar_RegisterInt( "net_qport", port, 1, 65535, CVAR_INIT, "The net_chan qport" );
-
-	//This is stupid to initialize with net_chan
-//	msg_dumpEnts = (cvar_t**)(0x8930c1c);
-//	msg_printEntityNums = (cvar_t**)(0x8930c18);
-	*msg_dumpEnts = Cvar_RegisterBool( "msg_dumpEnts", qfalse, CVAR_TEMP, "Print snapshot entity info");
-	*msg_printEntityNums = Cvar_RegisterBool( "msg_printEntityNums", qfalse, CVAR_TEMP, "Print entity numbers");
-
 }
 
 /*

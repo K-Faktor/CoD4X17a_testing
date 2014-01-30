@@ -37,17 +37,17 @@ global Hunk_InitDebugMemory
 Hunk_InitDebugMemory:
     jmp 0x819752a
 
-global Com_WriteConfig_f
-Com_WriteConfig_f:
-    jmp 0x8122e82
+;global Com_WriteConfig_f
+;Com_WriteConfig_f:
+;    jmp 0x8122e82
 
-global Com_WriteDefaults_f
-Com_WriteDefaults_f:
-    jmp 0x8123bae
+;global Com_WriteDefaults_f
+;Com_WriteDefaults_f:
+;    jmp 0x8123bae
 
-global Com_ErrorCleanup
-Com_ErrorCleanup:
-    jmp 0x8123c86
+;global Com_ErrorCleanup
+;Com_ErrorCleanup:
+;    jmp 0x8123c86
 
 global Hunk_ClearTempMemory
 Hunk_ClearTempMemory:
@@ -69,10 +69,6 @@ global Hunk_FreeTempMemory
 Hunk_FreeTempMemory:
     jmp 0x81969d4
 
-global Z_Malloc
-Z_Malloc:
-    jmp 0x8196d6e
-
 global Mem_BeginAlloc
 Mem_BeginAlloc:
     jmp 0x81a74d0
@@ -84,8 +80,3 @@ Mem_EndAlloc:
 global TempMalloc
 TempMalloc:
     jmp 0x8151dce
-
-global Com_DvarDump
-Com_DvarDump:
-    jmp 0x8126764
-;0x819680e

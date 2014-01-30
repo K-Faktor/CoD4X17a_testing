@@ -993,7 +993,7 @@ SV_DumpBanlist_f
 ================
 */
 
-void SV_DumpBanlist_f(){
+static void SV_DumpBanlist_f(){
     SV_DumpBanlist();
 }
 
@@ -1238,7 +1238,7 @@ SV_StopRecording_f
 stop recording a demo
 ====================
 */
-void SV_StopRecord_f( void ) {
+static void SV_StopRecord_f( void ) {
 
 	clanduid_t cl;
 	int i;
@@ -1278,7 +1278,7 @@ Begins recording a demo from the current position
 ====================
 */
 //static char demoName[MAX_QPATH];        // compiler bug workaround
-void SV_Record_f( void ) {
+static void SV_Record_f( void ) {
 
 	char* s;
 	char name[MAX_QPATH];
@@ -1340,7 +1340,7 @@ void SV_Record_f( void ) {
 
 
 
-void SV_ShowRules_f(){
+static void SV_ShowRules_f(){
 
     unsigned int clnum;
     client_t* cl;
@@ -1366,7 +1366,7 @@ void SV_ShowRules_f(){
     }
 }
 
-void SV_AddRule_f(){
+static void SV_AddRule_f(){
 
     if ( Cmd_Argc() != 2) {
         Com_Printf( "Usage: addRuleMsg <\"text here in quotes\">\n" );
@@ -1376,7 +1376,7 @@ void SV_AddRule_f(){
     G_AddRule( Cmd_Argv(1));
 }
 
-void SV_AddAdvert_f(){
+static void SV_AddAdvert_f(){
 
     if ( Cmd_Argc() != 2) {
         Com_Printf( "Usage: addAdvertMsg <\"text here in quotes\">\n" );
@@ -1385,7 +1385,7 @@ void SV_AddAdvert_f(){
     G_AddAdvert( Cmd_Argv(1));
 }
 
-void SV_ClearAllMessages_f(){
+static void SV_ClearAllMessages_f(){
 
     G_ClearAllMessages();
 
@@ -1600,7 +1600,7 @@ static void SV_SetPerk_f( void ){
 
 
 
-void SV_TestTimeOverrun( void ){
+static void SV_TestTimeOverrun( void ){
 
 	svs.time = 0x6ffeffff;
 
@@ -1608,7 +1608,7 @@ void SV_TestTimeOverrun( void ){
 
 
 
-void SV_GetCurrentServeTimer(){
+static void SV_GetCurrentServeTimer(){
 
 	Com_Printf("Server Time is : %x\n", svs.time);
 }
@@ -1861,13 +1861,6 @@ static void SV_ShowConfigstring_f()
     Com_Printf("Configstring is: %s\n", buffer);
 }
 
-static void SV_Test_f()
-{
-    Com_Printf("Serverinfo is: %s\n", Cvar_InfoString(CVAR_SERVERINFO));
-}
-
-
-
 
 void SV_AddOperatorCommands(){
 
@@ -1878,22 +1871,12 @@ void SV_AddOperatorCommands(){
 	}
 	initialized = qtrue;
 
-//	Cmd_AddCommand ("stance", SV_SetStance_f);
-
-	Cmd_AddCommand ("systeminfo", SV_Systeminfo_f);
-	Cmd_AddCommand ("serverinfo", SV_Serverinfo_f);
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
 	Cmd_AddCommand ("setPerk", SV_SetPerk_f);
-	Cmd_AddCommand ("map", SV_Map_f);
 	Cmd_AddCommand ("map_restart", SV_MapRestart_f);
 	Cmd_AddCommand ("fast_restart", SV_FastRestart_f);
-	Cmd_AddCommand ("map_rotate", SV_MapRotate_f);
-	Cmd_AddCommand ("addAdvertMsg", SV_AddAdvert_f);
-	Cmd_AddCommand ("addRuleMsg", SV_AddRule_f);
-	Cmd_AddCommand ("clearAllMsg", SV_ClearAllMessages_f);
 	Cmd_AddCommand ("rules", SV_ShowRules_f);
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
-	Cmd_AddCommand ("dumpbanlist", SV_DumpBanlist_f);
 	Cmd_AddCommand ("kick", Cmd_KickPlayer_f);
 	Cmd_AddCommand ("clientkick", Cmd_KickPlayer_f);
 	Cmd_AddCommand ("onlykick", Cmd_KickPlayer_f);
@@ -1906,11 +1889,6 @@ void SV_AddOperatorCommands(){
 	Cmd_AddCommand ("banUser", Cmd_BanPlayer_f);
 	Cmd_AddCommand ("banClient", Cmd_BanPlayer_f);
 	Cmd_AddCommand ("ministatus", SV_MiniStatus_f);
-	Cmd_AddCommand ("writenvcfg", NV_WriteConfig);
-	Cmd_AddCommand ("setAdmin", SV_SetAdmin_f);
-	Cmd_AddCommand ("unsetAdmin", SV_UnsetAdmin_f);
-	Cmd_AddCommand ("setCmdMinPower", SV_SetPermission_f);
-	Cmd_AddCommand ("adminlist", SV_ListAdmins_f);
 	Cmd_AddCommand ("say", SV_ConSayChat_f);
 	Cmd_AddCommand ("consay", SV_ConSayConsole_f);
 	Cmd_AddCommand ("screensay", SV_ConSayScreen_f);
@@ -1918,17 +1896,14 @@ void SV_AddOperatorCommands(){
 	Cmd_AddCommand ("contell", SV_ConTellConsole_f);
 	Cmd_AddCommand ("screentell", SV_ConTellScreen_f);
 	Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
-	Cmd_AddCommand ("status", SV_Status_f);
-	Cmd_AddCommand ("addCommand", Cmd_AddTranslatedCommand_f);
-//	Cmd_AddCommand ("UidSvConStatus", Cmd_DisplayUIDSVConStatus_f);
-//	Cmd_AddCommand ("fast_restarttest", (void*)0x816c67e);
 	Cmd_AddCommand ("stringUsage", SV_StringUsage_f);
 	Cmd_AddCommand ("scriptUsage", SV_ScriptUsage_f);
-//	Cmd_AddCommand ("macRegister",Mac_Register_f);
+
+	Cmd_AddCommand ("setadmin", SV_SetAdmin_f);
+	Cmd_AddCommand ("unsetadmin", SV_UnsetAdmin_f);
 
 	Cmd_AddCommand ("stoprecord", SV_StopRecord_f);
 	Cmd_AddCommand ("record", SV_Record_f);
-	Cmd_AddCommand ("test", SV_Test_f);
 
 	if(Com_IsDeveloper()){
 		Cmd_AddCommand ("showconfigstring", SV_ShowConfigstring_f);
@@ -1939,10 +1914,95 @@ void SV_AddOperatorCommands(){
 }
 
 
+void SV_AddSafeCommands(){
+
+	static qboolean	initialized;
+
+	if ( initialized ) {
+		return;
+	}
+	initialized = qtrue;
+
+	Cmd_AddCommand ("systeminfo", SV_Systeminfo_f);
+	Cmd_AddCommand ("serverinfo", SV_Serverinfo_f);
+	Cmd_AddCommand ("map", SV_Map_f);
+	Cmd_AddCommand ("map_rotate", SV_MapRotate_f);
+	Cmd_AddCommand ("addAdvertMsg", SV_AddAdvert_f);
+	Cmd_AddCommand ("addRuleMsg", SV_AddRule_f);
+	Cmd_AddCommand ("clearAllMsg", SV_ClearAllMessages_f);
+	Cmd_AddCommand ("dumpbanlist", SV_DumpBanlist_f);
+	Cmd_AddCommand ("writenvcfg", NV_WriteConfig);
+	Cmd_AddCommand ("setCmdMinPower", SV_SetPermission_f);
+	Cmd_AddCommand ("adminlist", SV_ListAdmins_f);
+	Cmd_AddCommand ("status", SV_Status_f);
+	Cmd_AddCommand ("addCommand", Cmd_AddTranslatedCommand_f);
+}
 
 
+void SV_Cmd_Init( void ) {
+
+	*(int*)0x8879a40 = -1;
+	*(int*)0x887eb40 = 0;
+	*(int*)0x887eb44 = 0;
+
+}
 
 
+/*
+============
+SV_Cmd_Argc	Returns count of commandline arguments
+============
+*/
+int	SV_Cmd_Argc( void ) {
+
+	int	cmd_argc;
+
+	__asm__ (
+	"mov	0x8879a40,%%eax			\n\t"
+	"mov	0x8879a84(,%%eax,4), %%eax	\n\t"
+	:"=a" (cmd_argc));
+
+	return cmd_argc;
+}
 
 
+/*
+============
+SV_Cmd_Argv	Returns commandline argument by number
+============
+*/
+
+char	*SV_Cmd_Argv( int arg ) {
+
+	char* cmd_argv;
+
+	__asm__ (
+	"mov	0x8879a40,%%eax			\n\t"
+	"mov    $0x822be98,%%edx		\n\t"
+	"cmpl   %%ecx,0x8879a84(,%%eax,4)	\n\t"
+	"jle	1f				\n\t"
+	"mov    0x8879aa4(,%%eax,4),%%eax	\n\t"
+	"lea	(%%eax,%%ecx,4),%%edx		\n\t"
+	"mov    0x4(%%eax),%%edx		\n\t"
+	"lea	(%%eax,%%ecx,4),%%edx		\n\t"
+	"mov	(%%edx),%%edx			\n\t"
+	"1:					\n\t"
+	"					\n\t"
+	:"=d" (cmd_argv)
+	:"c" (arg)
+	:"eax"					);
+	return (cmd_argv);
+}
+
+/*
+============
+SV_Cmd_ArgvBuffer
+
+The interpreted versions use this because
+they can't have pointers returned to them
+============
+*/
+void	SV_Cmd_ArgvBuffer( int arg, char *buffer, int bufferLength ) {
+	Q_strncpyz( buffer, SV_Cmd_Argv(arg), bufferLength );
+}
 

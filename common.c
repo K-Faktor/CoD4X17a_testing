@@ -44,13 +44,15 @@
 #include "server.h"
 #include "nvconfig.h"
 #include "hl2rcon.h"
+#include "punkbuster.h"
+#include "sec_init.h"
+#include "sys_cod4loader.h"
 
 #include <string.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <time.h>
 
-#include "common_adrdefs.h"
 
 
 unsigned long long com_uFrameTime = 0;
@@ -74,7 +76,7 @@ cvar_t* com_sv_running;
 
 char com_errorMessage[MAXPRINTMSG];
 qboolean com_errorEntered;
-
+qboolean gamebinary_initialized = qfalse;
 /*
 ========================================================================
 
@@ -533,36 +535,48 @@ do the apropriate things.
 void Com_Quit_f( void ) {
 	// don't try to shutdown if we are in a recursive error
 	Com_Printf("quitting...\n");
-	Scr_Cleanup();
+
 	Sys_EnterCriticalSection( 2 );
-	GScr_Shutdown();
+
+	if(gamebinary_initialized == qtrue)
+	{
+		Scr_Cleanup();
+		GScr_Shutdown();
+	}
 
 	if ( !com_errorEntered ) {
 		// Some VMs might execute "quit" command directly,
 		// which would trigger an unload of active VM error.
 		// Sys_Quit will kill this process anyways, so
 		// a corrupt call stack makes no difference
-		Hunk_ClearTempMemory();
-		Hunk_ClearTempMemoryHigh();
-		SV_Shutdown("EXE_SERVERQUIT");
+		if(gamebinary_initialized == qtrue)
+		{
+			Hunk_ClearTempMemory();
+			Hunk_ClearTempMemoryHigh();
+			SV_Shutdown("EXE_SERVERQUIT");
 
-		Com_Close();
-
+			Com_Close();
+		}
 		Com_CloseLogFiles( );
 
 		FS_Shutdown(qtrue);
-		FS_ShutdownIwdPureCheckReferences();
-		FS_ShutdownServerIwdNames();
-		FS_ShutdownServerReferencedIwds();
-		FS_ShutdownServerReferencedFFs();
+
+		if(gamebinary_initialized == qtrue)
+		{
+			FS_ShutdownIwdPureCheckReferences();
+			FS_ShutdownServerIwdNames();
+			FS_ShutdownServerReferencedIwds();
+			FS_ShutdownServerReferencedFFs();
+		}
 		NET_Shutdown();
 	}
+
 	Sys_Quit ();
 }
 cvar_t *test1;
 cvar_t *test2;
 
-void Com_InitCvars( void ){
+static void Com_InitCvars( void ){
     static const char* dedicatedEnum[] = {"listen server", "dedicated LAN server", "dedicated internet server", NULL};
     static const char* logfileEnum[] = {"disabled", "async file write", "sync file write", NULL};
 
@@ -626,49 +640,17 @@ void Com_PatchError()
 	*(char**)0x81240A3 = com_errorMessage;
 }
 
-/*
-=================
-Com_Init
-
-The games main initialization
-=================
-*/
-
-void Com_Init(char* commandLine){
-
-
-    static char creator[16];
-    char creatorname[37];
+void Com_InitGamefunctions()
+{
     int msec = 0;
-    int	qport;
 
-    jmp_buf* abortframe = (jmp_buf*)Sys_GetValue(2);
-
-    if(setjmp(*abortframe)){
-        Sys_Error(va("Error during Initialization:\n%s\n", com_errorMessage));
-    }
-    Com_Printf("%s %s %s build %i %s\n", GAME_STRING,Q3_VERSION,PLATFORM_STRING, BUILD_NUMBER, __DATE__);
-
+    FS_CopyCvars();
+    Com_CopyCvars();
+    SV_CopyCvars();
     XAssets_PatchLimits();  //Patch several asset-limits to higher values
 
     SL_Init();
-
     Swap_Init();
-
-    Cbuf_Init();
-
-    Cmd_Init();
-
-    Com_InitEventQueue();
-
-    Com_ParseCommandLine(commandLine);
-
-    Com_StartupVariable(NULL);
-
-    Com_InitCvars();
-    Com_CopyCvars();
-
-    Cvar_Init();
 
     CSS_InitConstantConfigStrings();
 
@@ -684,21 +666,116 @@ void Com_Init(char* commandLine){
 
         Mem_BeginAlloc("$init", qtrue);
     }
-
-    FS_InitFilesystem();
-
     Con_InitChannels();
-
-    Cbuf_AddText( "exec default_mp.cfg\n");
-    Cbuf_Execute(0,0); // Always execute after exec to prevent text buffer overflowing
-
-    Com_StartupVariable(NULL);
 
     if(!com_useFastfiles->integer) SEH_UpdateLanguageInfo();
 
     Com_InitHunkMemory();
 
     Hunk_InitDebugMemory();
+
+    Scr_InitVariables();
+
+    Scr_Init(); //VM_Init
+
+    Scr_Settings(com_logfile->integer || com_developer->integer ,com_developer_script->integer, com_developer->integer);
+
+    XAnimInit();
+
+    DObjInit();
+
+    Mem_EndAlloc("$init", qtrue);
+    DB_SetInitializing( qfalse );
+    Com_Printf("end $init %d ms\n", Sys_Milliseconds() - msec);
+
+    SV_Cmd_Init();
+    SV_AddOperatorCommands();
+
+    cvar_t **msg_dumpEnts = (cvar_t**)(0x8930c1c);
+    cvar_t **msg_printEntityNums = (cvar_t**)(0x8930c18);
+    *msg_dumpEnts = Cvar_RegisterBool( "msg_dumpEnts", qfalse, CVAR_TEMP, "Print snapshot entity info");
+    *msg_printEntityNums = Cvar_RegisterBool( "msg_printEntityNums", qfalse, CVAR_TEMP, "Print entity numbers");
+
+    if(com_useFastfiles->integer)
+        R_Init();
+
+    Com_InitParse();
+
+    Com_AddRedirect(PbCaptureConsoleOutput_wrapper);
+
+    if(!PbServerInitialize()){
+        Com_Printf("Unable to initialize PunkBuster.  PunkBuster is disabled.\n");
+    }
+
+}
+
+qboolean Com_LoadBinaryImage()
+{
+
+    if(gamebinary_initialized == qtrue)
+	return qtrue;
+
+    Com_Printf("--- Game binary initialization ---\n");
+
+    if(Sys_LoadImage() == qtrue)
+    {
+        Com_InitGamefunctions();
+        gamebinary_initialized = qtrue;
+        Com_Printf("--- Game Binary Initialization Complete ---\n");
+    }else{
+        Com_Printf("^1--- Game Binary Initialization Failed ---\n");
+        return qfalse;
+    }
+    return qtrue;
+}
+
+/*
+=================
+Com_Init
+
+The games main initialization
+=================
+*/
+
+void Com_Init(char* commandLine){
+
+
+    static char creator[16];
+    char creatorname[37];
+
+    int	qport;
+
+    jmp_buf* abortframe = (jmp_buf*)Sys_GetValue(2);
+
+    if(setjmp(*abortframe)){
+        Sys_Error(va("Error during Initialization:\n%s\n", com_errorMessage));
+    }
+    Com_Printf("%s %s %s build %i %s\n", GAME_STRING,Q3_VERSION,PLATFORM_STRING, BUILD_NUMBER, __DATE__);
+
+
+    Cbuf_Init();
+
+    Cmd_Init();
+
+    Com_InitEventQueue();
+
+    Com_ParseCommandLine(commandLine);
+
+    Com_StartupVariable(NULL);
+
+    Com_InitCvars();
+
+    Cvar_Init();
+
+    Sec_Init();
+
+    FS_InitFilesystem();
+
+    Cbuf_AddText( "exec default_mp.cfg\n");
+    Cbuf_Execute(0,0); // Always execute after exec to prevent text buffer overflowing
+
+    Com_StartupVariable(NULL);
+
 
     creator[0] = '_';
     creator[1] = 'C';
@@ -760,8 +837,6 @@ void Com_Init(char* commandLine){
 
     cvar_modifiedFlags &= ~CVAR_ARCHIVE;
 
-    com_codeTimeScale = 0x3f800000;
-
     if (com_developer && com_developer->integer)
     {
         Cmd_AddCommand ("error", Com_Error_f);
@@ -780,15 +855,6 @@ void Com_Init(char* commandLine){
     Com_RandomBytes( (byte*)&qport, sizeof(int) );
     Netchan_Init( qport );
 
-    Scr_InitVariables();
-
-    Scr_Init(); //VM_Init
-
-    Scr_Settings(com_logfile->integer || com_developer->integer ,com_developer_script->integer, com_developer->integer);
-
-    XAnimInit();
-
-    DObjInit();
 
     PHandler_Init();
 
@@ -798,15 +864,6 @@ void Com_Init(char* commandLine){
 
     com_frameTime = Sys_Milliseconds();
 
-    Mem_EndAlloc("$init", qtrue);
-    DB_SetInitializing( qfalse );
-    Com_Printf("end $init %d ms\n", Sys_Milliseconds() - msec);
-
-    if(com_useFastfiles->integer)
-        R_Init();
-
-    Com_DvarDump(6,0);
-
     NV_LoadConfig();
 
     Com_Printf("--- Common Initialization Complete ---\n");
@@ -814,7 +871,6 @@ void Com_Init(char* commandLine){
     Cbuf_Execute( 0, 0 );
 
     Com_AddStartupCommands( );
-
 
     abortframe = (jmp_buf*)Sys_GetValue(2);
 
@@ -827,6 +883,8 @@ void Com_Init(char* commandLine){
     HL2Rcon_Init();
 
     AddRedirectLocations();
+
+    Com_LoadBinaryImage();
 
 }
 
@@ -1001,8 +1059,6 @@ __optimize3 void Com_Frame( void ) {
 	NET_TcpServerPacketEventLoop();
 	Cbuf_Execute (0 ,0);
 
-	SetAnimCheck(com_animCheck->boolean);
-
 #ifdef TIMEDEBUG
 	if ( com_speeds->integer ) {
 		timeAfter = Sys_Milliseconds ();
@@ -1054,7 +1110,7 @@ __optimize3 void Com_Frame( void ) {
         Sys_EnterCriticalSection(2);
 
         if(com_errorEntered)
-            Com_ErrorCleanup();
+            Com_Error(ERR_FATAL,"Recursive error");
 
         Sys_LeaveCriticalSection(2);
 }

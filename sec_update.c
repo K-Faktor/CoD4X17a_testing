@@ -104,12 +104,12 @@ int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
     memset(out,0,sizeof(sec_httpPacket_t));
     status = recv(sock,buff,sizeof(buff)-1,0);
     if(status < 1){
-	printf("Sec_GetHTTPPacket: Failed to receive data!\n");
+	Com_PrintError("Sec_GetHTTPPacket: Failed to receive data!\n");
 	return -1;
     }
     tmp = strstr(buff,"\r\n\r\n");
     if(tmp == NULL){
-	printf("Sec_GetHTTPPacket: Packet is corrupt!\n");
+	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\n");
 	return -2;
     }
     //*(tmp + 3) = 0;
@@ -121,7 +121,7 @@ int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
     tmp = strtok(buff," ");
     tmp = strtok(NULL," ");
     if(strncmp(out->header,"HTTP/1.",7)!=0 || tmp == NULL || !Sec_IsNumeric(tmp)){
-	printf("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
+	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
 	return -3;
     }
     out->code = atoi(tmp);
@@ -129,12 +129,12 @@ int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
     //printf("DEBUG: \"%s\"\n",tmp);
     
     if(tmp==NULL){
-	printf("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
+	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
 	return -4;
     }
     
     if(!Sec_IsNumeric(tmp + 15)){
-	printf("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
+	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
 	return -5;
     }
     out->contentLength = atoi(tmp + 15);
@@ -145,7 +145,7 @@ int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
     
     datac = status - out->headerLength - 4;
     if(datac > out->contentLength){
-	printf("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %d,%d,%d,%d\n",datac,out->contentLength,out->headerLength,status);
+	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %d,%d,%d,%d\n",datac,out->contentLength,out->headerLength,status);
 	return -6;
     }
     memcpy(out->content,tmp,datac);
@@ -155,7 +155,7 @@ int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
 	    datac += status;
 	}while(datac<out->contentLength);
 	if(datac != out->contentLength){
-	    printf("Sec_GetHTTPPacket: Packet is corrupt!\n");
+	    Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\n");
 	    return -7;
 	}
     }
@@ -185,12 +185,12 @@ void Sec_Update(char *cmdLine[]){
     char hash[128];
     long unsigned size;
     
-    printf("\n-----------------------------\n");
-    printf(" CoD4X Auto Update\n");
-    printf(" Current version: %g\n",SEC_VERSION);
-    printf(" Current build: %d\n",BUILD_NUMBER);
-    printf(" Current type: %s\n",SEC_TYPE == 's' ? "stable      " : "experimental");
-    printf("-----------------------------\n\n");    
+    Com_Printf("\n-----------------------------\n");
+    Com_Printf(" CoD4X Auto Update\n");
+    Com_Printf(" Current version: %g\n",SEC_VERSION);
+    Com_Printf(" Current build: %d\n",BUILD_NUMBER);
+    Com_Printf(" Current type: %s\n",SEC_TYPE == 's' ? "stable      " : "experimental");
+    Com_Printf("-----------------------------\n\n");
     
     
     server = gethostbyname(SEC_UPDATE_HOST);

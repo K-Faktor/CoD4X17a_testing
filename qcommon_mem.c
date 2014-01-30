@@ -22,6 +22,7 @@
 
 #include <malloc.h>
 #include <string.h>
+#include "q_shared.h"
 #include "qcommon_mem.h"
 
 #define MEM_SIZE 140 //Megabyte
@@ -59,4 +60,19 @@ char *CopyString( const char *in ) {
 	out = Z_Malloc( strlen( in ) + 1 );
 	strcpy( out, in );
 	return out;
+}
+
+
+
+void* Z_Malloc(int size)
+{
+	void *allocmem;
+	allocmem = malloc(size);
+	if(!allocmem)
+	{
+		Com_Error(ERR_FATAL, "System is out of memory!\n");
+		return NULL;
+	}
+	memset(allocmem, 0, size);
+	return allocmem;
 }

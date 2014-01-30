@@ -35,7 +35,6 @@
 #include "sys_thread.h"
 #include "punkbuster.h"
 #include "server.h"
-#include "sec_init.h"
 #include "sec_main.h"
 #include <sys/resource.h>
 #include <libgen.h>
@@ -346,6 +345,19 @@ __cdecl void QDECL Sys_Error( const char *fmt, ... ) {
 
 
 /*
+================
+Sys_Init
+================
+*/
+void Sys_Init()
+{
+	Cvar_RegisterString("arch", OS_STRING "-" ARCH_STRING, CVAR_ROM, "System platform");
+	Cvar_RegisterString("username", Sys_GetUsername(), CVAR_ROM, "Current username");
+
+}
+
+
+/*
 =================
 Sys_SetBinaryPath
 =================
@@ -442,8 +454,6 @@ __cdecl int main(int argc, char* argv[]){
 
     Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
 
-    Sys_LoadImage( );
-    Sec_Init(argv);
     Sys_TimerInit( );
 
     Sys_PlatformInit( );
@@ -451,8 +461,6 @@ __cdecl int main(int argc, char* argv[]){
     Sys_ThreadInit();
 
     Sys_ThreadMain();
-
-    Com_InitParse();
 
     commandLine[0] = 0;
 
@@ -485,11 +493,12 @@ __cdecl int main(int argc, char* argv[]){
     signal( SIGTERM, Sys_SigHandler );
     signal( SIGINT, Sys_SigHandler );
 
-
+/*
     if(!PbServerInitialize()){
         Com_Printf("Unable to initialize PunkBuster.  PunkBuster is disabled.\n");
     }
 
+*/
     while ( 1 )
     {
         static int fpu_word = _FPU_DEFAULT;

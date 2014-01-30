@@ -221,4 +221,15 @@ void __cdecl FS_Startup(const char* game);
 unsigned Com_BlockChecksumKey32( void *buffer, int length, int key );
 void FS_PatchFileHandleData();
 int FS_LoadStack();
+void FS_CopyCvars();
 #endif
+
+
+
+
+
+
+
+
+
+

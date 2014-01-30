@@ -66,5 +66,6 @@ char *Sys_DefaultCDPath( void );
 qboolean Sys_DirectoryHasContent( const char* dir );
 char **Sys_ListFiles( const char *directory, const char *extension, char *filter, int *numfiles, qboolean wantsubs );
 void Sys_FreeFileList( char **list );
+const char* Sys_GetUsername();
 #endif
 

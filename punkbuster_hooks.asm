@@ -41,8 +41,8 @@ global PbSvAddEvent
 PbSvAddEvent:
     jmp 0x810ea20
 
-global PbCapatureConsoleOutput
-PbCapatureConsoleOutput:
+global PbCaptureConsoleOutput
+PbCaptureConsoleOutput:
     jmp 0x810e66a
 
 global PbServerForceProcess

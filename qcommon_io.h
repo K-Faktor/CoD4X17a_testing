@@ -35,16 +35,6 @@ typedef enum{
     MSG_NORDPRINT
 }msgtype_t;
 
-// parameters to the main Error routine
-typedef enum {
-	ERR_UNKNOWN,
-	ERR_FATAL,					// exit the entire game with a popup window
-	ERR_DROP,					// print to console and disconnect from game
-	ERR_SERVERDISCONNECT,		// don't kill server
-	ERR_DISCONNECT,				// client disconnected from the server
-	ERR_NEED_CD					// pop up the need-cd dialog
-} errorParm_t;
-
 void Com_BeginRedirect (char *buffer, int buffersize, void (*flush)( char *, qboolean) );
 void Com_EndRedirect (void);
 void Com_StopRedirect (void);
@@ -57,7 +47,6 @@ void QDECL Com_PrintWarningNoRedirect( const char *fmt, ... );
 void QDECL Com_DPrintf( const char *fmt, ... );
 void QDECL Com_DPrintfWrapper( int drop, const char *fmt, ...);
 void QDECL Com_DPrintNoRedirect( const char *fmt, ... );
-void QDECL Com_Error( int a, const char *error, ...);
 void QDECL Com_PrintRedirect(char *msg, int msglen);
 void Com_AddRedirect(void (*rd_dest)( const char *, int));
 void __cdecl Com_ErrorCleanup(void);

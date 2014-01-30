@@ -45,7 +45,14 @@ char* SL_ConvertToString(unsigned int index)
 
 void AddRedirectLocations()
 {
-    Com_AddRedirect(PbCapatureConsoleOutput_wrapper);
+/*
+    To Add:
+    PbCaptureConsoleOutput(msg, MAXPRINTMSG);*/
+/*    HL2Rcon_SourceRconSendConsole( msg, msglen);
+
+    Com_PrintUDP( msg, msglen );
+*/
+
 
 }
 
@@ -119,3 +126,14 @@ qboolean __cdecl Com_LoadDvarsFromBuffer(const char **inputbuf, unsigned int len
 	}
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
