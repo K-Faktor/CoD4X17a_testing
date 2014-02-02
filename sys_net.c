@@ -2547,7 +2547,10 @@ int NET_TcpClientGetData(int sock, void* buf, int* buflen){
 			return -1;
 
 		}else if(ret == 0){
-
+			if(*buflen == readcount)
+			{
+				return 0;
+			}
 			*buflen = readcount;
 			NET_TcpCloseSocket(sock);
 			Com_Printf("Connection closed by remote host\n");

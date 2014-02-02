@@ -29,6 +29,7 @@ void __cdecl Sys_LeaveCriticalSection(int section);
 void __cdecl Sys_ThreadInit( void );
 void __cdecl Sys_ThreadMain( void );
 qboolean __cdecl Sys_IsMainThread( void );
+qboolean __cdecl Sys_IsDatabaseThread( void );
 void Com_InitThreadData(void);
 const void* __cdecl Sys_GetValue(int key);
 void __cdecl Sys_SetValue(int key, const void* value);

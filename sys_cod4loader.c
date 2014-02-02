@@ -271,6 +271,7 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetJump(0x8131294, MSG_InitReadOnlySplit);
 	SetJump(0x8140e9c, Sys_GetValue);
 	SetJump(0x8140efe, Sys_IsMainThread);
+	SetJump(0x8140f42, Sys_IsDatabaseThread);
 	SetJump(0x81d6be4, Sys_EnterCriticalSection);
 	SetJump(0x81d6bc8, Sys_LeaveCriticalSection);
 	SetJump(0x8177402, SV_SendServerCommand_IW);

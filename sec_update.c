@@ -105,7 +105,7 @@ qboolean Sec_IsNumeric(char *str){
 #define TCP_TIMEOUT 12
 
 int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
-    byte buff[8000]; // Would say 'risky', but it is only 0.8% of the stack in most cases :)
+    byte buff[2000]; // Would say 'risky', but it is only 0.8% of the stack in most cases :)
     msg_t msg_c, msg_h;
     int status;
     char* line;
@@ -182,7 +182,7 @@ int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
     MSG_Init(&msg_c, (byte*)out->content, out->contentLength);
     MSG_WriteData(&msg_c, msg_h.data + msg_h.readcount, msg_h.cursize - msg_h.readcount);
 
-    while(status > 0 && time > Sys_Milliseconds())
+    while(status > 0 && time > Sys_Milliseconds() && msg_c.cursize != out->contentLength)
     {
         status = NET_ReceiveData(sock, &msg_c);
         usleep(10000);
@@ -195,7 +195,7 @@ int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
         NET_TcpCloseSocket(sock);
     }
     if(msg_c.cursize != out->contentLength){
-	    Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\n");
+	    Com_PrintError("Sec_GetHTTPPacket: Packet has invalid length. Length is: %d Expected %d!\n", msg_c.cursize, out->contentLength);
 	    return -7;
     }
     return out->code;

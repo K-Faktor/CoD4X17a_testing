@@ -51,6 +51,11 @@ qboolean __cdecl Sys_IsMainThread( void )
 	return qtrue;
 }
 
+qboolean __cdecl Sys_IsDatabaseThread( void )
+{
+	return qfalse;
+}
+
 
 #define MAX_KEYS 3
 
