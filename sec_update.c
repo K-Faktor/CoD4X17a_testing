@@ -105,7 +105,7 @@ qboolean Sec_IsNumeric(char *str){
 #define TCP_TIMEOUT 12
 
 int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
-    byte buff[2000]; // Would say 'risky', but it is only 0.8% of the stack in most cases :)
+    byte buff[8192]; // Would say 'risky', but it is only 0.8% of the stack in most cases :)
     msg_t msg_c, msg_h;
     int status;
     char* line;
