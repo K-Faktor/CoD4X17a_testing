@@ -1585,47 +1585,6 @@ int FS_ReadLine( void *buffer, int len, fileHandle_t f ) {
 }
 
 
-
-/*
-===========
-FS_SV_FOpenFileWrite
-
-===========
-*/
-fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
-	char ospath[MAX_OSPATH];
-	fileHandle_t	f;
-
-	if ( !fs_searchpaths ) {
-		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
-	}
-
-	FS_BuildOSPathForThread( fs_homepath->string, filename, "", ospath, 0 );
-	ospath[strlen(ospath)-1] = '\0';
-
-	f = FS_HandleForFile();
-	if(f == 0){
-		return 0;
-	}
-	FS_SetFilenameForHandle(f, filename);
-	fsh[f].zipFile = qfalse;
-
-	if ( fs_debug->integer ) {
-		Sys_Print(va("^4FS_SV_FOpenFileWrite: %s\n", ospath ));
-	}
-
-	if( FS_CreatePath( ospath ) ) {
-		return 0;
-	}
-
-	fsh[f].handleFiles.file.o = fopen( ospath, "wb" );
-	fsh[f].handleSync = qfalse;
-	if (!fsh[f].handleFiles.file.o) {
-		f = 0;
-	}
-	return f;
-}
-
 /*
 ===========
 FS_SV_FOpenFileRead
@@ -1950,6 +1909,56 @@ int FS_WriteFile( const char *qpath, const void *buffer, int size ) {
 
 }
 
+
+
+
+/*
+===========
+FS_SV_FOpenFileWrite
+
+===========
+*/
+
+static fileHandle_t FS_SV_FOpenFileWriteGeneric( const char *filename, const char* basepath ) {
+	char ospath[MAX_OSPATH];
+	fileHandle_t	f;
+
+	if ( !fs_searchpaths ) {
+		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+	}
+
+	FS_BuildOSPathForThread( basepath, filename, "", ospath, 0 );
+	FS_StripTrailingSeperator( ospath );
+
+	f = FS_HandleForFile();
+	if(f == 0){
+		return 0;
+	}
+	FS_SetFilenameForHandle(f, filename);
+	fsh[f].zipFile = qfalse;
+
+	if ( fs_debug->integer ) {
+		Sys_Print(va("^4FS_SV_FOpenFileWrite: %s\n", ospath ));
+	}
+
+	if( FS_CreatePath( ospath ) ) {
+		return 0;
+	}
+
+	fsh[f].handleFiles.file.o = fopen( ospath, "wb" );
+	fsh[f].handleSync = qfalse;
+	if (!fsh[f].handleFiles.file.o) {
+		f = 0;
+	}
+	return f;
+}
+
+fileHandle_t FS_SV_FOpenFileWrite( const char *filename )
+{
+    return FS_SV_FOpenFileWriteGeneric( filename, fs_homepath->string );
+}
+
+
 /*
 ============
 FS_SV_WriteFile
@@ -1957,26 +1966,45 @@ FS_SV_WriteFile
 Filename are reletive to the quake search path
 ============
 */
-void FS_SV_WriteFile( const char *qpath, const void *buffer, int size ) {
+
+static int FS_SV_WriteFileGeneric( const char *qpath, const void *buffer, int size, const char* basepath) {
 	fileHandle_t f;
+	int len;
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
+		return -1;
 	}
 
 	if ( !qpath || !buffer ) {
 		Com_Error( ERR_FATAL, "FS_WriteFile: NULL parameter" );
+		return -1;
 	}
 
-	f = FS_SV_FOpenFileWrite( qpath );
+	f = FS_SV_FOpenFileWriteGeneric( qpath, basepath );
 	if ( !f ) {
 		Com_Printf( "Failed to open %s\n", qpath );
-		return;
+		return -1;
 	}
 
-	FS_Write( buffer, size, f );
+	len = FS_Write( buffer, size, f );
 
 	FS_FCloseFile( f );
+
+	return len;
+}
+
+int FS_SV_BaseWriteFile( const char *qpath, const void *buffer, int size)
+{
+    return FS_SV_WriteFileGeneric( qpath, buffer, size, fs_basepath->string);
+
+}
+
+
+int FS_SV_HomeWriteFile( const char *qpath, const void *buffer, int size)
+{
+    return FS_SV_WriteFileGeneric( qpath, buffer, size, fs_homepath->string);
+
 }
 
 

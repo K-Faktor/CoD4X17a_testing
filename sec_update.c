@@ -312,12 +312,7 @@ void Sec_Update( ){
 	}
 	currFile->size = atoi(ptr);
 	Q_strncpyz(currFile->hash,ptr2,sizeof(currFile->hash));
-	for(i = strlen(currFile->path); i > 0 ; --i){
-	    if(currFile->path[i] == '/' || currFile->path[i] == '\\'){
-		Q_strncpyz(currFile->name,currFile->path + i+1, sizeof(currFile->name));
-		break;
-	    }
-	}
+	Q_strncpyz(currFile->name,currFile->path, sizeof(currFile->name));
 	//printf("DEBUG: File to download: link: \"%s\", name: \"%s\", size: %d, hash: \"%s\"\n\n",file.path,file.name,file.size,file.hash);
 
         sock = NET_TcpClientConnect(SEC_UPDATE_HOST);
@@ -344,17 +339,21 @@ void Sec_Update( ){
 	    return;
 	}
 
-	len = FS_WriteFile(buff, packet2.content, packet2.contentLength);
+	len = FS_SV_BaseWriteFile(buff, packet2.content, packet2.contentLength);
 	if(len != packet2.contentLength){
-	    Com_PrintError("Opening \"%s\" for writing! Update aborted.\n",buff);
-	    Sec_FreeHttpPacket(&packet);
-	    Sec_FreeHttpPacket(&packet2);
-	    return;
+
+		len = FS_SV_HomeWriteFile(buff, packet2.content, packet2.contentLength);
+		if(len != packet2.contentLength)
+		{
+		    Com_PrintError("Opening \"%s\" for writing! Update aborted.\n",buff);
+		    Sec_FreeHttpPacket(&packet);
+		    Sec_FreeHttpPacket(&packet2);
+		    return;
+		}
 	}
 
 	ptr = Sec_StrTok(NULL,"\n",42); // Yes, 42 again.
-	Sec_FreeHttpPacket(&packet);
-	Sec_FreeHttpPacket(&packet2);
+
 	size = sizeof(hash);
 	
 	if(!Sec_HashMemory(SEC_HASH_SHA256,packet2.content, packet2.contentLength, hash, &size,qfalse)){
@@ -363,7 +362,10 @@ void Sec_Update( ){
 	    Sec_FreeHttpPacket(&packet2);
 	    return;
 	}
-	
+
+	Sec_FreeHttpPacket(&packet);
+	Sec_FreeHttpPacket(&packet2);
+
 	if(!Q_strncmp(hash, currFile->hash, size)){
 	    Com_Printf("Successfully downloaded file \"%s\".\n", currFile->name);
 	    if(!Q_strncmp(currFile->name, EXECUTABLE_NAME, 15)){
@@ -374,19 +376,14 @@ void Sec_Update( ){
 	else{
 	    Com_PrintError("File \"%s\" is corrupt!\nUpdate aborted.\n",currFile->name);
 	    Com_DPrintf("Hash: \"%s\", correct hash: \"%s\".\n",hash,currFile->hash);
-	    Sec_FreeHttpPacket(&packet);
-	    Sec_FreeHttpPacket(&packet2);
+
 	    return;
 	}
 	
     }
-    Sec_FreeHttpPacket(&packet);
-    if(!dlExec){
-	Com_PrintError("Updating: lacking executable! Update aborted.\n");
-    }
-    else{
-	Com_Printf("All files downloaded successfully. Applying update...\n");
-    }
+
+    Com_Printf("All files downloaded successfully. Applying update...\n");
+
     currFile = files.next;
     do{
 	Com_Printf("Updating file %s...\n", currFile->name);

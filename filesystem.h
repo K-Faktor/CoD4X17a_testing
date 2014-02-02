@@ -200,7 +200,11 @@ fileHandle_t FS_SV_FOpenFileAppend( const char *filename );
 int FS_Write( const void *buffer, int len, fileHandle_t h );
 int FS_ReadFile( const char *qpath, void **buffer );
 int FS_WriteFile( const char *qpath, const void *buffer, int size );
-void FS_SV_WriteFile( const char *qpath, const void *buffer, int size );
+
+#define FS_SV_WriteFile FS_SV_HomeWriteFile
+int FS_SV_HomeWriteFile( const char *qpath, const void *buffer, int size );
+int FS_SV_BaseWriteFile( const char *qpath, const void *buffer, int size );
+
 void QDECL FS_Printf( fileHandle_t h, const char *fmt, ... );
 int FS_Seek( fileHandle_t f, long offset, int origin );
 __cdecl const char* FS_GetBasepath();

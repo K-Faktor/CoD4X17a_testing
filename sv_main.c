@@ -1506,6 +1506,13 @@ void	serverStatus_Write(){
 
         XML_OpenTag(&xmlbase,"Game",9,"CapatureLimit","", "FragLimit","", "Map",sv_mapname->string, "MapTime","", "Name","cod4", "RoundTime","", "Rounds","", "TimeLimit","", "Type",sv_g_gametype->string);
             Cvar_ForEach(serverStatus_WriteCvars, &xmlbase);
+            if(sv_password->string && *sv_password->string)
+            {
+                XML_OpenTag(&xmlbase,"Data",2, "Name", "pswrd", "Value", "1");
+            }else{
+                XML_OpenTag(&xmlbase,"Data",2, "Name", "pswrd", "Value", "0");
+            }
+            XML_CloseTag(&xmlbase);
         XML_CloseTag(&xmlbase);
 
         for ( i = 0, c = 0, cl = svs.clients; i < sv_maxclients->integer ; cl++, i++ ) {
