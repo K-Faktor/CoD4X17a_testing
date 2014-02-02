@@ -430,13 +430,11 @@ char *Sys_DefaultAppPath(void)
 #endif
 
 
-
+char commandLine[MAX_STRING_CHARS] = { 0 };
 
 __cdecl int main(int argc, char* argv[]){
 
     int i;
-    char commandLine[MAX_STRING_CHARS] = { 0 };
-
 
     uid_t uid = getuid();
     if( uid == 0 || uid != geteuid() ) { // warn user that he/she's operating as a privliged user

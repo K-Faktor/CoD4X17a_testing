@@ -90,7 +90,7 @@ qboolean NET_SendPacket( netsrc_t sock, int length, const void *data, netadr_t *
 __cdecl void QDECL NET_OutOfBandPrint( netsrc_t sock, netadr_t *adr, const char *format, ... );
 void NET_OutOfBandData( netsrc_t sock, netadr_t *adr, byte *format, int len );
 void QDECL NET_PrintData( int sock, const char *format, ... );
-qboolean NET_SendData( int sock, byte *data, int len );
+qboolean NET_SendData( int sock, msg_t* msg);
+int NET_ReceiveData( int sock, msg_t* msg);
 
 #endif
-

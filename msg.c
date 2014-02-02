@@ -362,6 +362,24 @@ int MSG_ReadLong( msg_t *msg ) {
 	return *c;
 
 }
+/*
+int MSG_SkipToString( msg_t *msg, const char* string ) {
+	byte c;
+
+	do{
+		c = MSG_ReadByte( msg );      // use ReadByte so -1 is out of bounds
+		if ( c == -1 )
+		{
+			return qfalse;
+		}
+		if(c == string[0] && !Q_strncmp(msg->data + msg->readcount, string, msg->cursize - msg->readcount))
+		{
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+*/
 
 
 char *MSG_ReadString( msg_t *msg ) {

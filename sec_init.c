@@ -126,7 +126,6 @@ void Sec_Init(void)
     SecCryptErr = CRYPT_OK;
     
     Com_Printf("--- Crypto Initializing ---\n");
-    //printf("Initialising Crypto...\n");
     for(i = 0;i<SEC_HASH_SIZE__;++i){
 	result = sec_hashes[i].test();
 	Com_Printf("Testing %s hash function - %s.\n",sec_hashes[i].name,result==CRYPT_OK ? "positive" : "negative");
@@ -137,6 +136,5 @@ void Sec_Init(void)
     }
     
     Com_Printf("--- Crypto Initialization Complete ---\n");
-//    Sec_Update(commandLine);
     return;
 }

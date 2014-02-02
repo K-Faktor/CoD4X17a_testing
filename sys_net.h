@@ -115,7 +115,7 @@ void		Sys_ShowIP(void);
 int NET_TcpSendData( int sock, const void *data, int length );
 void NET_TcpServerPacketEventLoop();
 int NET_TcpClientConnect( const char *remoteAdr );
-int NET_TcpClientGetData(int sock, void* buf, const int buflen);
+int NET_TcpClientGetData(int sock, void* buf, int *buflen);
 void NET_TcpCloseSocket(int socket);
 
 typedef enum {

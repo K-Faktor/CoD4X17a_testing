@@ -1500,7 +1500,7 @@ qboolean isInteger(const char* string, int size)
     if(size == 0) //If we have given a length compare the whole string
         size = 0x10000;
 
-    for(i = 0, ptr = string; i < size && *ptr != '\0' && *ptr != '\n'; i++, ptr++){
+    for(i = 0, ptr = string; i < size && *ptr != '\0' && *ptr != '\n' && *ptr != '\r'; i++, ptr++){
 
         if(*ptr == ' ')
         {

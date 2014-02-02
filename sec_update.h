@@ -23,7 +23,7 @@
 #include "sec_init.h"
 #include "version.h"
 
-void Sec_Update(char *cmdLine[]);
+void Sec_Update( );
 
 
 typedef struct{
@@ -54,7 +54,7 @@ typedef struct sec_file_s{
 
 
 //#undef QUOTE
-#define SEC_UPDATE_HOST "update.iceops.in"
+#define SEC_UPDATE_HOST "update.iceops.in:80"
 #define SEC_UPDATE_PHP(B,T) "/?ver=1.7&build=" B "&type=" T
 #define SEC_UPDATE_USER_AGENT "CoD4X AutoUpdater V. " SEC_UPDATE_VERSION
 //#define SEC_UPDATE_BOUNDARY "------------------------------------874ryg7v"
@@ -64,6 +64,7 @@ typedef struct sec_file_s{
 #define SEC_UPDATE_DOWNLOAD(file) "GET %s HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", file, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
 //#define SEC_UPDATE_TMP SEC_UPDATE_PHP(BUILD_NUMBER,"e")
 #define SEC_UPDATE_GETVERSION "GET /?ver=%g&build=%d&type=%c HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", SEC_VERSION, BUILD_NUMBER, SEC_TYPE, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
+#define SEC_UPDATE_GETGROUNDVERSION "GET /?ver=%g&build=%d&type=%c HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", SEC_VERSION, 753, SEC_TYPE, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
 //#define SEC_UPDATE_GETVERSION SEC_UPDATE_DOWNLOAD(SEC_UPDATE_TMP)
 
 

@@ -35,6 +35,8 @@
 #include "sys_thread.h"
 #include "filesystem.h"
 #include "misc.h"
+#include "sys_cod4loader.h"
+#include "sec_update.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -52,26 +54,16 @@
 #define ELF_SECTIONSTRINGOFFSET 0
 #define ELF_SECTIONTYPEOFFSET 4
 #define DLLMOD_FILESIZE 2281820
+#define ELF_TEXTSECTIONLENGTH 1831332
 
 
-static qboolean Sys_ModBinaryFile(FILE* fp, int offset, byte newval)
-{
-    if(fseek(fp, offset, SEEK_SET) != 0)
-    {
-        Com_PrintError("Seek error on file cod4_lnxded.so opened for writing - Error: %s\n", strerror(errno));
-        return qfalse;
-    }
-    if(fputc(newval, fp) == newval)
-    {
-        return qtrue;
-    }
-    return qfalse;
-}
+void Sys_CoD4Linker();
+
+/*
 
 static qboolean Sys_LoadImagePrepareFile(const char* path)
 {
-        FILE* fp;
-        int rval, trys;
+        int rval;
         char cmdline[MAX_OSPATH];
         char copypath[MAX_OSPATH];
         const char* dir;
@@ -102,13 +94,10 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
             return qfalse;
         }
 
-        trys = 0;
-
         if(access(path, F_OK) != 0)
         {
             Com_Printf("The file %s seems not to exist\n", path);
 
-        dl_again:
             Com_Printf("Trying to download...\n");
 
             Com_sprintf(cmdline, sizeof(cmdline), "wget -O %s %s", path, "http://update.iceops.in/cod4_lnxded.so");
@@ -139,101 +128,10 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
             return qfalse;
         }
 
-        //Test if it is the correct file and see if it is already a shared object
-        fp = fopen(path, "rb");
-        if(fp)
-        {
-            if( !fseek(fp, 0, SEEK_END) && ftell(fp) == DLLMOD_FILESIZE && !fseek(fp, ELF_INITOFFSET, SEEK_SET))
-            {
-                if(fgetc(fp) == 0xc3)
-                { //The elf type is shared library already
-                    fclose(fp);
-                    return qtrue;
-                }
-                //The elf type is exe file - we have to make it a shared library
-                fclose(fp);
-
-            }else{
-                //The file can not be read or the size is wrong
-                fclose(fp);
-                Com_PrintError("The file %s can not be read or has a wrong size.\n", path);
-                if(trys < 1)
-                {
-                    Com_PrintError("Deleting file: %s\n", path);
-                    if(remove(path) != 0)
-                    {
-                        Com_PrintError("Couldn't delete file %s Error: %s\n", path, strerror(errno));
-                        return qfalse;
-                    }
-                    trys++;
-                    goto dl_again;
-                }
-                return qfalse;
-            }
-
-        }else{
-            Com_PrintError("Failed to open file %s for reading - Error: %s\n", path, strerror(errno));
-            return qfalse;
-        }
-
-        //Try to make it a shared object
-        fp = fopen(path, "rb+");
-        if(fp)
-        {
-            /* Turning ELF file into a shared library object */
-            if(Sys_ModBinaryFile(fp, ELF_TYPEOFFSET, 3) == qfalse)
-            {
-                fclose(fp);
-                return qfalse;
-            }
-            /* kill function _init to prevent Segmentation fault if image is relocated. So we can give a proper error message instead SigSegV */
-#if 0
-            if(Sys_ModBinaryFile(fp, ELF_INITOFFSET, 0xc3) == qfalse)
-            {
-                fclose(fp);
-                return qfalse;
-            }
-
-            /* kill function _fini to prevent Segmentation fault if image is relocated. */
-            if(Sys_ModBinaryFile(fp, ELF_FINIOFFSET, 0xc3) == qfalse)
-            {
-                fclose(fp);
-                return qfalse;
-            }
-            /* kill relocation section (.rel.dyn) name to "" */
-            if(Sys_ModBinaryFile(fp, ELF_RELOCOFFSET + ELF_SECTIONSTRINGOFFSET, 0x5b) == qfalse)
-            {
-                fclose(fp);
-                return qfalse;
-            }
-            /* kill relocation section (.rel.plt) name to "" */
-            if(Sys_ModBinaryFile(fp, ELF_RELOC2OFFSET + ELF_SECTIONSTRINGOFFSET, 0x64) == qfalse)
-            {
-                fclose(fp);
-                return qfalse;
-            }
-            /* change relocation section (.rel.dyn) type to null */
-            if(Sys_ModBinaryFile(fp, ELF_RELOCOFFSET + ELF_SECTIONTYPEOFFSET, 0x0) == qfalse)
-            {
-                fclose(fp);
-                return qfalse;
-            }
-            /* change relocation section (.rel.plt) type to null */
-            if(Sys_ModBinaryFile(fp, ELF_RELOC2OFFSET + ELF_SECTIONTYPEOFFSET, 0x0) == qfalse)
-            {
-                fclose(fp);
-                return qfalse;
-            }
-
-#endif
-            fclose(fp);
-            return qtrue;
-        }
-
-        Com_PrintError("Failed to open file %s for writing - Error: %s\n", path, strerror(errno));
-        return qfalse;
-
+        return qtrue;
 }
+
+*/
 
 
 void Com_PatchError(void);
@@ -443,7 +341,6 @@ static qboolean Sys_PatchImage()
 	return qtrue;
 }
 
-
 /*
 =============
 Sys_LoadImage
@@ -452,42 +349,74 @@ Sys_LoadImage
 */
 qboolean Sys_LoadImage( ){
 
-    void *dl;
-    char *error;
-    char module[MAX_OSPATH];
+    byte *fileimage;
+    int len;
+    char *cmdline[2];
+    cmdline[0] = NULL;
 
-    Com_sprintf(module, sizeof(module), "%s/%s", Sys_BinaryPath(), COD4_DLL);
+    /* Is this file here ? */
+    len = FS_FOpenFileRead(BIN_FILENAME, NULL);
+    if(len != DLLMOD_FILESIZE)
+    {/* Nope !*/
 
-    if(!Sys_LoadImagePrepareFile( module ))
-    {
-        Com_PrintError("An error has occurred. Can not startup\n");
-        return qfalse;
-    }
-
-    dl = dlopen(module, RTLD_LAZY);
-
-    if(dl == NULL)
-    {
-        error = dlerror();
-        Com_PrintError("Failed to load required module: %s Error: %s\n", module, error);
+        Sec_Update(cmdline);
+        FS_Restart(0);
         return qfalse;
 
     }
 
-    if((int)(dlsym(dl, "_init") - (void*)0xA1A4) != 0x8040000)
+
+    len = FS_ReadFile(BIN_FILENAME, (void**)&fileimage);
+    if(!fileimage)
     {
-        Com_PrintError("The module %s got loaded to an invalid image base address: 0x%X\n", module, (int)(dlsym(dl, "_init") - (void*)0xA1A4));
-        Com_Printf("^1It is expected that this image base address is located at 0x%X\n", 0x804000);
-        Com_Printf("^1Can not continue!\n");
-        return qfalse;
+	Com_PrintError("Couldn't open "BIN_FILENAME". CoD4 can not startup.\n");
+	return qfalse;
+    }
+    if(len != DLLMOD_FILESIZE)
+    {
+	Com_PrintError(BIN_FILENAME" is corrupted! CoD4 can not startup.\n");
+	FS_FreeFile(fileimage);
+	return qfalse;
     }
 
-    /* No retrieving of symbols where none are :( */
+    Com_Memcpy(BIN_SECT_TEXT_START, fileimage + BIN_SECT_TEXT_FOFFSET, BIN_SECT_TEXT_LENGTH);
+    Com_Memcpy(BIN_SECT_RODATA_START, fileimage + BIN_SECT_RODATA_FOFFSET, BIN_SECT_RODATA_LENGTH);
+    Com_Memcpy(BIN_SECT_DATA_START, fileimage + BIN_SECT_DATA_FOFFSET, BIN_SECT_DATA_LENGTH);
+    Com_Memset(BIN_SECT_PLT_START, 0x90, BIN_SECT_PLT_LENGTH);
+
+    Sys_CoD4Linker();
+
+    FS_FreeFile(fileimage);
+
     if(!Sys_PatchImage())
     {
-        Com_PrintError("Failed to patch module: %s\n", module);
         return qfalse;
     }
+    if(Sys_MemoryProtectExec(BIN_SECT_PLT_START, BIN_SECT_PLT_LENGTH) == qfalse)
+    {
+        FS_FreeFile(fileimage);
+        return qfalse;
+    }
+    if(Sys_MemoryProtectExec(BIN_SECT_TEXT_START, BIN_SECT_TEXT_LENGTH) == qfalse)
+    {
+        FS_FreeFile(fileimage);
+        return qfalse;
+    }
+    if(Sys_MemoryProtectReadonly(BIN_SECT_RODATA_START, BIN_SECT_RODATA_LENGTH) == qfalse)
+    {
+        FS_FreeFile(fileimage);
+        return qfalse;
+    }
+    if(Sys_MemoryProtectWrite(BIN_SECT_DATA_START, BIN_SECT_DATA_LENGTH) == qfalse)
+    {
+        FS_FreeFile(fileimage);
+        return qfalse;
+    }
+    if(Sys_MemoryProtectWrite(BIN_SECT_BSS_START, BIN_SECT_BSS_LENGTH) == qfalse)
+    {
+        FS_FreeFile(fileimage);
+        return qfalse;
+    }
+
     return qtrue;
 }
-

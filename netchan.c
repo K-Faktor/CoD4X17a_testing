@@ -583,8 +583,42 @@ NET_TCPData
 Sends a data message in an out-of-band datagram (only used for "PbSvSendToClient")
 ================
 */
-qboolean NET_SendData( int sock, byte *data, int len ) {
+qboolean NET_SendData( int sock, msg_t* msg) {
 
-	return NET_TcpSendData( sock, data, len );
+	return NET_TcpSendData( sock, msg->data, msg->cursize );
 }
 
+/*
+===============
+NET_ReceiveData
+Receives a TCP datastream
+return values:
+2: Got new data + Connection okay
+1: Got no data + Connection okay
+-1: Got no data + Connection closed
+-2: Got new data + Connection closed
+================
+*/
+int NET_ReceiveData( int sock, msg_t* msg) {
+
+	int len = msg->maxsize - msg->cursize;
+	int ret;
+
+	ret = NET_TcpClientGetData( sock, msg->data + msg->cursize, &len);
+
+	if(ret < 0 && len > 0)
+        {
+            msg->cursize += len;
+            return -2;
+        }
+	if(ret < 0 && len < 1)
+        {
+	    return -1;
+        }
+        if(len > 0)
+	{
+            msg->cursize += len;
+	    return 2;
+	}
+	return 1;
+}

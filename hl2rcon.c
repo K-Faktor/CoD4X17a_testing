@@ -363,7 +363,7 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 	MSG_WriteLong(&sendmsg, 0);
 	MSG_WriteLong(&sendmsg, SERVERDATA_RESPONSE_VALUE);
 	MSG_WriteShort(&sendmsg, 0);
-	if(NET_SendData(socketfd, sendmsg.data, sendmsg.cursize))
+	if(NET_SendData(socketfd, &sendmsg))
 	{
 		return TCP_AUTHBAD;
 	}
@@ -426,7 +426,7 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 	MSG_WriteLong(&sendmsg, user->lastpacketid);
 	MSG_WriteLong(&sendmsg, SERVERDATA_AUTH_RESPONSE);
 	MSG_WriteShort(&sendmsg, 0);
-	if(NET_SendData(socketfd, sendmsg.data, sendmsg.cursize))
+	if(NET_SendData(socketfd, &sendmsg))
 	{
 		return TCP_AUTHBAD;
 	}
@@ -445,7 +445,7 @@ badrcon:
 	MSG_WriteLong(&sendmsg, -1);
 	MSG_WriteLong(&sendmsg, SERVERDATA_AUTH_RESPONSE);
 	MSG_WriteShort(&sendmsg, 0);
-	NET_SendData(socketfd, sendmsg.data, sendmsg.cursize);
+	NET_SendData(socketfd, &sendmsg);
 	return TCP_AUTHBAD;
 
 }
@@ -508,7 +508,7 @@ void HL2Rcon_SourceRconSendDataToEachClient( const byte* data, int msglen, int t
 			*updatelen = msg.cursize - 4;
 			msgbuild = qtrue;
 		}
-		NET_SendData(user->socketfd, msg.data, msg.cursize);
+		NET_SendData(user->socketfd, &msg);
 	}
 }
 
@@ -563,7 +563,7 @@ void HL2Rcon_SourceRconSendChatToEachClient( const char *text, rconUser_t *self,
 		updatelen = (int32_t*)msg.data;
 		*updatelen = msg.cursize - 4;
 
-		NET_SendData(user->socketfd, msg.data, msg.cursize);
+		NET_SendData(user->socketfd, &msg);
 	}
 }
 
@@ -593,7 +593,7 @@ void HL2Rcon_SourceRconFlushRedirect(char* outputbuf, qboolean lastcommand){
 	updatelen = (int32_t*)msg.data;
 	*updatelen = msg.cursize - 4;
 
-	NET_SendData(user->socketfd, msg.data, msg.cursize);
+	NET_SendData(user->socketfd, &msg);
 }
 
 
@@ -671,7 +671,7 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int socketfd, int c
 		    //Adjust the length
 		    updatelen = (int32_t*)msg2.data;
 		    *updatelen = msg2.cursize - 4;
-		    NET_SendData(socketfd, msg2.data, msg2.cursize);
+		    NET_SendData(socketfd, &msg2);
 		    break;
 
 		case SERVERDATA_EXECCOMMAND:

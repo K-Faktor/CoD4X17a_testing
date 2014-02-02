@@ -2,8 +2,10 @@
 echo Compiling C-code...
 gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c
 
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c sec_update.c
+
 #echo Comiling Crypto library...
-#gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c lib_tomcrypt/*.c -o crypto.o | more
+#gcc -m32 -Wall -O1 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c lib_tomcrypt/*.c -o crypto.o
 
 
 echo Compiling NASM...
@@ -21,8 +23,8 @@ nasm -f elf server_hooks.asm
 nasm -f elf msg_hooks.asm
 
 echo Linking...
-gcc -m32 -Wl,-ldl,-lpthread,-lm,-Tlinkerscript.ld,--dynamic-list=pluginExports.ld -o cod4x17a_dedrun *.o -L./ -ltomcrypt -ltommath
+gcc -m32 -Wl,-ldl,-lpthread,-lm,-lstdc++,-Tlinkerscript.ld,--dynamic-list=pluginExports.ld -o cod4x17a_dedrun *.o -L./ -ltomcrypt -ltommath
 
-rm *.o
+#rm *.o
 
 ./version_make_progress.sh

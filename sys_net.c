@@ -2515,7 +2515,7 @@ returns -1 if connection got closed
 ====================
 */
 
-int NET_TcpClientGetData(int sock, void* buf, const int buflen){
+int NET_TcpClientGetData(int sock, void* buf, int* buflen){
 
 	int err;
 	int ret;
@@ -2526,7 +2526,7 @@ int NET_TcpClientGetData(int sock, void* buf, const int buflen){
 
 	while(true){
 
-		ret = recv(sock, buf + readcount, buflen - readcount, MSG_DONTWAIT);
+		ret = recv(sock, buf + readcount, *buflen - readcount, MSG_DONTWAIT);
 
 		if(ret == SOCKET_ERROR){
 
@@ -2542,27 +2542,30 @@ int NET_TcpClientGetData(int sock, void* buf, const int buflen){
 			else
 				Com_PrintWarningNoRedirect("NET_TcpGetData recv() syscall failed: %s\n", NET_ErrorString());
 
+			*buflen = readcount;
 			NET_TcpCloseSocket(sock);
 			return -1;
 
 		}else if(ret == 0){
 
+			*buflen = readcount;
 			NET_TcpCloseSocket(sock);
 			Com_Printf("Connection closed by remote host\n");
 			return -1;
 
 		}else{
 
-			if( ret >= buflen - readcount) {
+			if( ret >= *buflen - readcount) {
 
 				Com_PrintWarning( "Oversize packet on socket %d\n", sock);
 
-				readcount = buflen -1;
+				readcount = *buflen -1;
 				break;
 			}
 			readcount = readcount + ret;
 		}
 	}
+	*buflen = readcount;
 	return readcount;
 }
 

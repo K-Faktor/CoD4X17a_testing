@@ -26,4 +26,19 @@
 
 qboolean Sys_LoadImage(void);
 
+#define BIN_FILENAME "cod4_lnxded-bin"
+#define BIN_SECT_PLT_START (void*)0x804a1bc
+#define BIN_SECT_PLT_LENGTH 0xa60
+#define BIN_SECT_TEXT_START (void*)0x804ac20
+#define BIN_SECT_TEXT_LENGTH 0x1bf1a4
+#define BIN_SECT_TEXT_FOFFSET 0x2c20
+#define BIN_SECT_RODATA_START (void*)0x8209e00
+#define BIN_SECT_RODATA_LENGTH 0x36898
+#define BIN_SECT_RODATA_FOFFSET 0x1c1e00
+#define BIN_SECT_DATA_START (void*)0x826b580
+#define BIN_SECT_DATA_LENGTH 0x9454
+#define BIN_SECT_DATA_FOFFSET 0x222580
+#define BIN_SECT_BSS_START (void*)0x8274a00
+#define BIN_SECT_BSS_LENGTH 0xc182240
+
 #endif

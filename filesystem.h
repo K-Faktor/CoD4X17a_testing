@@ -175,6 +175,7 @@ qboolean FS_HomeRemove( const char *path );
 qboolean FS_SV_HomeRemove( const char *path );
 
 qboolean FS_FileExists( const char *file );
+qboolean FS_SV_HomeFileExists( const char *file );
 
 char* FS_SV_GetFilepath( const char *file );
 void FS_Rename( const char *from, const char *to );
@@ -198,7 +199,7 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 fileHandle_t FS_SV_FOpenFileAppend( const char *filename );
 int FS_Write( const void *buffer, int len, fileHandle_t h );
 int FS_ReadFile( const char *qpath, void **buffer );
-void FS_WriteFile( const char *qpath, const void *buffer, int size );
+int FS_WriteFile( const char *qpath, const void *buffer, int size );
 void FS_SV_WriteFile( const char *qpath, const void *buffer, int size );
 void QDECL FS_Printf( fileHandle_t h, const char *fmt, ... );
 int FS_Seek( fileHandle_t f, long offset, int origin );
@@ -222,14 +223,8 @@ unsigned Com_BlockChecksumKey32( void *buffer, int length, int key );
 void FS_PatchFileHandleData();
 int FS_LoadStack();
 void FS_CopyCvars();
+char* FS_SV_GetFilepath( const char *file );
+qboolean FS_SV_BaseRemove( const char *path );
 #endif
-
-
-
-
-
-
-
-
 
 

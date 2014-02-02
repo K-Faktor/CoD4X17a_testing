@@ -22,6 +22,11 @@
 #include "sec_crypto.h"
 #include "sec_common.h"
 #include "sec_main.h"
+#include "sys_main.h"
+#include "msg.h"
+#include "sys_net.h"
+#include "netchan.h"
+#include "filesystem.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -96,71 +101,109 @@ qboolean Sec_IsNumeric(char *str){
     }
     return qfalse; // Only whitespaces
 }
+
+#define TCP_TIMEOUT 12
+
 int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
-    char buff[8000]; // Would say 'risky', but it is only 0.8% of the stack in most cases :)
-    int status,datac;
-    char *tmp;
-    memset(buff,0,sizeof(buff));
+    byte buff[8000]; // Would say 'risky', but it is only 0.8% of the stack in most cases :)
+    msg_t msg_c, msg_h;
+    int status;
+    char* line;
+    unsigned int time;
+
     memset(out,0,sizeof(sec_httpPacket_t));
-    status = recv(sock,buff,sizeof(buff)-1,0);
-    if(status < 1){
-	Com_PrintError("Sec_GetHTTPPacket: Failed to receive data!\n");
-	return -1;
-    }
-    tmp = strstr(buff,"\r\n\r\n");
-    if(tmp == NULL){
-	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\n");
+
+    status = 1;
+    out->contentLength = -1;
+
+    time = Sys_Milliseconds() + TCP_TIMEOUT*1000;
+
+    MSG_Init(&msg_h, buff, sizeof(buff));
+
+    do{
+        while(status > 0 && status != 2 && time > Sys_Milliseconds())
+        {
+            status = NET_ReceiveData(sock, &msg_h);
+            usleep(10000);
+        }
+        if(status < 1 && msg_h.cursize - msg_h.readcount < 1){
+
+		Com_PrintError("Sec_GetHTTPPacket: Failed to receive data!\n");
+		return -1;
+	}
+
+	if(!out->code)
+	{
+		line = MSG_ReadStringLine(&msg_h);
+		if(Q_stricmpn(line,"HTTP/1.",7) || isInteger(line + 9, 4) == qfalse){
+			Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n", line);
+			return -3;
+		}
+		out->code = atoi(line + 9);
+	}
+	if(out->contentLength < 0)
+	{
+		line = MSG_ReadStringLine(&msg_h);
+		if(!Q_stricmpn("Content-Length:", line, 15))
+		{
+			if(isInteger(line + 15, 0) == qfalse)
+			{
+				Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n", line);
+				return -5;
+			}
+			out->contentLength = atoi(line + 15);
+		}
+	}
+	line = MSG_ReadStringLine(&msg_h);
+	if(line[0] == '\r')
+	{
+            /* We are done with header */
+            break;
+	}
+    }while(line[0] != '\0');
+
+
+    if(line[0] == '\0')
+    {
+	Com_PrintError("Sec_GetHTTPPacket: Packet has unexpected end!\n");
 	return -2;
     }
-    //*(tmp + 3) = 0;
-    out->headerLength = tmp-buff;
-    out->header = Sec_SMalloc(out->headerLength + 1);
-    out->header[out->headerLength]=0; // A valid C string :)
-    memcpy(out->header,buff,out->headerLength);
-    //printf("DEBUG: header contents:\n\n-------------\n\n%s\n\n-------------\n\n",out->header);
-    tmp = strtok(buff," ");
-    tmp = strtok(NULL," ");
-    if(strncmp(out->header,"HTTP/1.",7)!=0 || tmp == NULL || !Sec_IsNumeric(tmp)){
-	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
-	return -3;
-    }
-    out->code = atoi(tmp);
-    tmp = strstr(out->header,"Content-Length:");
-    //printf("DEBUG: \"%s\"\n",tmp);
-    
-    if(tmp==NULL){
-	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
+
+    if(out->contentLength < 0)
+    {
+        out->contentLength = 0;
+	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\n");
 	return -4;
     }
-    
-    if(!Sec_IsNumeric(tmp + 15)){
-	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n",tmp);
-	return -5;
-    }
-    out->contentLength = atoi(tmp + 15);
+
+    out->headerLength = msg_h.readcount;
+    out->header = Sec_SMalloc(out->headerLength + 1);
+    Com_Memcpy(out->header, msg_h.data, out->headerLength);
+    out->header[out->headerLength] = 0; // A valid C string :)
+/*    out->code = ?; */
     out->content = Sec_SMalloc(out->contentLength + 1);
-    out->content[out->contentLength] = 0; // In case we wanted to use string functions on the content
-    //printf("Mega debug: %d     %d, %s\n",status,out->headerLength + 4,buff+out->headerLength+4);
-    tmp = buff + out->headerLength + 4; // tmp now points on the start of the content
-    
-    datac = status - out->headerLength - 4;
-    if(datac > out->contentLength){
-	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %d,%d,%d,%d\n",datac,out->contentLength,out->headerLength,status);
-	return -6;
+
+    MSG_Init(&msg_c, (byte*)out->content, out->contentLength +1);
+    MSG_WriteData(&msg_c, msg_h.data + msg_h.readcount, msg_h.cursize - msg_h.readcount);
+
+    while(status > 0 && time > Sys_Milliseconds())
+    {
+        status = NET_ReceiveData(sock, &msg_c);
+        usleep(10000);
     }
-    memcpy(out->content,tmp,datac);
-    if(datac < out->contentLength){
-	do{
-	    status=recv(sock,out->content+datac,out->contentLength-datac,0);
-	    datac += status;
-	}while(datac<out->contentLength);
-	if(datac != out->contentLength){
+    MSG_WriteByte(&msg_c, 0);
+    if(status > 0)
+    {
+        NET_TcpCloseSocket(sock);
+    }
+    if(msg_c.cursize != out->contentLength +1){
 	    Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\n");
 	    return -7;
-	}
     }
     return out->code;
 }
+
+
 void Sec_FreeHttpPacket(sec_httpPacket_t *packet){
     Sec_Free(packet->content);
     Sec_Free(packet->header);
@@ -170,18 +213,15 @@ void Sec_FreeFileStruct(sec_file_t *file){
 	Sec_FreeFileStruct(file->next);
     Sec_Free(file);
 }
-void Sec_Update(char *cmdLine[]){
-    char *buff;
-    char *ptr,*ptr2;
+void Sec_Update( ){
+    char buff[SEC_UPDATE_INITIALBUFFSIZE];
+    char *ptr,*ptr2, *testfile;
     char name1[256],name2[256];
-    struct sockaddr_in addr;
-    struct hostent *server;
     int sock,status;
-    sec_file_t files,*currFile = &files;
+    sec_file_t files, *currFile = &files;
     sec_httpPacket_t packet,packet2;
-    FILE *fp;
     qboolean dlExec = qfalse;
-    int i;
+    int i, len;
     char hash[128];
     long unsigned size;
     
@@ -191,212 +231,230 @@ void Sec_Update(char *cmdLine[]){
     Com_Printf(" Current build: %d\n",BUILD_NUMBER);
     Com_Printf(" Current type: %s\n",SEC_TYPE == 's' ? "stable      " : "experimental");
     Com_Printf("-----------------------------\n\n");
-    
-    
-    server = gethostbyname(SEC_UPDATE_HOST);
-    if(server == NULL){
-	printf("Cannot connect to the update server - no such host.\n");
+
+    sock = NET_TcpClientConnect(SEC_UPDATE_HOST);
+
+    if(sock < 0){
 	return;
     }
-    memset(&addr,0,sizeof(struct sockaddr_in));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(SEC_UPDATE_PORT);
-    memcpy(&addr.sin_addr.s_addr,server->h_addr,sizeof(struct hostent));
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if(sock<0){
-	printf("Cannot create a socket. Error string: %s.\n", strerror(errno));
-	return;
-    }
-    
-    status = connect(sock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in));
+
+    Com_sprintf(buff, sizeof(buff), SEC_UPDATE_GETGROUNDVERSION);
+
+    status = NET_TcpSendData(sock, buff, strlen(buff));
+
     if(status < 0){
-	printf("Cannot connect to the update server -%d, %s.\n",status,strerror(errno));
 	return;
     }
-    //Sec_Free(buff);
-    buff = (char *)Sec_Malloc(SEC_UPDATE_INITIALBUFFSIZE);
-    sprintf(buff,SEC_UPDATE_GETVERSION);
-    
-    status = send(sock,buff,strlen(buff),0);
-    
-    fp = fopen("tmp.txt","w");
-    fwrite(buff,sizeof(char),status,fp);
-    fflush(fp);
-    fclose(fp);
-    //Sec_Free(buff);
+    /* Need to catch errors */
+    FS_WriteFile("tmp.txt", va("%d", status), 1);
+
     // TODO: Do something with the status?
+
     status = Sec_GetHTTPPacket(sock, &packet);
-    //status = recv(sock,buff,strlen(buff),0);
-    fp = fopen("tmp2.txt","w");
-    fwrite(packet.header,sizeof(char),packet.headerLength,fp);
-    fflush(fp);
-    fclose(fp);
-    fp = fopen("tmp3.txt","w");
-    fwrite(packet.content,sizeof(char),packet.contentLength,fp);
-    fflush(fp);
-    fclose(fp);
-    if(status<=0){
-	printf("Error receiving data. Error code: %d.\n", status);
-	close(sock);
-	Sec_Free(buff);
+
+    FS_WriteFile("tmp2.txt", packet.header, packet.headerLength);
+    FS_WriteFile("tmp3.txt", packet.content, packet.contentLength);
+
+    if(status <= 0){
+	Com_PrintError("Receiving data. Error code: %d.\n", status);
 	Sec_FreeHttpPacket(&packet);
 	return;
     }
-    if(status==204){
-	printf("\nServer is up to date.\n\n");
-	close(sock);
-	Sec_Free(buff);
+    if(status == 204){
+	Com_Printf("\nServer is up to date.\n\n");
 	Sec_FreeHttpPacket(&packet);
 	return;
     }
-    else if(status!=200){
-	printf("Error updating: update server's malfunction.\nStatus code: %d.\n",status);
-	close(sock);
-	Sec_Free(buff);
+    else if(status != 200){
+	Com_PrintWarning("The update server's malfunction.\nStatus code: %d.\n",status);
 	Sec_FreeHttpPacket(&packet);
 	return;
     }
+
+    Com_Memset(&files, 0, sizeof(files));
+
     /* We need to parse filenames etc */
-    
     ptr = Sec_StrTok(packet.content,"\n",42); // Yes, 42.
-    
+
     while(ptr != NULL){
 	
 	currFile->next = Sec_GMalloc(sec_file_t,1);
 	currFile = currFile->next;
-	memset(currFile,0,sizeof(sec_file_t));
+	Com_Memset(currFile,0,sizeof(sec_file_t));
 	ptr2 = strchr(ptr,' ');
 	if(ptr2 == NULL){
-	    printf("Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
+	    Com_PrintWarning("Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
 	    return;
 	}
 	*ptr2++ = 0;
-	strncpy(currFile->path,ptr,sizeof(currFile->path));
+	Q_strncpyz(currFile->path,ptr,sizeof(currFile->path));
 	ptr = ptr2;
 	ptr2 = strchr(ptr,' ');
 	if(ptr2 == NULL){
-	    printf("Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
+	    Com_PrintWarning("Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
 	    return;
 	}
 	*ptr2++ = 0;
-	if(!Sec_IsNumeric(ptr)){
-	    printf("Sec_Update: Corrupt data from update server - size is not a number. Update aborted.\nDebug:\"%s\"\n",ptr);
+	if(!isInteger(ptr, 0)){
+	    Com_PrintWarning("Sec_Update: Corrupt data from update server - size is not a number. Update aborted.\nDebug:\"%s\"\n",ptr);
 	    return;
 	}
 	currFile->size = atoi(ptr);
-	strncpy(currFile->hash,ptr2,sizeof(currFile->hash));
-	for(i=strlen(currFile->path);i>0;--i){
-	    if(currFile->path[i]=='/' || currFile->path[i]=='\\'){
-		strcpy(currFile->name,currFile->path + i+1);
+	Q_strncpyz(currFile->hash,ptr2,sizeof(currFile->hash));
+	for(i = strlen(currFile->path); i > 0 ; --i){
+	    if(currFile->path[i] == '/' || currFile->path[i] == '\\'){
+		Q_strncpyz(currFile->name,currFile->path + i+1, sizeof(currFile->name));
 		break;
 	    }
 	}
 	//printf("DEBUG: File to download: link: \"%s\", name: \"%s\", size: %d, hash: \"%s\"\n\n",file.path,file.name,file.size,file.hash);
-	close(sock);
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	status = connect(sock,(struct sockaddr *)&addr,sizeof(struct sockaddr_in));
-	if(status < 0){
-	    printf("Cannot connect to the update server - %d, %s.\n",status,strerror(errno));
-	    Sec_Free(buff);
-	    Sec_FreeHttpPacket(&packet);
-	    return;
-	}
-	sprintf(buff,SEC_UPDATE_DOWNLOAD(currFile->path));
-	status = send(sock,buff,strlen(buff),0);
-	
-	strncpy(buff,currFile->name,128);
-	strncat(buff,".new",128);
-	fp = fopen(buff,"w");
-	if(fp == NULL){
-	    printf("Error opening \"%s\" for writing! Update aborted.\n",buff);
-	    Sec_Free(buff);
-	    Sec_FreeHttpPacket(&packet);
-	    return;
-	}
+
+        sock = NET_TcpClientConnect(SEC_UPDATE_HOST);
+
+        if(sock < 0){
+		Sec_FreeHttpPacket(&packet);
+		return;
+        }
+
+	Com_sprintf(buff, sizeof(buff), SEC_UPDATE_DOWNLOAD(currFile->path));
+	status = NET_TcpSendData(sock, buff, strlen(buff));
+
+	Q_strncpyz(buff,currFile->name, sizeof(buff));
+	/* Potential stackframe overflow risk */
+	strncat(buff,".new", sizeof(buff));
+
+	Com_Printf("Downloading file: \"%s\"\n",currFile->name);
+
 	status = Sec_GetHTTPPacket(sock, &packet2);	
-	if(status!=200){
-	    printf("Error downloading file \"%s\"! Error code: %d. Update aborted.\n",currFile->name,status);
-	    fclose(fp);
-	    Sec_Free(buff);
+	if(status != 200){
+	    Com_PrintError("Downloading has failed! Error code: %d. Update aborted.\n", status);
 	    Sec_FreeHttpPacket(&packet);
 	    Sec_FreeHttpPacket(&packet2);
 	    return;
 	}
-	fwrite(packet2.content,sizeof(char),packet2.contentLength,fp);
-	fflush(fp);
-	fclose(fp);
+
+	len = FS_WriteFile(buff, packet2.content, packet2.contentLength);
+	if(len != packet2.contentLength){
+	    Com_PrintError("Opening \"%s\" for writing! Update aborted.\n",buff);
+	    Sec_FreeHttpPacket(&packet);
+	    Sec_FreeHttpPacket(&packet2);
+	    return;
+	}
+
 	ptr = Sec_StrTok(NULL,"\n",42); // Yes, 42 again.
+	Sec_FreeHttpPacket(&packet);
 	Sec_FreeHttpPacket(&packet2);
 	size = sizeof(hash);
 	
 	if(!Sec_HashFile(SEC_HASH_SHA256,buff,hash,&size,qfalse)){
-	    printf("Error hashing the file \"%s\". Error code: %s.\nUpdate aborted.\n",currFile->name,Sec_CryptErrStr(SecCryptErr));
-	    //fclose(fp);
-	    Sec_Free(buff);
+	    Com_PrintError("Hashing the file \"%s\". Error code: %s.\nUpdate aborted.\n",currFile->name,Sec_CryptErrStr(SecCryptErr));
 	    Sec_FreeHttpPacket(&packet);
+	    Sec_FreeHttpPacket(&packet2);
 	    return;
 	}
 	
-	if(strncmp(hash,currFile->hash,size)==0){
-	    printf("successfully downloaded file \"%s\".\n",currFile->name);
-	    if(strncmp(currFile->name,EXECUTABLE_NAME,15)==0){
-		printf("-Executable downloaded successfully\n");
+	if(!Q_strncmp(hash, currFile->hash, size)){
+	    Com_Printf("Successfully downloaded file \"%s\".\n", currFile->name);
+	    if(!Q_strncmp(currFile->name, EXECUTABLE_NAME, 15)){
+		Com_Printf("-Executable downloaded successfully\n");
 		dlExec = qtrue;
 	    }
 	}
 	else{
-	    printf("Error, file \"%s\" is corrupt!\nUpdate aborted.\n",currFile->name);
-	    printf("DEBUG: hash: \"%s\", correct hash: \"%s\".\n",hash,currFile->hash);
-	    Sec_Free(buff);
+	    Com_PrintError("File \"%s\" is corrupt!\nUpdate aborted.\n",currFile->name);
+	    Com_DPrintf("Hash: \"%s\", correct hash: \"%s\".\n",hash,currFile->hash);
 	    Sec_FreeHttpPacket(&packet);
+	    Sec_FreeHttpPacket(&packet2);
 	    return;
 	}
 	
     }
-    
     Sec_FreeHttpPacket(&packet);
-    Sec_Free(buff);
     if(!dlExec){
-	printf("\nError updating: lacking executable! Update aborted.\n");
+	Com_PrintError("Updating: lacking executable! Update aborted.\n");
     }
     else{
-	printf("\nAll files downloaded successfully. Applying update...\n");
+	Com_Printf("All files downloaded successfully. Applying update...\n");
     }
     currFile = files.next;
     do{
-	printf("Updating file %s...\n",currFile->name);
-	strncpy(name1,currFile->name,sizeof(name1));
-	strncat(name1,".old",sizeof(name1));
-	strncpy(name2,currFile->name,sizeof(name2));
-	strncat(name2,".new",sizeof(name2));
-	// Check if an old file exists with this name
-	fp = fopen(currFile->name,"r");
-	if(fp!=NULL){ // Old file exists, back it up
-	    printf("Backing up old file %s...\n",currFile->name);
-	    fclose(fp);
-	    fp = fopen(name1,"r");
-	    if(fp!= NULL){ // Backup of old file exists, remove it
-		printf("Found old backup of file %s, removing...\n",currFile->name);
-		fclose(fp);
-		if(remove(name1)!=0) printf("WARNING: failed to remove file %s, error string: \"%s\".\n",name1,strerror(errno));
-	    }
-	    if(rename(currFile->name,name1) !=0) printf("WARNING: failed to rename file %s to %s, error string: \"%s\".\n",currFile->name,name1,strerror(errno));
+	Com_Printf("Updating file %s...\n", currFile->name);
+	Q_strncpyz(name1, currFile->name, sizeof(name1));
+
+	/* Potential stackframe overflow risk */
+	strncat(name1, ".old", sizeof(name1));
+
+	Q_strncpyz(name2, currFile->name, sizeof(name2));
+
+	/* Potential stackframe overflow risk */
+	strncat(name2, ".new", sizeof(name2));
+
+	testfile = FS_SV_GetFilepath(name1);
+	if(testfile != NULL)
+	{ // Old file exists, back it up
+		FS_SV_BaseRemove( name1 );
+		FS_SV_HomeRemove( name1 );
+		testfile = FS_SV_GetFilepath(name1);
+		if(testfile != NULL)
+		{
+			Com_PrintWarning("Couldn't remove backup file: %s\n", testfile);
+		}
+		if(FS_SV_HomeFileExists(name1) == qtrue)
+		{
+			Com_PrintError("Couldn't remove backup file from fs_homepath: %s\n", name1);
+		}
 	}
-	if(rename(name2,currFile->name) != 0) printf("WARNING: failed to rename file %s to %s, error string: \"%s\".\n",name2,currFile->name,strerror(errno));
-	printf("Update on file %s successfully applied.\n",currFile->name);
+	// Check if an old file exists with this name
+	testfile = FS_SV_GetFilepath(currFile->name);
+	if(testfile != NULL)
+	{ // Old file exists, back it up
+		FS_SV_Rename(currFile->name, name1);
+	}
+	testfile = FS_SV_GetFilepath(currFile->name);
+	// We couldn't back it up. Now we try to just delete it.
+	if(testfile != NULL)
+	{
+		FS_SV_BaseRemove( currFile->name );
+		FS_SV_HomeRemove( currFile->name );
+		testfile = FS_SV_GetFilepath( currFile->name );
+		if(testfile != NULL)
+		{
+			Com_PrintWarning("Couldn't remove file: %s\n", testfile);
+		}
+		if(FS_SV_HomeFileExists(currFile->name) == qtrue)
+		{
+			Com_PrintError("Couldn't remove file from fs_homepath: %s\n", currFile->name);
+			Com_PrintError("Update has failed!\n");
+			Sec_FreeHttpPacket(&packet2);
+			return;
+		}
+	}
+	FS_SV_Rename(name2, currFile->name);
+	testfile = FS_SV_GetFilepath(currFile->name);
+	if(testfile == NULL)
+	{
+		Com_PrintError("Failed to rename file %s to %s\n", name2,currFile->name);
+		Com_PrintError("Update has failed!\n");
+		Sec_FreeHttpPacket(&packet2);
+		return;
+	}
+	Com_Printf("Update on file %s successfully applied.\n",currFile->name);
 	currFile = currFile->next;
-    }while(currFile!=NULL);
+
+    }while(currFile != NULL);
+
     Sec_FreeFileStruct(files.next);
-    printf("Finalizing update...\n");
-    printf("Executing chmod on file \"%s\"...\n",EXECUTABLE_NAME);
-    
+    Com_Printf("Finalizing update...\n");
+    Com_Printf("Executing chmod on file \"%s\"...\n",EXECUTABLE_NAME);
+/*
     if(chmod(EXECUTABLE_NAME,S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)!=0){
-	printf("CRITICAL ERROR: failed to change mode of the file \"%s\"! Aborting, manual installation might be required.\n",cmdLine[0]);
+	Com_Printf("CRITICAL ERROR: failed to change mode of the file \"%s\"! Aborting, manual installation might be required.\n", cmdLine[0]);
 	return;
     }
-    printf("Executing %s...\n",EXECUTABLE_NAME);
+    Com_Printf("Executing %s...\n",EXECUTABLE_NAME);
     execv(EXECUTABLE_NAME,cmdLine);
-    printf("If you can see this, call 911! Something went terribly wrong...\n");
-    printf("execv's error code: %d, error string: \"%s\".\n",errno,strerror(errno));
+    Com_Printf("If you can see this, call 911! Something went terribly wrong...\n");
+    Com_PrintError("execv's error code: %d, error string: \"%s\".\n",errno,strerror(errno));
     exit(87);
+*/
 }
