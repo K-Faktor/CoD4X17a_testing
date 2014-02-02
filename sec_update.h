@@ -61,10 +61,10 @@ typedef struct sec_file_s{
 #define SEC_UPDATE_PORT 80
 
 
-#define SEC_UPDATE_DOWNLOAD(file) "GET %s HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", file, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
+#define SEC_UPDATE_DOWNLOAD(baseurl, qpath) "GET %s%s HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", baseurl, qpath, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
 //#define SEC_UPDATE_TMP SEC_UPDATE_PHP(BUILD_NUMBER,"e")
 #define SEC_UPDATE_GETVERSION "GET /?ver=%g&build=%d&type=%c HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", SEC_VERSION, BUILD_NUMBER, SEC_TYPE, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
-#define SEC_UPDATE_GETGROUNDVERSION "GET /?ver=%g&build=%d&type=%c HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", SEC_VERSION, 753, SEC_TYPE, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
+#define SEC_UPDATE_GETGROUNDVERSION "GET /?ver=%g&build=%d&type=%c HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", SEC_VERSION, 753, 'b', SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
 //#define SEC_UPDATE_GETVERSION SEC_UPDATE_DOWNLOAD(SEC_UPDATE_TMP)
 
 

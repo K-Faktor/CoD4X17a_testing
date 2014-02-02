@@ -67,14 +67,14 @@ int PHandler_TcpGetData(int pID, int connection, void* buf, int size )
         Com_PrintWarning("Plugin_TcpGetData: called on a non open socket for plugin ID: #%d\n", pID);
         return -1;
     }
-    len = NET_TcpClientGetData(ptcs->sock, buf, size);
+    len = NET_TcpClientGetData(ptcs->sock, buf, &size);
 
     if(len == -1)
     {
         ptcs->sock = -1;
     }
 
-    return len;
+    return size;
 }
 
 qboolean PHandler_TcpSendData(int pID, int connection, void* data, int len)

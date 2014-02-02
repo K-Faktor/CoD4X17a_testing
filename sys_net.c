@@ -2555,10 +2555,9 @@ int NET_TcpClientGetData(int sock, void* buf, int* buflen){
 
 		}else{
 
-			if( ret >= *buflen - readcount) {
+			if( ret > *buflen - readcount) {
 
-				Com_PrintWarning( "Oversize packet on socket %d\n", sock);
-
+				Com_PrintWarning( "Oversize packet on socket %d Remaining bytes are: %d, received bytes are %d\n", sock, *buflen - readcount, ret);
 				readcount = *buflen -1;
 				break;
 			}
