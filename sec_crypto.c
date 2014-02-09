@@ -59,9 +59,8 @@ qboolean Sec_HashMemory(sec_hash_e algo, void *in, size_t inSize, void *out, lon
     
     SecCryptErr = CRYPT_OK;
     size = (binaryOutput ? hs->hashsize / 4: hs->hashsize);
-    //printf("Debug: %lu, %lu.\n",size,*outSize);
+    
     if(size > *outSize){
-	//printf("ERROR: CRYPT_MEM, size: %lu, outSize: %lu\n",size,*outSize);
 	SecCryptErr = CRYPT_MEM;
         return qfalse;
     }
@@ -72,11 +71,7 @@ qboolean Sec_HashMemory(sec_hash_e algo, void *in, size_t inSize, void *out, lon
     if((result = hs->init(&md)) != CRYPT_OK)		   { Sec_Free(buff2); SecCryptErr = result; return qfalse; }
     if((result = hs->process(&md, in, inSize)) != CRYPT_OK){ Sec_Free(buff2); SecCryptErr = result; return qfalse; }
     if((result = hs->done(&md,buff)) != CRYPT_OK)	   { Sec_Free(buff2); SecCryptErr = result; return qfalse; }
-    //__asm__("int $3");
-    //printf("Debug: binary output while hashing \"%s\":\n",in);
-    //for(i=0;i<hs->hashsize;++i){
-    //	printf("%x ",(int)buff[i]);
-    //}
+    
     if(!binaryOutput){
 	Sec_BinaryToHex((char *)buff,hs->hashsize,out,outSize);
     }
@@ -95,14 +90,12 @@ qboolean Sec_HashFile(sec_hash_e algo, const char *fname, void *out, long unsign
     }
     hash_state md;
     FILE *fp;
-    unsigned char buff[2];
+    unsigned char buff[1024];
     unsigned char *ptr;
     int x,result,size;
     struct ltc_hash_descriptor *hs = &sec_hashes[algo];
     SecCryptErr = CRYPT_OK;
     size = binaryOutput ? hs->hashsize / 4 : hs->hashsize;
-    //printf("Debug: Hashing using the \"%s\" hash.\n",hs->name);
-    //printf("DBG: %lu, %d, %p, %p\n",hs->hashsize,outSize,hs->done,tiger_done);
     if(size > *outSize){
 	SecCryptErr = CRYPT_MEM;
         return qfalse;
@@ -111,11 +104,13 @@ qboolean Sec_HashFile(sec_hash_e algo, const char *fname, void *out, long unsign
     
     if((result = hs->init(&md))!=CRYPT_OK){ SecCryptErr=result; return qfalse; }
     fp = fopen(fname,"rb");
+    if(fp==NULL){
+	SecCryptErr = CRYPT_INVALID_ARG;
+	return qfalse;
+    }
     do{
         x = fread(buff, 1, sizeof(buff), fp);
         
-        buff[x]=0;
-        //printf("DBG:%d, \"%s\"\n\n",x,buff);
         if ((result = hs->process(&md, buff, x)) != CRYPT_OK){
            SecCryptErr = result;
            fclose(fp);
@@ -123,7 +118,7 @@ qboolean Sec_HashFile(sec_hash_e algo, const char *fname, void *out, long unsign
         }
         dbg += x;
     }while (x == sizeof(buff));
-    printf("File size: %lu\n",dbg);
+    //printf("File size: %lu\n",dbg);
     fclose(fp);
     ptr = binaryOutput ? out : buff;
     if((result = hs->done(&md,buff))!=CRYPT_OK){ SecCryptErr = result; return qfalse; }
