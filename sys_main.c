@@ -244,12 +244,15 @@ void Sys_SigHandler( int signal )
 	static qboolean signalcaught = qfalse;
 	char termmsg[MAX_STRING_CHARS];
 
-	fprintf( stderr, "Received signal: %s, exiting...\n",
-		strsignal(signal) );
+	if( signal != SIGTERM && signal != SIGINT )
+	{
+		Sys_DumpCrash( signal );
+	}
+	Com_Printf( "Received signal: %s, exiting...\n", strsignal(signal) );
 
 	if( signalcaught )
 	{
-		fprintf( stderr, "DOUBLE SIGNAL FAULT: Received signal: %s, exiting...\n",
+		Com_Printf( "DOUBLE SIGNAL FAULT: Received signal: %s, exiting...\n",
 			strsignal(signal));
 	}
 
@@ -491,7 +494,7 @@ int Sys_Main(char* commandLine){
 
     signal( SIGILL, Sys_SigHandler );
     signal( SIGFPE, Sys_SigHandler );
-/*    signal( SIGSEGV, Sys_SigHandler );  No corefiles get generated with it */
+    signal( SIGSEGV, Sys_SigHandler ); /* No corefiles get generated with it */
     signal( SIGTERM, Sys_SigHandler );
     signal( SIGINT, Sys_SigHandler );
 

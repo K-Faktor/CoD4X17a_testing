@@ -1051,8 +1051,19 @@ void	Cmd_ExecuteString( const char *text )
 		Cmd_EndTokenizedString( );
 		return;
 	}
+
 	Cmd_EndTokenizedString( );
-	return;
+
+	if(!Q_stricmpn(text, "bind", 4))
+		return;
+
+	if(!Q_stricmpn(text, "unbindall", 9))
+		return;
+
+	if(!Q_stricmpn(text, "con_showchannel", 15))
+		return;
+
+	Com_Printf("Bad command or cvar: %s\n", text);
 }
 
 void Cmd_ExecuteSingleCommand(int arg1, int arg2, const char* text)

@@ -21,7 +21,7 @@ nasm -f elf server_hooks.asm
 nasm -f elf msg_hooks.asm
 
 echo Linking...
-gcc -m32 -Wl,-ldl,-lpthread,-lm,-lstdc++,-Tlinkerscript.ld,--dynamic-list=pluginExports.ld -o cod4x17a_dedrun *.o -L./ -ltomcrypt -ltommath
+gcc -m32 -rdynamic -Wl,-ldl,-lpthread,-lm,-lstdc++,-Tlinkerscript.ld,--dynamic-list=pluginExports.ld -o cod4x17a_dedrun *.o -L./ -ltomcrypt -ltommath
 
 rm *.o
 

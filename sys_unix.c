@@ -28,6 +28,8 @@
 #include "qcommon.h"
 #include "sys_main.h"
 #include "cmd.h"
+#include "sys_cod4defs.h"
+
 #include <sys/resource.h>
 #include <libgen.h>
 #include <signal.h>
@@ -40,6 +42,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <pwd.h>
+#include <execinfo.h>
 
 /*
 ==================
@@ -512,4 +515,29 @@ int main(int argc, char* argv[])
     Sys_SetBinaryPath( Sys_Dirname( argv[ 0 ] ) );
 
     return Sys_Main(commandLine);
+}
+
+void Sys_DumpCrash(int signal)
+{
+	void** traces;
+	char** symbols;
+	int numFrames;
+	int i;
+	char hash[65];
+
+	Com_Printf("This program has crashed with signal: %s\n", strsignal(signal));
+	Com_Printf("The current Gameversion is: %s %s %s build %i %s\n", GAME_STRING,Q3_VERSION,PLATFORM_STRING, BUILD_NUMBER, __DATE__);
+	/* Sec_HashFile(SEC_HASH_SHA256, Sys_GetExefile(), hash, sizeof(hash), qfalse); */
+	Q_strncpyz(hash, "File Hashing has not been implemented yet", sizeof(hash));
+	hash[64] = '\0';
+	Com_Printf("File is %s Hash is: %s\n", Sys_ExeFile(), hash);
+	Com_Printf("---------- Crash Backtrace ----------\n");
+	traces = malloc(65536*sizeof(void*));
+	numFrames = backtrace(traces, 65536);
+	symbols = backtrace_symbols(traces, numFrames);
+	for(i = 0; i < numFrames; i++)
+		Com_Printf("%5d: %s\n", numFrames - i, symbols[i]);
+
+	Com_Printf("-------- Backtrace Completed --------\n");
+	free(traces);
 }

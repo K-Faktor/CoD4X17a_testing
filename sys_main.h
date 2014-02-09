@@ -73,6 +73,7 @@ void Sys_SetExeFile(const char *);
 int Sys_Main(char* commandLine);
 const char* Sys_GetCommandline( void );
 void Sys_ReplaceProcess( char *cmdline );
+void Sys_DumpCrash(int signal);
 #endif
 
 

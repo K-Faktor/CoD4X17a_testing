@@ -2821,7 +2821,7 @@ static const char* sub_55D700(const char *instr)
   flip ^= 1u;
   if ( strlen(instr) >= 10 )
   {
-    memset(&Array64[64 * flip], 0, 64);
+    Com_Memset(&Array64[64 * flip], 0, 64);
 	for(i = 10; i < 64 && instr[i] != '\0' && isalpha(instr[i]) != '\0'; i++)
 	{
 		Array64[(64 * flip) + i - 10] = instr[i];
@@ -2911,7 +2911,7 @@ void FS_AddIwdFilesForGameDirectory(const char *path, const char *dir)
 		{
 			Com_Memcpy(sorted[i],  "localized_", 10);
 			language = sub_55D700(sorted[i]);
-	        if ( !language[0] )
+			if ( !language[0] )
 			{
 				Com_PrintWarning("WARNING: Localized assets iwd file %s/%s/%s has invalid name (no language specified). Proper naming convention is: localized_[language]_iwd#.iwd\n", path, dir, sorted[i]);
 				continue;
@@ -2963,6 +2963,7 @@ void FS_AddIwdFilesForGameDirectory(const char *path, const char *dir)
 			{
 				prev = sp;
 			}
+			Cvar_SetInt(loc_language, search->langIndex);
 		}
 		search->next = sp;
 		prev->next = search;
