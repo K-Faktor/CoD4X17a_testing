@@ -27,6 +27,8 @@
 #include "sys_net.h"
 #include "netchan.h"
 #include "filesystem.h"
+#include "cmd.h"
+#include "cvar.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -39,6 +41,9 @@
 
 #define EXECUTABLE_NAME "cod4x17a_dedrun"
 #define BUFSIZE 10240
+
+cvar_t *canupdate;
+
 char *Sec_StrTok(char *str,char *tokens,int id){
     static char *mem[100] = {NULL};
     char *ptr,*ptr2;
@@ -85,21 +90,6 @@ char *Sec_StrTok(char *str,char *tokens,int id){
 	if(mem[id] == NULL) return NULL;
 	return Sec_StrTok(NULL,tokens,id); // BECAUSE I CAN.
     }	
-}
-qboolean Sec_IsNumeric(char *str){
-    int i,j;
-    if(str==NULL)
-	return qfalse;
-    for(i=0,j=strlen(str);i<j;++i){
-	if((str[i]>='0'&&str[i]<='9')){
-	    return qtrue; // First non-whitespace is a digit
-	}
-	else if( str[i]==' ' || str[i]=='\r' || str[i]=='\n')
-	    continue; // Whitespaces at the start
-	else
-	    return qfalse; // Not whitespace, not a digit
-    }
-    return qfalse; // Only whitespaces
 }
 
 #define TCP_TIMEOUT 12
@@ -211,19 +201,22 @@ void Sec_FreeFileStruct(sec_file_t *file){
 	Sec_FreeFileStruct(file->next);
     Sec_Free(file);
 }
-void Sec_Update( ){
+
+void Sec_Update( qboolean getbasefiles ){
     char buff[SEC_UPDATE_INITIALBUFFSIZE];
     char *ptr,*ptr2, *testfile;
     char baseurl[1024];
+    char commandline[1024];
     char name1[256],name2[256];
     int sock,status;
     sec_file_t files, *currFile = &files;
     sec_httpPacket_t packet,packet2;
     qboolean dlExec = qfalse;
-    int i, len;
+    int len;
     char hash[128];
     long unsigned size;
-    
+
+#ifdef CAN_UPDATE
     Com_Printf("\n-----------------------------\n");
     Com_Printf(" CoD4X Auto Update\n");
     Com_Printf(" Current version: %g\n",SEC_VERSION);
@@ -231,13 +224,33 @@ void Sec_Update( ){
     Com_Printf(" Current type: %s\n",SEC_TYPE == 's' ? "stable      " : "experimental");
     Com_Printf("-----------------------------\n\n");
 
+    canupdate = Cvar_RegisterBool("allowupdating", qtrue, 0, "This enables autoupdating of CoD4 server with new versions.");
+
+    if(getbasefiles == qtrue)
+    {
+
+        Com_sprintf(buff, sizeof(buff), SEC_UPDATE_GETGROUNDVERSION);
+
+    }else{
+
+        if(canupdate->boolean == qfalse)
+            return;
+
+        Com_sprintf(buff, sizeof(buff), SEC_UPDATE_GETVERSION);
+    }
+#else
+    if(getbasefiles == qtrue)
+    {
+        Com_sprintf(buff, sizeof(buff), SEC_UPDATE_GETGROUNDVERSION);
+    }else{
+        return;
+    }
+#endif
     sock = NET_TcpClientConnect(SEC_UPDATE_HOST);
 
     if(sock < 0){
 	return;
     }
-
-    Com_sprintf(buff, sizeof(buff), SEC_UPDATE_GETGROUNDVERSION);
 
     status = NET_TcpSendData(sock, buff, strlen(buff));
 
@@ -326,8 +339,7 @@ void Sec_Update( ){
 	status = NET_TcpSendData(sock, buff, strlen(buff));
 
 	Q_strncpyz(buff,currFile->name, sizeof(buff));
-	/* Potential stackframe overflow risk */
-	strncat(buff,".new", sizeof(buff));
+	Q_strcat(buff, sizeof(buff),".new");
 
 	Com_Printf("Downloading file: \"%s\"\n",currFile->name);
 
@@ -368,10 +380,6 @@ void Sec_Update( ){
 
 	if(!Q_strncmp(hash, currFile->hash, size)){
 	    Com_Printf("Successfully downloaded file \"%s\".\n", currFile->name);
-	    if(!Q_strncmp(currFile->name, EXECUTABLE_NAME, 15)){
-		Com_Printf("-Executable downloaded successfully\n");
-		dlExec = qtrue;
-	    }
 	}
 	else{
 	    Com_PrintError("File \"%s\" is corrupt!\nUpdate aborted.\n",currFile->name);
@@ -389,13 +397,11 @@ void Sec_Update( ){
 	Com_Printf("Updating file %s...\n", currFile->name);
 	Q_strncpyz(name1, currFile->name, sizeof(name1));
 
-	/* Potential stackframe overflow risk */
-	strncat(name1, ".old", sizeof(name1));
+	Q_strcat(name1, sizeof(name1), ".old");
 
 	Q_strncpyz(name2, currFile->name, sizeof(name2));
 
-	/* Potential stackframe overflow risk */
-	strncat(name2, ".new", sizeof(name2));
+	Q_strcat(name2, sizeof(name2), ".new");
 
 	testfile = FS_SV_GetFilepath(name1);
 	if(testfile != NULL)
@@ -433,36 +439,75 @@ void Sec_Update( ){
 		{
 			Com_PrintError("Couldn't remove file from fs_homepath: %s\n", currFile->name);
 			Com_PrintError("Update has failed!\n");
-			Sec_FreeHttpPacket(&packet2);
 			return;
 		}
 	}
-	FS_SV_Rename(name2, currFile->name);
-	testfile = FS_SV_GetFilepath(currFile->name);
-	if(testfile == NULL)
-	{
-		Com_PrintError("Failed to rename file %s to %s\n", name2,currFile->name);
-		Com_PrintError("Update has failed!\n");
-		Sec_FreeHttpPacket(&packet2);
-		return;
+
+	if(Q_strncmp(currFile->name, EXECUTABLE_NAME, 15)){
+		/* This is not the executable file */
+		FS_SV_Rename(name2, currFile->name);
+		testfile = FS_SV_GetFilepath(currFile->name);
+		if(testfile == NULL)
+		{
+			Com_PrintError("Failed to rename file %s to %s\n", name2,currFile->name);
+			Com_PrintError("Update has failed!\n");
+			return;
+		}
+		Com_Printf("Update on file %s successfully applied.\n",currFile->name);
+
+	}else{
+		/* This is the executable file */
+		testfile = FS_SV_GetFilepath(name2);
+		if(testfile == NULL)
+		{
+			Com_PrintError("Can not find file %s\n", name2);
+			Com_PrintError("Update has failed!\n");
+			return;
+		}
+		if(FS_SetPermissionsExec(name2) == qfalse)
+		{
+			Com_PrintError("CRITICAL ERROR: failed to change mode of the file \"%s\"! Aborting, manual installation might be required.\n", name2);
+			return;
+		}
+		FS_RenameOSPath(Sys_ExeFile(), va("%s.dead", Sys_ExeFile()));
+		FS_RemoveOSPath(va("%s.dead", Sys_ExeFile()));
+		FS_RemoveOSPath(Sys_ExeFile());
+		if(FS_FileExistsOSPath(Sys_ExeFile()))
+		{
+			Com_PrintError("Failed to delete file %s\n", Sys_ExeFile());
+			Com_PrintError("Update has failed!\n");
+			return;
+		}
+		FS_RenameOSPath(testfile, Sys_ExeFile());
+		if(!FS_FileExistsOSPath(Sys_ExeFile()))
+		{
+			Com_PrintError("Failed to rename file %s\n", testfile);
+			Com_PrintError("Update has failed! Manual reinstallation of file %s is required. This server is now broken!\n", Sys_ExeFile());
+			return;
+		}
+		Com_Printf("Update on file %s successfully applied.\n", Sys_ExeFile());
+		dlExec = qtrue;
 	}
-	Com_Printf("Update on file %s successfully applied.\n",currFile->name);
 	currFile = currFile->next;
 
     }while(currFile != NULL);
 
     Sec_FreeFileStruct(files.next);
     Com_Printf("Finalizing update...\n");
-    Com_Printf("Executing chmod on file \"%s\"...\n",EXECUTABLE_NAME);
-/*
-    if(chmod(EXECUTABLE_NAME,S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)!=0){
-	Com_Printf("CRITICAL ERROR: failed to change mode of the file \"%s\"! Aborting, manual installation might be required.\n", cmdLine[0]);
-	return;
+
+
+    if(dlExec == qtrue)
+    {
+        Com_sprintf(commandline, sizeof(commandline), "%s %s", Sys_ExeFile(), Sys_GetCommandline());
+        Com_Printf("Restart commandline is: %s\n", commandline);
+        Sys_SetExitCmdline(commandline);
+
+        Cbuf_ExecuteText(EXEC_NOW, "quit\n");
+        Com_Printf("If you can see this, call 911! Something went terribly wrong...\n");
+        Com_PrintError("execv's error code: %d, error string: \"%s\".\n",errno,strerror(errno));
+        exit(87);
+
+    }else{
+        FS_Restart( 0 );
     }
-    Com_Printf("Executing %s...\n",EXECUTABLE_NAME);
-    execv(EXECUTABLE_NAME,cmdLine);
-    Com_Printf("If you can see this, call 911! Something went terribly wrong...\n");
-    Com_PrintError("execv's error code: %d, error string: \"%s\".\n",errno,strerror(errno));
-    exit(87);
-*/
 }

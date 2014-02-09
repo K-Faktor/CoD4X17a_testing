@@ -26,6 +26,8 @@
 #include "qcommon_mem.h"
 #include "qcommon_io.h"
 #include "qcommon.h"
+#include "sys_main.h"
+#include "cmd.h"
 #include <sys/resource.h>
 #include <libgen.h>
 #include <signal.h>
@@ -62,23 +64,39 @@ qboolean Sys_RandomBytes( byte *string, int len )
 	return qtrue;
 }
 
+void Sys_ReplaceProcess( char *cmdline )
+{
+
+	int i;
+	char *argv[256];
+
+	Cmd_TokenizeString(cmdline);
+	if(Cmd_Argc() < 256)
+	{
+		for(i = 0; i < Cmd_Argc(); i++)
+		{
+			argv[i] = CopyString(Cmd_Argv(i));
+		}
+		argv[i] = NULL;
+
+		execv( argv[0], argv );
+		Com_PrintError( "Sys_ReplaceProcess: execv failed: %s\n", strerror( errno ) );
+	}else{
+		Com_PrintError( "Sys_ReplaceProcess: Exceeded limit of 256 commandline arguments.\nCommandline is: %s\n", cmdline);
+	}
+	Cmd_EndTokenizedString();
+	_exit( 0 );
+}
 
 void Sys_DoStartProcess( char *cmdline ) {
+
 	switch ( fork() )
 	{
 	case - 1:
 		// main thread
 		break;
 	case 0:
-		if ( strchr( cmdline, ' ' ) ) {
-			system( cmdline );
-
-		} else {
-			execl( cmdline, cmdline, NULL );
-			printf( "execl failed: %s\n", strerror( errno ) );
-
-		}
-		_exit( 0 );
+		Sys_ReplaceProcess( cmdline );
 		break;
 	}
 }
@@ -449,8 +467,49 @@ const char* Sys_GetUsername()
         struct passwd *passwdstr = getpwuid(getuid());
 
         if(passwdstr == NULL)
-            return "player";
+            return "codadmin";
 
         return passwdstr->pw_name;
 
+}
+
+int main(int argc, char* argv[])
+{
+
+    int i;
+
+    uid_t uid = getuid();
+    if( uid == 0 || uid != geteuid() ) { // warn user that he/she's operating as a privliged user
+        Com_Printf( "********************************************************\n" );    
+        Com_Printf( "***** RUNNING SERVER AS A ROOT IS GENERALLY UNSAFE *****\n" );
+        Com_Printf( "********************************************************\n\n" );  
+    }
+    // go back to real user for config loads
+    seteuid( uid );
+
+
+    char commandLine[MAX_STRING_CHARS];
+
+    commandLine[0] = 0;
+
+    // Concatenate the command line for passing to Com_Init
+    for( i = 1; i < argc; i++ )
+    {
+        const qboolean containsSpaces = strchr(argv[i], ' ') != NULL;
+        if (containsSpaces)
+            Q_strcat( commandLine, sizeof( commandLine ), "\"" );
+
+        Q_strcat( commandLine, sizeof( commandLine ), argv[ i ] );
+
+        if (containsSpaces)
+            Q_strcat( commandLine, sizeof( commandLine ), "\"" );
+
+        Q_strcat( commandLine, sizeof( commandLine ), " " );
+    }
+
+    Sys_SetExeFile( argv[ 0 ] );
+    /* This function modifies argv[ 0 ] :S */
+    Sys_SetBinaryPath( Sys_Dirname( argv[ 0 ] ) );
+
+    return Sys_Main(commandLine);
 }

@@ -45,10 +45,8 @@ void Cmd_ExecuteString(const char *cmd );
 void Cbuf_Init(void);
 void Cbuf_Execute();
 void Cbuf_ExecuteText(int exec_when, const char* text);
-void __cdecl Cbuf_Execute_WrapperIW(int, int);
-void Cbuf_ExecuteBuffer(int, int, const char* buf);
 void Cbuf_AddText(const char* text);
-void __cdecl Cbuf_AddText_WrapperIW(int dummy, const char* text);
+void Cbuf_InsertText( const char *text );
 
 qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function );
 qboolean Cmd_RemoveCommand( const char *cmd_name );

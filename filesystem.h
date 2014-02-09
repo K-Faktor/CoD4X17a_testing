@@ -199,6 +199,7 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );
 fileHandle_t FS_SV_FOpenFileAppend( const char *filename );
 int FS_Write( const void *buffer, int len, fileHandle_t h );
 int FS_ReadFile( const char *qpath, void **buffer );
+int FS_SV_ReadFile( const char *qpath, void **buffer );
 int FS_WriteFile( const char *qpath, const void *buffer, int size );
 
 #define FS_SV_WriteFile FS_SV_HomeWriteFile
@@ -229,6 +230,10 @@ int FS_LoadStack();
 void FS_CopyCvars();
 char* FS_SV_GetFilepath( const char *file );
 qboolean FS_SV_BaseRemove( const char *path );
-#endif
 
+void FS_RemoveOSPath(const char *);
+qboolean FS_FileExistsOSPath( const char *ospath );
+void FS_RenameOSPath( const char *from_ospath, const char *to_ospath );
+qboolean FS_SetPermissionsExec(const char* ospath);
+#endif
 

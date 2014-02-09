@@ -99,7 +99,8 @@ qboolean Com_AddStartupCommands( void ) {
 
 		added = qtrue;
 		Com_sprintf(buf,sizeof(buf),"%s\n",com_consoleLines[i]);
-		Cbuf_ExecuteBuffer( 0,0, buf);
+		Cbuf_ExecuteText( EXEC_NOW, buf);
+		Cbuf_Execute();
 	}
 
 	return added;

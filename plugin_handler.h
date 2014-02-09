@@ -104,7 +104,7 @@ typedef struct{
     int scriptfunctions;
     int scriptmethods;
     
-    char name[20];
+    char name[MAX_QPATH];
     
     pluginMem_t memory[PLUGIN_MAX_MALLOCS];
     pluginTcpClientSocket_t sockets[PLUGIN_MAX_SOCKETS];
@@ -137,7 +137,7 @@ extern pluginWrapper_t pluginFunctions; // defined in plugin_handler.c
 //  Plugin Handler's own functions //
 // --------------------------------//
 
-void PHandler_Load(char*,size_t);
+void PHandler_Load(char* );
 void PHandler_Unload(int id);
 void PHandler_UnloadByName(char *name, size_t size);
 int PHandler_GetID(char *name, size_t size);

@@ -84,15 +84,11 @@ void Cbuf_AddText( const char *text ) {
 	if (cmd_text.cursize + l >= cmd_text.maxsize)
 	{
 		Com_Printf ("Cbuf_AddText: overflow\n");
+		Com_Printf ("Discarded text is: %s\n", text);
 		return;
 	}
 	Com_Memcpy(&cmd_text.data[cmd_text.cursize], text, l);
 	cmd_text.cursize += l;
-}
-
-void __cdecl Cbuf_AddText_Wrapper_IW(int dummy, const char *text )
-{
-    Cbuf_AddText( text );
 }
 
 /*
@@ -125,13 +121,6 @@ void Cbuf_InsertText( const char *text ) {
 	cmd_text.data[ len - 1 ] = '\n';
 
 	cmd_text.cursize += len;
-}
-
-void Cbuf_ExecuteBuffer(int a1, int a2, const char *text)
-{
-
-    Cbuf_ExecuteText (EXEC_NOW , text);
-
 }
 
 /*

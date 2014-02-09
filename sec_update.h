@@ -21,9 +21,11 @@
 #ifndef SEC_UPDATE_H
 #define SEC_UPDATE_H
 #include "sec_init.h"
+#include "q_platform.h"
 #include "version.h"
 
-void Sec_Update( );
+
+void Sec_Update( qboolean getbasefiles );
 
 
 typedef struct{
@@ -36,8 +38,8 @@ typedef struct{
 }sec_httpPacket_t;
 
 typedef struct sec_file_s{
-    char name[128];
-    char path[256];
+    char name[MAX_OSPATH];
+    char path[MAX_OSPATH];
     int size;
     char hash[65];
     struct sec_file_s *next;
@@ -67,6 +69,8 @@ typedef struct sec_file_s{
 #define SEC_UPDATE_GETGROUNDVERSION "GET /?ver=%g&build=%d&type=%c HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", SEC_VERSION, 753, 'b', SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
 //#define SEC_UPDATE_GETVERSION SEC_UPDATE_DOWNLOAD(SEC_UPDATE_TMP)
 
-
+#if defined(OFFICIAL) || defined(OFFICIALTESTING) || defined(OFFICIALBETA) || defined(OFFICIALDEBUG)
+    #define CAN_UPDATE
+#endif
 
 #endif

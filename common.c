@@ -571,10 +571,10 @@ void Com_Quit_f( void ) {
 		NET_Shutdown();
 	}
 
+	Sys_LeaveCriticalSection( 2 );
+
 	Sys_Quit ();
 }
-cvar_t *test1;
-cvar_t *test2;
 
 static void Com_InitCvars( void ){
     static const char* dedicatedEnum[] = {"listen server", "dedicated LAN server", "dedicated internet server", NULL};
@@ -870,8 +870,6 @@ void Com_Init(char* commandLine){
 
     Cbuf_Execute( 0, 0 );
 
-    Com_AddStartupCommands( );
-
     abortframe = (jmp_buf*)Sys_GetValue(2);
 
     if(setjmp(*abortframe)){
@@ -880,12 +878,13 @@ void Com_Init(char* commandLine){
     if(com_errorEntered) Com_Error(ERR_FATAL,"Recursive error");
 
 
-    HL2Rcon_Init();
+    HL2Rcon_Init( );
 
-    AddRedirectLocations();
+    AddRedirectLocations( );
 
-    Com_LoadBinaryImage();
+    Com_LoadBinaryImage( );
 
+    Com_AddStartupCommands( );
 }
 
 

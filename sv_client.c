@@ -873,7 +873,7 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 	int clientnum;
 	char var_01[2];
 	const char *dropreason;
-	char clientName[16];
+	char clientName[64];
 	challenge_t *challenge;
 
 	if ( drop->state <= CS_ZOMBIE ) {
@@ -914,7 +914,7 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 	clientnum = drop - svs.clients;
 
 	if(!reason)
-		reason = "";
+		reason = "Unknown reason for dropping";
 
 	if(!Q_stricmp(reason, "silent")){
 		//Just disconnect him and don't tell anyone about it
@@ -927,13 +927,13 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 	}
 
 
-	if(SEH_StringEd_GetString( reason )){
+/*	if(SEH_StringEd_GetString( reason )){
 		var_01[0] = 0x14;
 		var_01[1] = 0;
-	}else{
+	}else{*/
 		var_01[0] = 0;
-	}
-
+/*	}
+*/
 	if(!Q_stricmp(reason, "EXE_DISCONNECTED")){
 		dropreason = "EXE_LEFTGAME";
 	} else {

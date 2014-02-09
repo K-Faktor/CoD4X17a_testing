@@ -637,11 +637,11 @@ qboolean FS_SV_BaseRemove( const char *path ) {
 
 /*
 ===========
-FS_Remove
+FS_RemoveOSPath
 
 ===========
 */
-static void FS_Remove( const char *osPath ) {
+void FS_RemoveOSPath( const char *osPath ) {
 	remove( osPath );
 }
 
@@ -746,9 +746,47 @@ void FS_Rename( const char *from, const char *to ) {
 	if (rename( from_ospath, to_ospath )) {
 		// Failed, try copying it and deleting the original
 		FS_CopyFile ( from_ospath, to_ospath );
-		FS_Remove ( from_ospath );
+		FS_RemoveOSPath ( from_ospath );
 	}
 }
+
+/*
+===========
+FS_RenameOSPath
+
+===========
+*/
+void FS_RenameOSPath( const char *from_ospath, const char *to_ospath ) {
+
+	if ( fs_debug->integer ) {
+		Sys_Print(va("^4FS_RenameOSPath: %s --> %s\n", from_ospath, to_ospath ));
+	}
+
+	if (rename( from_ospath, to_ospath )) {
+		// Failed, try copying it and deleting the original
+		FS_CopyFile ( (char*)from_ospath, (char*)to_ospath );
+		FS_RemoveOSPath ( from_ospath );
+	}
+}
+
+/*
+===========
+FS_FileExistsOSPath
+
+===========
+*/
+qboolean FS_FileExistsOSPath( const char *ospath ) {
+
+	FILE* f;
+
+	f = fopen( ospath, "rb" );
+	if (f) {
+		fclose( f );
+		return qtrue;
+	}
+	return qfalse;
+}
+
 
 
 /*
@@ -777,7 +815,7 @@ void FS_SV_Rename( const char *from, const char *to ) {
 		if (rename( from_ospath, to_ospath )) {
 			// Failed, try copying it and deleting the original
 			FS_CopyFile ( from_ospath, to_ospath );
-			FS_Remove ( from_ospath );
+			FS_RemoveOSPath ( from_ospath );
 		}
 	}
 
@@ -795,7 +833,7 @@ void FS_SV_Rename( const char *from, const char *to ) {
 		if (rename( from_ospath, to_ospath )) {
 			// Failed, try copying it and deleting the original
 			FS_CopyFile ( from_ospath, to_ospath );
-			FS_Remove ( from_ospath );
+			FS_RemoveOSPath ( from_ospath );
 		}
 	}
 }
@@ -824,9 +862,12 @@ void FS_SV_HomeRename( const char *from, const char *to ) {
 	if (rename( from_ospath, to_ospath )) {
 		// Failed, try copying it and deleting the original
 		FS_CopyFile ( from_ospath, to_ospath );
-		FS_Remove ( from_ospath );
+		FS_RemoveOSPath ( from_ospath );
 	}
 }
+
+
+
 
 
 
@@ -1873,6 +1914,54 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 	FS_FCloseFile( h );
 	return len;
 }
+
+
+/*
+============
+FS_SV_ReadFile
+
+Filename are relative to the quake search path
+a null buffer will just return the file length without loading
+============
+*/
+int FS_SV_ReadFile( const char *qpath, void **buffer ) {
+	fileHandle_t	h;
+	byte*			buf;
+	int			len;
+
+	if ( !qpath || !qpath[0] ) {
+		Com_Error( ERR_FATAL, "FS_ReadFile with empty name\n" );
+	}
+
+	buf = NULL;	// quiet compiler warning
+
+	// look for it in the filesystem or pack files
+	len = FS_SV_FOpenFileRead( qpath, &h );
+	if ( h == 0 ) {
+		if ( buffer ) {
+			*buffer = NULL;
+		}
+		return -1;
+	}
+	
+	if ( !buffer ) {
+		FS_FCloseFile( h);
+		return len;
+	}
+
+	fs_loadStack ++;
+
+	buf = malloc(len+1);
+	*buffer = buf;
+
+	FS_Read (buf, len, h);
+
+	// guarantee that it will have a trailing 0 for string operations
+	buf[len] = 0;
+	FS_FCloseFile( h );
+	return len;
+}
+
 
 
 /*
@@ -3454,3 +3543,11 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames ) {
 }
 
 */
+
+qboolean FS_SetPermissionsExec(const char* ospath)
+{
+        if(chmod(ospath, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)!=0){
+		return qfalse;
+        }
+	return qtrue;
+}

@@ -2005,20 +2005,24 @@ void NET_Config( qboolean enableNetworking ) {
 		for(i = 0, con = tcpServer.connections; i < MAX_TCPCONNECTIONS; i++, con++){
 
 			if(con->lastMsgTime > 0 && con->sock != INVALID_SOCKET)
+			{
+				Com_Printf("Close TCP serversocket: %d\n", con->sock);
 				NET_TcpCloseSocket(con->sock);
+			}
 		}
 
 		for(i = 0; i < numIP; i++){
 
 			if(ip_socket[i].sock != INVALID_SOCKET){
+				Com_Printf("Close UDP socket: %d\n", ip_socket[i].sock);
 				closesocket( ip_socket[i].sock );
 				ip_socket[i].sock = INVALID_SOCKET;
 			}
 		}
 
 		if ( tcp_socket != INVALID_SOCKET ) {
-			//closesocket( tcp_socket );
-			shutdown(con->sock, 2);
+			Com_Printf("Close TCPv4 socket: %d\n", tcp_socket);
+			closesocket( tcp_socket );
 			tcp_socket = INVALID_SOCKET;
 		}
 
@@ -2032,11 +2036,13 @@ void NET_Config( qboolean enableNetworking ) {
 		}
 */
 		if ( tcp6_socket != INVALID_SOCKET ) {
+			Com_Printf("Close TCPv6 socket: %d\n", tcp6_socket);
 			closesocket( tcp6_socket );
 			tcp6_socket = INVALID_SOCKET;
 		}
 
 		if ( socks_socket != INVALID_SOCKET ) {
+			Com_Printf("Close Socks socket: %d\n", socks_socket);
 			closesocket( socks_socket );
 			socks_socket = INVALID_SOCKET;
 		}

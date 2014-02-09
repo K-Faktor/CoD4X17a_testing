@@ -292,6 +292,7 @@ void __cdecl SV_AddServerCommand(client_t *client, int type, const char *cmd)
   int i;
   int j;
   int index;
+  char string[64];
 
 	if ( client->canNotReliable )
 		return;
@@ -333,7 +334,8 @@ void __cdecl SV_AddServerCommand(client_t *client, int type, const char *cmd)
 	SV_DelayDropClient(client, "EXE_SERVERCOMMANDOVERFLOW");
 
         type = 1;
-        cmd = va("%c \"EXE_SERVERCOMMANDOVERFLOW\"", 119);
+        Com_sprintf(string,sizeof(string),"%c \"EXE_SERVERCOMMANDOVERFLOW\"", 119);
+        cmd = string;
     }
 
     index = client->reliableSequence & ( MAX_RELIABLE_COMMANDS - 1 );
@@ -393,7 +395,6 @@ void QDECL SV_SendServerCommand_IW(client_t *cl, int cmdtype, const char *fmt, .
 	va_start (argptr,fmt);
 	Q_vsnprintf ((char *)message, sizeof(message), fmt,argptr);
 	va_end (argptr);
-
 	SV_SendServerCommandString(cl, cmdtype, (char *)message);
 
 }
@@ -2277,6 +2278,7 @@ void SV_MapRestart( qboolean fastRestart ){
 	int i, j;
 	client_t    *client;
 	const char  *denied;
+	char cmd[128];
 
 	// make sure server is running
 	if ( !com_sv_running->boolean ) {
@@ -2365,8 +2367,8 @@ void SV_MapRestart( qboolean fastRestart ){
 			j = -1;
 		else
 			j = 0;
-
-		SV_AddServerCommand(client, 1, va("%c",((-44 & j) + 110) ) );
+		Com_sprintf(cmd, sizeof(cmd), "%c", ((-44 & j) + 110) );
+		SV_AddServerCommand(client, 1, cmd);
 
 		// connect the client again, without the firstTime flag
 		denied = ClientConnect(i, client->clscriptid);

@@ -50,10 +50,12 @@
 #define MAX_QUED_EVENTS 256
 
 #define MAX_CMD 1024
-static char exit_cmdline[MAX_CMD] = "";
+static char exit_cmdline[MAX_CMD + MAX_OSPATH] = "";
 
 static char binaryPath[ MAX_OSPATH ] = { 0 };
 static char installPath[ MAX_OSPATH ] = { 0 };
+static char exeFilename[ MAX_OSPATH ] = { 0 };
+static char cmdline[MAX_CMD + MAX_OSPATH] = "";
 
 #ifndef MAXPRINTMSG
 #define MAXPRINTMSG 1024
@@ -172,7 +174,7 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode ) {
 		// buggy kernels / buggy GL driver, I don't know for sure
 		// but it's safer to wait an eternity before and after the fork
 		sleep( 1 );
-		Sys_DoStartProcess( exit_cmdline );
+		Sys_ReplaceProcess( exit_cmdline );
 		sleep( 1 );
 	}
 
@@ -189,6 +191,32 @@ Sys_Quit
 void Sys_Quit( void )
 {
 	Sys_Exit( 0 );
+}
+
+/*
+=================
+Sys_SetExitCmdline
+=================
+*/
+
+void Sys_SetExitCmdline(const char* cmdline)
+{
+	if(strlen(cmdline) >= sizeof(exit_cmdline))
+	{
+		Com_PrintError("Sys_SetExitCmdline: Exceeded length of %d characters.\n", sizeof(exit_cmdline) -1);
+	}
+	Q_strncpyz(exit_cmdline, cmdline, sizeof(exit_cmdline));
+}
+
+/*
+=================
+Sys_GetCommandline
+=================
+*/
+
+const char* Sys_GetCommandline( void )
+{
+    return cmdline;
 }
 
 
@@ -214,6 +242,7 @@ Sys_SigHandler
 void Sys_SigHandler( int signal )
 {
 	static qboolean signalcaught = qfalse;
+	char termmsg[MAX_STRING_CHARS];
 
 	fprintf( stderr, "Received signal: %s, exiting...\n",
 		strsignal(signal) );
@@ -228,7 +257,8 @@ void Sys_SigHandler( int signal )
 	{
 		signalcaught = qtrue;
 		Com_Printf("Server received signal: %s\nShutting down server...\n", strsignal(signal));
-		SV_Shutdown(va("\nServer received signal: %s\nTerminating server...", strsignal(signal)) );
+		Com_sprintf(termmsg, sizeof(termmsg), "\nServer received signal: %s\nTerminating server...", strsignal(signal));
+		SV_Shutdown( termmsg );
 
 		Sys_EnterCriticalSection( 2 );
 
@@ -274,20 +304,6 @@ void Sys_PrintBinVersion( const char* name ) {
 	fprintf( stdout, " local install: %s\n", name );
 	fprintf( stdout, "%s\n\n", sep );
 }
-
-
-
-
-void Sys_ParseArgs( int argc, char* argv[] ) {
-	if ( argc == 2 ) {
-		if ( ( !strcmp( argv[1], "--version" ) )
-			 || ( !strcmp( argv[1], "-v" ) ) ) {
-			Sys_PrintBinVersion( argv[0] );
-			Sys_Exit( 0 );
-		}
-	}
-}
-
 
 
 /*
@@ -369,10 +385,31 @@ void Sys_SetBinaryPath(const char *path)
 
 /*
 =================
+Sys_SetExeFile
+=================
+*/
+void Sys_SetExeFile(const char *filepath)
+{
+	Q_strncpyz(exeFilename, filepath, sizeof(exeFilename));
+}
+
+/*
+=================
+Sys_ExeFile
+=================
+*/
+const char* Sys_ExeFile( void )
+{
+	return exeFilename;
+}
+
+
+/*
+=================
 Sys_BinaryPath
 =================
 */
-char *Sys_BinaryPath(void)
+const char *Sys_BinaryPath(void)
 {
 	return binaryPath;
 }
@@ -415,7 +452,7 @@ char *Sys_DefaultCDPath(void)
 Sys_DefaultAppPath
 =================
 */
-char *Sys_DefaultAppPath(void)
+const char *Sys_DefaultAppPath(void)
 {
 	return Sys_BinaryPath();
 }
@@ -430,25 +467,9 @@ char *Sys_DefaultAppPath(void)
 #endif
 
 
-char commandLine[MAX_STRING_CHARS] = { 0 };
+int Sys_Main(char* commandLine){
 
-__cdecl int main(int argc, char* argv[]){
-
-    int i;
-
-    uid_t uid = getuid();
-    if( uid == 0 || uid != geteuid() ) { // warn user that he/she's operating as a privliged user
-        printf( "********************************************************\n" );    
-        printf( "***** RUNNING SERVER AS A ROOT IS GENERALLY UNSAFE *****\n" );
-        printf( "********************************************************\n\n" );  
-    }
-    
-    // go back to real user for config loads
-    seteuid( uid );
-
-    Sys_ParseArgs( argc, argv );
-
-    Sys_SetBinaryPath( Sys_Dirname( argv[ 0 ] ) );
+    Q_strncpyz(cmdline, commandLine, sizeof(cmdline));
 
     Sys_SetDefaultInstallPath( DEFAULT_BASEDIR );
 
@@ -459,23 +480,6 @@ __cdecl int main(int argc, char* argv[]){
     Sys_ThreadInit();
 
     Sys_ThreadMain();
-
-    commandLine[0] = 0;
-
-    // Concatenate the command line for passing to Com_Init
-    for( i = 1; i < argc; i++ )
-    {
-        const qboolean containsSpaces = strchr(argv[i], ' ') != NULL;
-        if (containsSpaces)
-            Q_strcat( commandLine, sizeof( commandLine ), "\"" );
-
-        Q_strcat( commandLine, sizeof( commandLine ), argv[ i ] );
-
-        if (containsSpaces)
-            Q_strcat( commandLine, sizeof( commandLine ), "\"" );
-
-        Q_strcat( commandLine, sizeof( commandLine ), " " );
-    }
 
     CON_Init();
 

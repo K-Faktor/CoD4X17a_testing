@@ -283,7 +283,7 @@ void PHandler_LoadPlugin_f( void )
                 Com_Printf("Usage: %s <plugin file name without extension>\n", Cmd_Argv(0));
                 return;
         }
-        PHandler_Load(Cmd_Argv(1),128);
+        PHandler_Load(Cmd_Argv(1));
 }
 void PHandler_UnLoadPlugin_f()
 {

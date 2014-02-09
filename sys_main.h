@@ -46,10 +46,11 @@ void Sys_PrintBinVersion( const char* name );
 void Sys_ParseArgs( int argc, char* argv[] );
 __cdecl void QDECL Sys_Error( const char *fmt, ... );
 void Sys_SetBinaryPath(const char *path);
-char *Sys_BinaryPath(void);
+const char *Sys_BinaryPath(void);
+const char *Sys_ExeFile(void);
 void Sys_SetDefaultInstallPath(const char *path);
 char *Sys_DefaultInstallPath(void);
-char *Sys_DefaultAppPath(void);
+const char *Sys_DefaultAppPath(void);
 //sys_unix.c
 qboolean Sys_RandomBytes( byte *string, int len );
 void Sys_DoStartProcess( char *cmdline );
@@ -67,9 +68,11 @@ qboolean Sys_DirectoryHasContent( const char* dir );
 char **Sys_ListFiles( const char *directory, const char *extension, char *filter, int *numfiles, qboolean wantsubs );
 void Sys_FreeFileList( char **list );
 const char* Sys_GetUsername();
-char commandLine[MAX_STRING_CHARS];
-
+void Sys_SetExitCmdline(const char *);
+void Sys_SetExeFile(const char *);
+int Sys_Main(char* commandLine);
+const char* Sys_GetCommandline( void );
+void Sys_ReplaceProcess( char *cmdline );
 #endif
-
 
 

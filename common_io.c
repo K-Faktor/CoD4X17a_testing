@@ -322,12 +322,15 @@ void QDECL Com_PrintScriptRuntimeWarning(const char *fmt, ...)
 
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
+	char		finalmsg[MAXPRINTMSG];
 
 	va_start (argptr,fmt);
 	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
 	va_end (argptr);
 
-        Com_PrintMessage( 0, va("^6Script Runtime Warning: %s\n", msg), MSG_WARNING);
+	Com_sprintf(finalmsg, sizeof(finalmsg), "^6Script Runtime Warning: %s\n", msg);
+
+        Com_PrintMessage( 0, finalmsg, MSG_WARNING);
 }
 
 

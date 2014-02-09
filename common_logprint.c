@@ -73,7 +73,8 @@ void QDECL SV_EnterLeaveLog( const char *fmt, ... ) {
 			// force it to not buffer so we get valid
 			if ( enterleavelogfile ){
 				FS_ForceFlush(enterleavelogfile);
-				FS_Write(va("\nLogfile opened on %s\n\n", ltime), strlen(va("\nLogfile opened on %s\n\n", ltime)), enterleavelogfile);
+				Com_sprintf(msg, sizeof(msg), "\nLogfile opened on %s\n\n", ltime);
+				FS_Write( msg, strlen(msg), enterleavelogfile);
 			}
 	    }
 
@@ -94,6 +95,7 @@ void QDECL Com_PrintAdministrativeLog( const char *msg ) {
 	struct tm 	*newtime;
 	char*		ltime;
 	time_t		realtime;
+	char		logwritestart[256];
 
         // logfile
 	if ( com_logfile && com_logfile->integer ) {
@@ -114,7 +116,8 @@ void QDECL Com_PrintAdministrativeLog( const char *msg ) {
 			// force it to not buffer so we get valid
 			if ( adminlogfile ){
 				FS_ForceFlush(adminlogfile);
-				FS_Write(va("\nLogfile opened on %s\n\n", ltime), strlen(va("\nLogfile opened on %s\n\n", ltime)), adminlogfile);
+				Com_sprintf(logwritestart, sizeof(logwritestart), "\nLogfile opened on %s\n\n", ltime);
+				FS_Write(logwritestart, strlen(logwritestart), adminlogfile);
 			}
 	    }
 
@@ -130,7 +133,9 @@ void QDECL Com_PrintAdministrativeLog( const char *msg ) {
 void Com_PrintLogfile( const char *msg )
 {
 
+	char	logwritestart[256];
 	Sys_EnterCriticalSection(5);
+
 
 	if ( com_logfile && com_logfile->integer ) {
         // TTimo: only open the qconsole.log if the filesystem is in an initialized state
@@ -149,7 +154,11 @@ void Com_PrintLogfile( const char *msg )
 				// data even if we are crashing
 				FS_ForceFlush(logfile);
 			}
-			if ( logfile ) FS_Write(va("\nLogfile opened on %s\n", asctime( newtime )), strlen(va("\nLogfile opened on %s\n", asctime( newtime ))), logfile);
+			if ( logfile )
+			{
+				Com_sprintf(logwritestart, sizeof(logwritestart), "\nLogfile opened on %s\n\n", asctime( newtime ));
+				FS_Write(logwritestart, strlen(logwritestart), logfile);
+			}
 	    }
 	    if ( logfile && FS_Initialized()) 
 	    {

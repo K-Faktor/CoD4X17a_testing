@@ -262,9 +262,14 @@ void Sys_CoD4LinkObject( plt_offset_t index, void *fun )
     SetJump((DWORD)&entry[index], fun);
 }
 
-void _isdead()
+void _isdead_dbg()
 {
     __asm__("int $3");
+}
+
+void _isdead()
+{
+
 }
 
 
@@ -281,7 +286,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD___cxa_atexit , _isdead );
      Sys_CoD4LinkObject(LD__Znaj , _Znaj );
      Sys_CoD4LinkObject(LD_sysconf , sysconf );
-     Sys_CoD4LinkObject(LD___cxa_begin_catch , _isdead );
+     Sys_CoD4LinkObject(LD___cxa_begin_catch , _isdead_dbg );
      Sys_CoD4LinkObject(LD_qsort , qsort );
      Sys_CoD4LinkObject(LD__ZNSs4_Rep10_M_destroyERKSaIcE , _ZNSs4_Rep10_M_destroyERKSaIcE );
      Sys_CoD4LinkObject(LD_sem_trywait , sem_trywait );
@@ -311,7 +316,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_memset , memset );
      Sys_CoD4LinkObject(LD___strtol_internal , __strtol_internal );
      Sys_CoD4LinkObject(LD__ZdlPv , _ZdlPv );
-     Sys_CoD4LinkObject(LD___libc_start_main , _isdead );
+     Sys_CoD4LinkObject(LD___libc_start_main , _isdead_dbg );
      Sys_CoD4LinkObject(LD_execl , execl );
      Sys_CoD4LinkObject(LD__exit , _exit );
      Sys_CoD4LinkObject(LD_strrchr , strrchr );
@@ -320,29 +325,29 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_chmod , chmod );
      Sys_CoD4LinkObject(LD_read , read );
      Sys_CoD4LinkObject(LD_asinf , asinf );
-     Sys_CoD4LinkObject(LD___cxa_pure_virtual , _isdead );
+     Sys_CoD4LinkObject(LD___cxa_pure_virtual , _isdead_dbg );
      Sys_CoD4LinkObject(LD_usleep , usleep );
      Sys_CoD4LinkObject(LD_readdir , readdir );
      Sys_CoD4LinkObject(LD_gettimeofday , gettimeofday );
      Sys_CoD4LinkObject(LD_free , free );
      Sys_CoD4LinkObject(LD__ZNSs7reserveEj , _ZNSs7reserveEj );
      Sys_CoD4LinkObject(LD_atan , atan );
-     Sys_CoD4LinkObject(LD___cxa_allocate_exception , _isdead );
+     Sys_CoD4LinkObject(LD___cxa_allocate_exception , _isdead_dbg );
      Sys_CoD4LinkObject(LD_access , access );
      Sys_CoD4LinkObject(LD_atanf , atanf );
      Sys_CoD4LinkObject(LD_dlsym , dlsym );
      Sys_CoD4LinkObject(LD__ZSt20__throw_out_of_rangePKc , _ZSt20__throw_out_of_rangePKc );
      Sys_CoD4LinkObject(LD_fflush , fflush );
      Sys_CoD4LinkObject(LD_sqrt , sqrt );
-     Sys_CoD4LinkObject(LD___gxx_personality_v0 , _isdead );
+     Sys_CoD4LinkObject(LD___gxx_personality_v0 , _isdead_dbg );
      Sys_CoD4LinkObject(LD_opendir , opendir );
      Sys_CoD4LinkObject(LD_ioctl , ioctl );
      Sys_CoD4LinkObject(LD_socket , socket );
      Sys_CoD4LinkObject(LD_fseek , fseek );
-     Sys_CoD4LinkObject(LD_pthread_mutex_unlock , _isdead );
+     Sys_CoD4LinkObject(LD_pthread_mutex_unlock , _isdead_dbg );
      Sys_CoD4LinkObject(LD_isatty , isatty );
      Sys_CoD4LinkObject(LD_atan2f , atan2f );
-     Sys_CoD4LinkObject(LD_pthread_mutexattr_destroy , _isdead );
+     Sys_CoD4LinkObject(LD_pthread_mutexattr_destroy , _isdead_dbg );
      Sys_CoD4LinkObject(LD_fclose , fclose );
      Sys_CoD4LinkObject(LD__ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_ , _ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_ );
      Sys_CoD4LinkObject(LD_memalign , memalign );
@@ -352,7 +357,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_memcpy , memcpy );
      Sys_CoD4LinkObject(LD_cosf , cosf );
      Sys_CoD4LinkObject(LD_fopen , fopen );
-     Sys_CoD4LinkObject(LD___cxa_throw , _isdead );
+     Sys_CoD4LinkObject(LD___cxa_throw , _isdead_dbg );
      Sys_CoD4LinkObject(LD_cos , cos );
      Sys_CoD4LinkObject(LD_unlink , unlink );
      Sys_CoD4LinkObject(LD_getpwuid , getpwuid );
@@ -366,9 +371,9 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_ctime , ctime );
      Sys_CoD4LinkObject(LD_bind , bind );
      Sys_CoD4LinkObject(LD_getuid , getuid );
-     Sys_CoD4LinkObject(LD_pthread_mutex_init , _isdead );
+     Sys_CoD4LinkObject(LD_pthread_mutex_init , _isdead_dbg );
      Sys_CoD4LinkObject(LD_strcasecmp , strcasecmp );
-     Sys_CoD4LinkObject(LD___cxa_end_catch , _isdead );
+     Sys_CoD4LinkObject(LD___cxa_end_catch , _isdead_dbg );
      Sys_CoD4LinkObject(LD_select , select );
      Sys_CoD4LinkObject(LD_closedir , closedir );
      Sys_CoD4LinkObject(LD_close , close );
@@ -381,7 +386,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_strncat , strncat );
      Sys_CoD4LinkObject(LD_remove , remove );
      Sys_CoD4LinkObject(LD_malloc , malloc );
-     Sys_CoD4LinkObject(LD_pthread_mutex_lock , _isdead );
+     Sys_CoD4LinkObject(LD_pthread_mutex_lock , _isdead_dbg );
      Sys_CoD4LinkObject(LD_isupper , isupper );
      Sys_CoD4LinkObject(LD__ZN9__gnu_cxx18__exchange_and_addEPVii , _ZN9__gnu_cxx18__exchange_and_addEPVii );
      Sys_CoD4LinkObject(LD_gethostname , gethostname );
@@ -390,7 +395,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_rintf , rintf );
      Sys_CoD4LinkObject(LD_rmdir , rmdir );
      Sys_CoD4LinkObject(LD_dlerror , dlerror );
-     Sys_CoD4LinkObject(LD_pthread_create , _isdead );
+     Sys_CoD4LinkObject(LD_pthread_create , _isdead_dbg );
      Sys_CoD4LinkObject(LD__ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base , _ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base );
      Sys_CoD4LinkObject(LD_sleep , sleep );
      Sys_CoD4LinkObject(LD_strncasecmp , strncasecmp );
@@ -412,26 +417,26 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD___fxstat , __fxstat );
      Sys_CoD4LinkObject(LD_strncmp , strncmp );
      Sys_CoD4LinkObject(LD_vfprintf , vfprintf );
-     Sys_CoD4LinkObject(LD___udivdi3 , _isdead );
+     Sys_CoD4LinkObject(LD___udivdi3 , _isdead_dbg );
      Sys_CoD4LinkObject(LD_sem_getvalue , sem_getvalue );
      Sys_CoD4LinkObject(LD_tan , tan );
      Sys_CoD4LinkObject(LD_fread , fread );
      Sys_CoD4LinkObject(LD_seteuid , seteuid );
      Sys_CoD4LinkObject(LD_snprintf , snprintf );
-     Sys_CoD4LinkObject(LD_pthread_mutexattr_init , _isdead );
+     Sys_CoD4LinkObject(LD_pthread_mutexattr_init , _isdead_dbg );
      Sys_CoD4LinkObject(LD_sin , sin );
      Sys_CoD4LinkObject(LD_strdup , strdup );
      Sys_CoD4LinkObject(LD_gethostbyname , gethostbyname );
-     Sys_CoD4LinkObject(LD___cxa_rethrow , _isdead );
-     Sys_CoD4LinkObject(LD_pthread_mutexattr_settype , _isdead );
+     Sys_CoD4LinkObject(LD___cxa_rethrow , _isdead_dbg );
+     Sys_CoD4LinkObject(LD_pthread_mutexattr_settype , _isdead_dbg );
      Sys_CoD4LinkObject(LD_recvfrom , recvfrom );
-     Sys_CoD4LinkObject(LD__Unwind_Resume , _isdead );
+     Sys_CoD4LinkObject(LD__Unwind_Resume , _isdead_dbg );
      Sys_CoD4LinkObject(LD_tolower , tolower );
      Sys_CoD4LinkObject(LD_strcmp , strcmp );
      Sys_CoD4LinkObject(LD_exit , exit );
      Sys_CoD4LinkObject(LD__ZNSsC1ERKSs , _ZNSsC1ERKSs );
      Sys_CoD4LinkObject(LD_sem_init , sem_init );
-     Sys_CoD4LinkObject(LD_pthread_self , _isdead );
+     Sys_CoD4LinkObject(LD_pthread_self , _isdead_dbg );
      Sys_CoD4LinkObject(LD__ZNSs6assignEPKcj , _ZNSs6assignEPKcj );
      Sys_CoD4LinkObject(LD__ZNSs9_M_mutateEjjj , _ZNSs9_M_mutateEjjj );
      Sys_CoD4LinkObject(LD_geteuid , geteuid );

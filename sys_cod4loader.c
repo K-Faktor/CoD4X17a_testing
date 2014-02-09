@@ -37,6 +37,7 @@
 #include "misc.h"
 #include "sys_cod4loader.h"
 #include "sec_update.h"
+#include "cmd.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -136,6 +137,16 @@ static qboolean Sys_LoadImagePrepareFile(const char* path)
 
 void Com_PatchError(void);
 void Cvar_PatchModifiedFlags();
+
+static void __cdecl Cbuf_AddText_Wrapper_IW(int dummy, const char *text )
+{
+    Cbuf_AddText( text );
+}
+
+static void __cdecl Cbuf_InsertText_Wrapper_IW(int dummy, const char *text )
+{
+    Cbuf_InsertText( text );
+}
 
 static void Sys_PatchImageData( void )
 {
@@ -303,13 +314,12 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetJump(0x819e90a, Cvar_GetInt);
 
 	SetJump(0x819e6d0, Cvar_FindVar);
-
-
 	SetJump(0x819f328, Cvar_ForEach);
-
 	SetJump(0x81264f4, Cvar_InfoString_IW_Wrapper);
-
 	SetJump(0x81a1cc4, Com_LoadDvarsFromBuffer);
+
+	SetJump(0x8110ff8, Cbuf_AddText_Wrapper_IW);
+	SetJump(0x8110f3e, Cbuf_InsertText_Wrapper_IW);
 
 	*(char*)0x8215ccc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebc = '\n'; //adds a missing linebreak
@@ -323,23 +333,25 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 
 static qboolean Sys_PatchImage()
 {
-
-	if(!Sys_MemoryProtectWrite((void*)(IMAGE_BASE + TEXT_SECTION_OFFSET), TEXT_SECTION_LENGTH))
-		return qfalse;
-
-	if(!Sys_MemoryProtectWrite((void*)(IMAGE_BASE + RODATA_SECTION_OFFSET), RODATA_SECTION_LENGTH))
-		return qfalse;
-
-
 	Sys_PatchImageData( );
-
-	if(!Sys_MemoryProtectExec((void*)(IMAGE_BASE + TEXT_SECTION_OFFSET), TEXT_SECTION_LENGTH))
-		return qfalse;
-
-	if(!Sys_MemoryProtectReadonly((void*)(IMAGE_BASE + RODATA_SECTION_OFFSET), RODATA_SECTION_LENGTH))
-		return qfalse;
-
 	return qtrue;
+}
+
+
+void Sys_ImageRunInitFunctions()
+{
+
+    int i;
+
+    void (*functions[])() = { (void*)0x81d8c1e, (void*)0x81b5d3c, (void*)0x81b104c, (void*)0x81a6040, (void*)0x8197bd4, (void*)0x8191cf4,
+                              (void*)0x818efac, (void*)0x810e59c, (void*)0x80f32cc, (void*)0x80f1354, (void*)0x80893b0, (void*)0x80803cc,
+                              (void*)0x807fe7c, (void*)0x807e95c, (void*)0x8076ee4, NULL };
+
+    for(i = 0; functions[i] != NULL; i++)
+    {
+        functions[i]();
+    }
+
 }
 
 /*
@@ -352,20 +364,21 @@ qboolean Sys_LoadImage( ){
 
     byte *fileimage;
     int len;
-    char *cmdline[2];
-    cmdline[0] = NULL;
 
     /* Is this file here ? */
     len = FS_FOpenFileRead(BIN_FILENAME, NULL);
     if(len != DLLMOD_FILESIZE)
     {/* Nope !*/
 
-        Sec_Update(cmdline);
-        FS_Restart(0);
-        return qfalse;
-
+        Sec_Update( qtrue );
+        len = FS_FOpenFileRead(BIN_FILENAME, NULL);
+        if(len != DLLMOD_FILESIZE)
+        {/* Nope !*/
+            Com_PrintError("Failed to load the CoD4 Game. Can not startup the game\n");
+            return qfalse;
+        }
     }
-
+    Sec_Update( qfalse );
 
     len = FS_ReadFile(BIN_FILENAME, (void**)&fileimage);
     if(!fileimage)
@@ -419,5 +432,8 @@ qboolean Sys_LoadImage( ){
         return qfalse;
     }
 
+    Sys_ImageRunInitFunctions();
+
     return qtrue;
 }
+
