@@ -25,4 +25,5 @@
 #include "sec_update.h"
 
 void Sec_Init( void );
+qboolean Sec_Initialized();
 #endif

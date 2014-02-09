@@ -215,7 +215,11 @@ void Sec_Update( qboolean getbasefiles ){
     int len;
     char hash[128];
     long unsigned size;
-
+    
+    if(!Sec_Initialized()){
+	return;
+    }
+    
 #ifdef CAN_UPDATE
     Com_Printf("\n-----------------------------\n");
     Com_Printf(" CoD4X Auto Update\n");

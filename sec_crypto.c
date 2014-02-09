@@ -51,6 +51,10 @@ qboolean Sec_HashMemory(sec_hash_e algo, void *in, size_t inSize, void *out, lon
 	SecCryptErr = CRYPT_INVALID_ARG;
 	return qfalse;
     }
+    if(!Sec_Initialized()){
+	return qfalse;
+    }
+    
     hash_state md;
     int result;
     long unsigned int size;
@@ -84,8 +88,11 @@ qboolean Sec_HashMemory(sec_hash_e algo, void *in, size_t inSize, void *out, lon
 
 qboolean Sec_HashFile(sec_hash_e algo, const char *fname, void *out, long unsigned *outSize,qboolean binaryOutput)
 {
-    if(fname == NULL || out == NULL || *outSize < 1 || algo < 0 || algo >= SEC_HASH_SIZE__){
+    if(fname == NULL || out == NULL || outSize == NULL || *outSize < 1 || algo < 0 || algo >= SEC_HASH_SIZE__){
 	SecCryptErr = CRYPT_INVALID_ARG;
+	return qfalse;
+    }
+    if(!Sec_Initialized()){
 	return qfalse;
     }
     hash_state md;

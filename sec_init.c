@@ -21,6 +21,9 @@
 
 #include "sec_init.h"
 #include "sec_main.h"
+
+qboolean initialized = qfalse;;
+
 /*
 void Sec_MakeCert_f(){
     if(Cmd_Argc() != 4){
@@ -51,6 +54,10 @@ void Sec_MakeCert_f(){
     }
     
 }*/
+
+qboolean Sec_Initialized(){
+    return initialized;
+}
 
 void Sec_Init(void)
 {
@@ -134,7 +141,7 @@ void Sec_Init(void)
     	    return;
 	}
     }
-    
+    initialized = qtrue;
     Com_Printf("--- Crypto Initialization Complete ---\n");
     return;
 }
