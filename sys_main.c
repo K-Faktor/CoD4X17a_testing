@@ -239,14 +239,14 @@ void Sys_Print( const char *msg )
 Sys_SigHandler
 =================
 */
-void Sys_SigHandler( int signal )
+void Sys_SigHandler( int signal, struct sigcontext ctx )
 {
 	static qboolean signalcaught = qfalse;
 	char termmsg[MAX_STRING_CHARS];
 
 	if( signal != SIGTERM && signal != SIGINT )
 	{
-		Sys_DumpCrash( signal );
+		Sys_DumpCrash( signal, &ctx );
 	}
 	Com_Printf( "Received signal: %s, exiting...\n", strsignal(signal) );
 
@@ -318,12 +318,23 @@ Unix specific initialisation
 */
 void Sys_PlatformInit( void )
 {
-	signal( SIGHUP, Sys_SigHandler );
-	signal( SIGQUIT, Sys_SigHandler );
-	signal( SIGTRAP, Sys_SigHandler );
-	signal( SIGIOT, Sys_SigHandler );
-	signal( SIGBUS, Sys_SigHandler );
-//	signal( SIGCHLD, Sys_TermProcess );
+    struct sigaction sa;
+    sa.sa_handler = (void *)Sys_SigHandler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+
+    sigaction( SIGHUP, &sa, NULL );
+    sigaction( SIGQUIT, &sa, NULL );
+    sigaction( SIGTRAP, &sa, NULL );
+    sigaction( SIGIOT, &sa, NULL );
+    sigaction( SIGBUS, &sa, NULL );
+
+    sigaction( SIGILL, &sa, NULL );
+    sigaction( SIGFPE, &sa, NULL );
+    sigaction( SIGSEGV, &sa, NULL ); // No corefiles get generated with it
+    sigaction( SIGTERM, &sa, NULL );
+    sigaction( SIGINT, &sa, NULL );
+//  sigaction( SIGCHLD, &sa, NULL );
 
 }
 
@@ -489,21 +500,32 @@ int Sys_Main(char* commandLine){
 /*    Sys_ImageFindConstant();   */
 
     Sys_InitCrashDumps();
-
+    
     Com_Init( commandLine );
-
-    signal( SIGILL, Sys_SigHandler );
+    
+    // Moved
+    /*signal( SIGILL, Sys_SigHandler );
     signal( SIGFPE, Sys_SigHandler );
-    signal( SIGSEGV, Sys_SigHandler ); /* No corefiles get generated with it */
+    signal( SIGSEGV, Sys_SigHandler ); // No corefiles get generated with it
     signal( SIGTERM, Sys_SigHandler );
     signal( SIGINT, Sys_SigHandler );
-
+*/
 /*
     if(!PbServerInitialize()){
         Com_Printf("Unable to initialize PunkBuster.  PunkBuster is disabled.\n");
     }
 
 */
+    // Forcing a SIGSEGV, tests of signal handlers
+    /*__asm__ volatile("mov $0xdeadbeef, %eax\n"
+	    "mov $0x00, %ebx\n"
+	    "mov $0x01, %ecx\n"
+	    "mov $0x02, %edx\n"
+	    "mov $0x03, %ebp\n"
+	    "mov $0x04, %esi\n"
+	    "mov $0x05, %edi\n"
+	    "call %ecx\n");
+    */
     while ( 1 )
     {
         static int fpu_word = _FPU_DEFAULT;
