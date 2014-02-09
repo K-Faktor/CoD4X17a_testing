@@ -165,13 +165,15 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
     --nstrings;
     for(i = 0,j=0 ;i<nstrings;++i){
         if(strings[i]==0){
-            if(strcmp(strings+i+1,"malloc")==0 || strcmp(strings+i+1,"calloc")==0 || strcmp(strings+i+1,"realloc")==0 || strcmp(strings+i+1,"free")==0 || strcmp(strings+i+1,"printf")==0 || strcmp(strings+i+1,"scanf")==0 ||  strcmp(strings+i+1,"free")==0){ // malloc, calloc, realloc, free, printf, scanf
+            if(strcmp(strings+i+1,"malloc")==0 || strcmp(strings+i+1,"calloc")==0 || strcmp(strings+i+1,"realloc")==0 || 
+               strcmp(strings+i+1,"free")==0 || strcmp(strings+i+1,"printf")==0 || strcmp(strings+i+1,"scanf")==0 ||  
+               strcmp(strings+i+1,"asprintf")==0 || strcmp(strings+i+1,"free")==0){ // malloc, calloc, realloc, free, printf, , asprintf, scanf
                 Com_Printf("The plugin file contains one of the disallowed functions! Disallowed function name: \"%s\".\nPlease refer to the documentation for details.\nPlugin load failed.\n",strings+i+1);
                 free(strings);
                 PHandler_CloseTempFile( realpath);
                 return;
             }
-            if(strncmp(strings+i+1,"_Znaj",5)==0 || strncmp(strings+i+1,"_Znwj",5)==0){ // new and new[]
+            if(strncmp(strings+i+1,"_Zna",4)==0 || strncmp(strings+i+1,"_Znw",4)==0){ // new and new[]
                 Com_Printf("The plugin file contains C++'s new operator which is forbidden.\nPlease refer to the documentation for details.\nPlugin load failed.\n");
                 free(strings);
                 PHandler_CloseTempFile( realpath);
