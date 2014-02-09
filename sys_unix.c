@@ -536,7 +536,7 @@ void Sys_DumpCrash(int signal)
 	numFrames = backtrace(traces, 65536);
 	symbols = backtrace_symbols(traces, numFrames);
 	for(i = 0; i < numFrames; i++)
-		Com_Printf("%5d: %s\n", numFrames - i, symbols[i]);
+		Com_Printf("%5d: %s\n", numFrames - i -1, symbols[i]);
 
 	Com_Printf("-------- Backtrace Completed --------\n");
 	free(traces);
