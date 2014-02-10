@@ -1608,9 +1608,13 @@ int FS_ReadLine( void *buffer, int len, fileHandle_t f ) {
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
-
 	if ( !f ) {
 		return 0;
+	}
+
+	if(fsh[f].zipFile == qtrue)
+	{
+		Com_Error( ERR_FATAL, "FS_ReadLine: Can not read ZIP-Files\n" );
 	}
 
 	buf = buffer;
@@ -1619,7 +1623,7 @@ int FS_ReadLine( void *buffer, int len, fileHandle_t f ) {
 	if (read == NULL) {	//Error
 
 		if(feof(fsh[f].handleFiles.file.o)) return 0;
-		Com_Error (ERR_FATAL, "FS_ReadLine: couldn't read");
+		Com_PrintError("FS_ReadLine: couldn't read");
 		return -1;
 	}
 	return 1;
@@ -2522,7 +2526,7 @@ void FS_GameSetDirSep()
 
   flag = qfalse;
   Q_strncpyz(buf, fs_gameDirVar->string, sizeof(buf));
-  length = strlen(fs_gameDirVar->string);
+  length = strlen(buf);
 
   for (i = 0; length >= i; i++)
   {

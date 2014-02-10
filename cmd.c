@@ -319,37 +319,41 @@ qboolean Cmd_RemoveCommand( const char *cmd_name ) {
 }
 
 
-/*
-===============
-Cmd_Exec_f
-===============
-*/
 void Cmd_Exec_f( void ) {
-	union {
-		char	*c;
-		void	*v;
-	} f;
-	char	filename[MAX_QPATH];
+	char *f, *f_ptr;
+	int len, i;
+	char filename[MAX_QPATH];
+	char line[8192];
 
-	if (Cmd_Argc () != 2) {
-		Com_Printf ("exec <filename> : execute a script file\n");
+	if ( Cmd_Argc() != 2 ) {
+		Com_Printf( "exec <filename> : execute a script file\n" );
 		return;
 	}
 
-	Q_strncpyz( filename, Cmd_Argv(1), sizeof( filename ) );
+	Q_strncpyz( filename, Cmd_Argv( 1 ), sizeof( filename ) );
 	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
-	FS_ReadFile( filename, &f.v);
-	if (!f.c) {
-		Com_Printf ("couldn't exec %s\n",Cmd_Argv(1));
+	len = FS_ReadFile( filename, (void **)&f );
+	if ( !f ) {
+		Com_Printf( "couldn't exec %s\n",Cmd_Argv( 1 ) );
 		return;
 	}
-	Com_Printf ("execing %s\n",Cmd_Argv(1));
-	
-	Cbuf_InsertText (f.c);
-
-	FS_FreeFile (f.v);
+	Com_Printf( "execing %s\n",Cmd_Argv( 1 ) );
+	f_ptr = f;
+	do
+	{
+	    for(i = 0; *f_ptr != '\n' && len > 0 && i < sizeof(line) -2; i++)
+	    {
+		len--;
+		line[i] = *f_ptr;
+		f_ptr++;
+	    }
+	    line[i] = '\n';
+	    line[i+1] = '\0';
+	    Cbuf_ExecuteText( EXEC_NOW, line );
+	    if(*f_ptr == '\n') f_ptr++;
+	}while(len > 0);
+	FS_FreeFile( f );
 }
-
 
 /*
 ===============
@@ -915,84 +919,6 @@ static void Cmd_ListPower_f() {
 
 
 
-
-/*
-===============
-Cmd_Exec_f
-===============
-*/
-/*
-void Cmd_Exec_f( void ) {
-	char    *f;
-	int len;
-	int read;
-
-	fileHandle_t file;
-	char filename[MAX_QPATH];
-	char buf[4096];
-
-	if ( Cmd_Argc() != 2 ) {
-		Com_Printf( "exec <filename> : execute a script file\n" );
-		return;
-	}
-
-	Q_strncpyz( filename, Cmd_Argv( 1 ), sizeof( filename ) );
-	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
-	FS_FOpenFileRead(filename, &file);
-	//len = FS_ReadFile( filename, (void **)&f );
-	if ( !file ) {
-		Com_Printf( "couldn't exec %s\n",Cmd_Argv( 1 ) );
-		return;
-	}
-
-	Com_Printf( "execing %s\n",Cmd_Argv( 1 ) );
-
-	while(qtrue)
-	{
-		read = FS_ReadLine(buf, sizeof(buf), file);
-		if(read == 0){
-			FS_FCloseFile(file);
-			return;
-		}
-
-
-		if(read == -1){
-			Com_Printf("Can not read from nvconfig.dat\n");
-			FS_FCloseFile(file);
-			return;
-		}
-		if(!*buf || *buf == '\n'){
-			continue;
-		}
-		Cbuf_Execute( )
-	}
-}
-
-
-
-void Cmd_Exec_f( void ) {
-	char    *f;
-	char filename[MAX_QPATH];
-
-	if ( Cmd_Argc() != 2 ) {
-		Com_Printf( "exec <filename> : execute a script file\n" );
-		return;
-	}
-
-	Q_strncpyz( filename, Cmd_Argv( 1 ), sizeof( filename ) );
-	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
-	FS_ReadFile( filename, (void **)&f );
-	if ( !f ) {
-		Com_PrintError( "couldn't exec %s\n",Cmd_Argv( 1 ) );
-		return;
-	}
-	Com_Printf( "execing %s\n",Cmd_Argv( 1 ) );
-
-	Cbuf_ExecuteBuffer( 0,0, f );
-
-	FS_FreeFile( f );
-}
-*/
 
 
 

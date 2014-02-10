@@ -593,7 +593,7 @@ static void Com_InitCvars( void ){
     com_shortversion = Cvar_RegisterString ("shortversion", Q3_VERSION, CVAR_ROM | CVAR_SERVERINFO , "Short game version");
 
     Cvar_RegisterString ("build", va("%i", BUILD_NUMBER), CVAR_ROM | CVAR_SERVERINFO , "");
-    com_useFastfiles = Cvar_RegisterBool ("useFastFils", qtrue, 16, "Enables loading data from fast files");
+    com_useFastfiles = Cvar_RegisterBool ("useFastFiles", qtrue, 16, "Enables loading data from fast files");
     //MasterServer
     //AuthServer
     //MasterServerPort
