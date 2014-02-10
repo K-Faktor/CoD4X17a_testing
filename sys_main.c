@@ -244,7 +244,7 @@ void Sys_SigHandler( int signal, struct sigcontext ctx )
 	static qboolean signalcaught = qfalse;
 	char termmsg[MAX_STRING_CHARS];
 
-	if( signal != SIGTERM && signal != SIGINT )
+	if( signal == SIGSEGV || signal == SIGTRAP || signal == SIGBUS || signal == SIGIOT || signal == SIGILL || signal == SIGFPE )
 	{
 		Sys_DumpCrash( signal, &ctx );
 	}
