@@ -343,13 +343,24 @@ void Cmd_Exec_f( void ) {
 	{
 	    for(i = 0; *f_ptr != '\n' && len > 0 && i < sizeof(line) -2; i++)
 	    {
-		len--;
+		if(f_ptr[0] == '/' && f_ptr[1] == '*')
+		{
+			while((f_ptr[0] != '*' || f_ptr[1] != '/') && len > 0)
+			{
+				len--;
+				f_ptr++;
+			}
+			if(len > 2)
+				f_ptr += 2;
+		}
 		line[i] = *f_ptr;
+		len--;
 		f_ptr++;
 	    }
 	    line[i] = '\n';
 	    line[i+1] = '\0';
-	    Cbuf_ExecuteText( EXEC_NOW, line );
+	    Cbuf_InsertText( line );
+	    Cbuf_Execute( );
 	    if(*f_ptr == '\n') f_ptr++;
 	}while(len > 0);
 	FS_FreeFile( f );

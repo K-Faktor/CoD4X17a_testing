@@ -47,11 +47,11 @@ qboolean	cheating_enabled;
 
 static char nullstring[1] = {0};
 
-#define	MAX_CVARS	1024
+#define	MAX_CVARS	8192
 cvar_t		cvar_indexes[MAX_CVARS];
 int			cvar_numIndexes;
 
-#define FILE_HASH_SIZE		256
+#define FILE_HASH_SIZE		512
 static	cvar_t*		hashTable[FILE_HASH_SIZE];
 
 typedef struct{
