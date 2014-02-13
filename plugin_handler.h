@@ -72,7 +72,7 @@ enum {
 };
 
 typedef struct{
-    char name[32];
+    char name[64];
     xcommand_t xcommand;
 }pluginCmd_t;
 
@@ -100,6 +100,8 @@ typedef struct{
     void (*OnUnload)();    // De-initialization function
 
     pluginCmd_t cmd[20];
+    pluginCmd_t scr_functions[36];
+    pluginCmd_t scr_methods[36];
     int cmds;
     int scriptfunctions;
     int scriptmethods;
@@ -139,8 +141,8 @@ extern pluginWrapper_t pluginFunctions; // defined in plugin_handler.c
 
 void PHandler_Load(char* );
 void PHandler_Unload(int id);
-void PHandler_UnloadByName(char *name, size_t size);
-int PHandler_GetID(char *name, size_t size);
+void PHandler_UnloadByName(char *name);
+int PHandler_GetID(char *name);
 void PHandler_Event(int, ...);
 void PHandler_Init();
 void *PHandler_Malloc(int,size_t);

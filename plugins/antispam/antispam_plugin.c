@@ -27,7 +27,7 @@ void Antispam_Initialize()
     data.players = (userData_t *)Plugin_Malloc(sizeof(userData_t)*data.maxPlayers);
     memset(data.players,0x00,sizeof(userData_t)*data.maxPlayers);
 }
-int OnInit(){	// Funciton called on server initiation
+PCL int OnInit(){	// Funciton called on server initiation
 
 	//G_SayCensor_Init();
 	data.maxPlayers = Plugin_GetSlotCount();
@@ -86,7 +86,7 @@ PCL void OnMessageSent(char *message,int slot, qboolean *show){
 	    Plugin_ChatPrintf(slot,"^2AntiSpam: you can send next chat message in %d seconds.",60 - t - data.players[slot].messages[0]);
 	}
 }
-void OnInfoRequest(pluginInfo_t *info){	// Function used to obtain information about the plugin
+PCL void OnInfoRequest(pluginInfo_t *info){	// Function used to obtain information about the plugin
     // Memory pointed by info is allocated by the server binary, just fill in the fields
     
     // =====  MANDATORY FIELDS  =====

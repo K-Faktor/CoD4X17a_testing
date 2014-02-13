@@ -291,7 +291,7 @@ void PHandler_UnLoadPlugin_f()
         Com_Printf("Usage: %s <plugin file name without extension>\n", Cmd_Argv(0));
         return;
     }
-    PHandler_UnloadByName(Cmd_Argv(1),128);
+    PHandler_UnloadByName(Cmd_Argv(1));
 }
 void PHandler_PluginInfo_f()
 {
@@ -299,7 +299,7 @@ void PHandler_PluginInfo_f()
         Com_Printf("Usage: %s <plugin name>\n",Cmd_Argv(0));
         return;
     }
-    int id = PHandler_GetID(Cmd_Argv(1),strlen(Cmd_Argv(1)));
+    int id = PHandler_GetID(Cmd_Argv(1));
     int i;
     int vMajor, vMinor;
     pluginInfo_t info;
@@ -309,7 +309,7 @@ void PHandler_PluginInfo_f()
     }
     (*pluginFunctions.plugins[id].OnInfoRequest)(&info);
     Com_Printf("\n");
-    Com_Printf("\n^2Plugin name:^7\n%s\n\n",pluginFunctions.plugins[id].name);
+    Com_Printf("^2Plugin name:^7\n%s\n\n",pluginFunctions.plugins[id].name);
     vMajor = info.pluginVersion.major;
     vMinor = info.pluginVersion.minor;
     if(vMinor > 100){
@@ -317,15 +317,28 @@ void PHandler_PluginInfo_f()
             vMinor /= 10;
         }
     }
-    Com_Printf("\n^2Plugin version:^7\n%d.%d\n\n",vMajor,vMinor);
-    Com_Printf("\n^2Full plugin name:^7\n%s\n\n",info.fullName);
-    Com_Printf("\n^2Short plugin description:^7\n%s\n\n",info.shortDescription);
-    Com_Printf("\n^2Full plugin description:^7\n%s\n\n",info.longDescription);
-    Com_Printf("\n^2Plugin commands:^7\n\n");
-    for(i=0;i<pluginFunctions.plugins[id].cmds;++i){
+    Com_Printf("^2Plugin version:^7\n%d.%d\n\n",vMajor,vMinor);
+    Com_Printf("^2Full plugin name:^7\n%s\n\n",info.fullName);
+    Com_Printf("^2Short plugin description:^7\n%s\n\n",info.shortDescription);
+    Com_Printf("^2Full plugin description:^7\n%s\n\n",info.longDescription);
+    Com_Printf("^2Commands:^7\n\n");
+    for(i=0; i < pluginFunctions.plugins[id].cmds;++i){
         Com_Printf(" -%s\n",pluginFunctions.plugins[id].cmd[i].name);
     }
-    Com_Printf("\n^2Total of %d commands.^7\n\n",pluginFunctions.plugins[id].cmds);
+    Com_Printf("^2Total of %d commands.^7\n\n",pluginFunctions.plugins[id].cmds);
+
+    Com_Printf("^2Script Functions:^7\n\n");
+    for(i=0; i < pluginFunctions.plugins[id].scriptfunctions;++i){
+        Com_Printf(" -%s\n",pluginFunctions.plugins[id].scr_functions[i].name);
+    }
+    Com_Printf("^2Total of %d functions.^7\n\n",pluginFunctions.plugins[id].scriptfunctions);
+
+    Com_Printf("^2Script Methods:^7\n\n");
+    for(i=0; i < pluginFunctions.plugins[id].scriptmethods;++i){
+        Com_Printf(" -%s\n",pluginFunctions.plugins[id].scr_methods[i].name);
+    }
+    Com_Printf("^2Total of %d methods.^7\n\n",pluginFunctions.plugins[id].scriptmethods);
+
 }
 void PHandler_PluginList_f()
 {

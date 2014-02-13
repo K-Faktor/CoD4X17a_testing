@@ -344,9 +344,11 @@ P_P_F int Plugin_GetServerTime(void)
     return svs.time;
 }
 
-P_P_F void Plugin_ScrAddFunction(char *name, xfunction_t function)
+void Plugin_ScrAddFunction_Internal(char *name, xfunction_t function, qboolean replace)
 {
     volatile int pID;
+    int i;
+
     pID = PHandler_CallerID();
     if(pID>=MAX_PLUGINS){
         Com_Printf("Error: tried adding a script command for a plugin with non existent pID. pID supplied: %d.\n",pID);
@@ -359,90 +361,105 @@ P_P_F void Plugin_ScrAddFunction(char *name, xfunction_t function)
         Com_Printf("Error: Tried adding a command for not loaded plugin! PID: %d.\n",pID);
     }
     Com_Printf("Adding a plugin script function for plugin %d, command name: %s.\n",pID, name);
-
+    for(i = 0; i < (sizeof(pluginFunctions.plugins[0].scr_functions) / sizeof(pluginCmd_t)); i++ )
+    {
+        if(pluginFunctions.plugins[pID].scr_functions[i].xcommand == NULL)
+        {
+            break;
+        }
+    }
+    if(i == (sizeof(pluginFunctions.plugins[0].scr_functions) / sizeof(pluginCmd_t)))
+    {
+        Com_PrintError("Exceeded maximum number of scrip-functions (%d) for plugin\n", (sizeof(pluginFunctions.plugins[0].scr_functions) / sizeof(pluginCmd_t)));
+        return;
+    }
+    if(strlen(name) >= sizeof(pluginFunctions.plugins[0].scr_functions[0].name))
+    {
+        Com_PrintError("Exceeded maximum length of name for scrip-method: %s (%d) for plugin %s\n", name, sizeof(pluginFunctions.plugins[0].scr_functions[0].name) ,name);
+        return;
+    }
+    if(replace == qtrue)
+    {
+        Scr_RemoveFunction(name);
+    }
     if(Scr_AddFunction(name, function, qfalse) == qfalse)
     {
         Com_PrintError("Failed to add this script function: %s for plugin\n", name);
         return;
     }
+    Q_strncpyz(pluginFunctions.plugins[pID].scr_functions[i].name, name, sizeof(pluginFunctions.plugins[0].scr_functions[0].name));
+    pluginFunctions.plugins[pID].scr_functions[i].xcommand = function;
     pluginFunctions.plugins[pID].scriptfunctions ++;
+}
+
+void Plugin_ScrAddMethod_Internal(char *name, xfunction_t function, qboolean replace)
+{
+    volatile int pID;
+    int i;
+
+    pID = PHandler_CallerID();
+    if(pID>=MAX_PLUGINS){
+        Com_Printf("Error: tried adding a script command for a plugin with non existent pID. pID supplied: %d.\n",pID);
+        return;
+    }else if(pID<0){
+        Com_Printf("Plugin Handler error: Plugin_ScrAddMethod called from not within a plugin or from a disabled plugin!\n");
+        return;
+    }
+    if(!pluginFunctions.plugins[pID].loaded){
+        Com_Printf("Error: Tried adding a command for not loaded plugin! PID: %d.\n",pID);
+    }
+    Com_Printf("Adding a plugin script method for plugin %d, method name: %s.\n",pID, name);
+    for(i = 0; i < (sizeof(pluginFunctions.plugins[0].scr_methods) / sizeof(pluginCmd_t)); i++ )
+    {
+        if(pluginFunctions.plugins[pID].scr_methods[i].xcommand == NULL)
+        {
+            break;
+        }
+    }
+    if(i == (sizeof(pluginFunctions.plugins[0].scr_methods) / sizeof(pluginCmd_t)))
+    {
+        Com_PrintError("Exceeded maximum number of scrip-methods (%d) for plugin\n", (sizeof(pluginFunctions.plugins[0].scr_methods) / sizeof(pluginCmd_t)));
+        return;
+    }
+    if(strlen(name) >= sizeof(pluginFunctions.plugins[0].scr_methods[0].name))
+    {
+        Com_PrintError("Exceeded maximum length of name for scrip-method: %s (%d) for plugin %s\n", name, sizeof(pluginFunctions.plugins[0].scr_methods[0].name) ,name);
+        return;
+    }
+    if(replace == qtrue)
+    {
+        Scr_RemoveMethod(name);
+    }
+    if(Scr_AddMethod(name, function, qfalse) == qfalse)
+    {
+        Com_PrintError("Failed to add this script function: %s for plugin\n", name);
+        return;
+    }
+    Q_strncpyz(pluginFunctions.plugins[pID].scr_methods[i].name, name, sizeof(pluginFunctions.plugins[0].scr_methods[0].name));
+    pluginFunctions.plugins[pID].scr_methods[i].xcommand = function;
+    pluginFunctions.plugins[pID].scriptmethods ++;
+}
+
+P_P_F void Plugin_ScrAddFunction(char *name, xfunction_t function)
+{
+    Plugin_ScrAddFunction_Internal(name, function, qfalse);
 }
 
 P_P_F void Plugin_ScrAddMethod(char *name, xfunction_t function)
 {
-    volatile int pID;
-    pID = PHandler_CallerID();
-    if(pID>=MAX_PLUGINS){
-        Com_Printf("Error: tried adding a script command for a plugin with non existent pID. pID supplied: %d.\n",pID);
-        return;
-    }else if(pID<0){
-        Com_Printf("Plugin Handler error: Plugin_ScrAddMethod called from not within a plugin or from a disabled plugin!\n");
-        return;
-    }
-    if(!pluginFunctions.plugins[pID].loaded){
-        Com_Printf("Error: Tried adding a command for not loaded plugin! PID: %d.\n",pID);
-    }
-    Com_Printf("Adding a plugin script method for plugin %d, command name: %s.\n",pID, name);
-
-    if(Scr_AddMethod(name, function, qfalse) == qfalse)
-    {
-        Com_PrintError("Failed to add this script function: %s for plugin\n", name);
-        return;
-    }
-    pluginFunctions.plugins[pID].scriptmethods ++;
+    Plugin_ScrAddMethod_Internal(name, function, qfalse);
 }
 
 P_P_F void Plugin_ScrReplaceFunction(char *name, xfunction_t function)
 {
-    volatile int pID;
-    pID = PHandler_CallerID();
-    if(pID>=MAX_PLUGINS){
-        Com_Printf("Error: tried adding a script command for a plugin with non existent pID. pID supplied: %d.\n",pID);
-        return;
-    }else if(pID<0){
-        Com_Printf("Plugin Handler error: Plugin_ScrAddFunction called from not within a plugin or from a disabled plugin!\n");
-        return;
-    }
-    if(!pluginFunctions.plugins[pID].loaded){
-        Com_Printf("Error: Tried adding a command for not loaded plugin! PID: %d.\n",pID);
-    }
-    Com_Printf("Adding a plugin script function for plugin %d, command name: %s.\n",pID, name);
-
-    Scr_RemoveFunction(name);
-
-    if(Scr_AddFunction(name, function, qfalse) == qfalse)
-    {
-        Com_PrintError("Failed to add this script function: %s for plugin\n", name);
-        return;
-    }
-    pluginFunctions.plugins[pID].scriptfunctions ++;
+    Plugin_ScrAddFunction_Internal(name, function, qtrue);
 }
 
 P_P_F void Plugin_ScrReplaceMethod(char *name, xfunction_t function)
 {
-    volatile int pID;
-    pID = PHandler_CallerID();
-    if(pID>=MAX_PLUGINS){
-        Com_Printf("Error: tried adding a script command for a plugin with non existent pID. pID supplied: %d.\n",pID);
-        return;
-    }else if(pID<0){
-        Com_Printf("Plugin Handler error: Plugin_ScrAddMethod called from not within a plugin or from a disabled plugin!\n");
-        return;
-    }
-    if(!pluginFunctions.plugins[pID].loaded){
-        Com_Printf("Error: Tried adding a command for not loaded plugin! PID: %d.\n",pID);
-    }
-    Com_Printf("Adding a plugin script method for plugin %d, command name: %s.\n",pID, name);
-
-    Scr_RemoveMethod(name);
-
-    if(Scr_AddMethod(name, function, qfalse) == qfalse)
-    {
-        Com_PrintError("Failed to add this script function: %s for plugin\n", name);
-        return;
-    }
-    pluginFunctions.plugins[pID].scriptmethods ++;
+    Plugin_ScrAddMethod_Internal(name, function, qtrue);
 }
+
 
 P_P_F void Plugin_ChatPrintf(int slot, const char *fmt, ... )
 {
