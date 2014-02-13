@@ -587,7 +587,7 @@ static void Com_InitCvars( void ){
     com_fixedtime = Cvar_RegisterInt("fixedtime", 0, 0, 1000, 0x80, "Use a fixed time rate for each frame");
     com_maxFrameTime = Cvar_RegisterInt("com_maxFrameTime", 100, 50, 1000, 0, "Time slows down if a frame takes longer than this many milliseconds");
     com_animCheck = Cvar_RegisterBool("com_animCheck", qfalse, 0, "Check anim tree");
-    s = va("%s %s %s build %i %s\n", GAME_STRING,Q3_VERSION,PLATFORM_STRING, BUILD_NUMBER, __DATE__);
+    s = va("%s %s %s build %i %s", GAME_STRING,Q3_VERSION,PLATFORM_STRING, BUILD_NUMBER, __DATE__);
 
     com_version = Cvar_RegisterString ("version", s, CVAR_ROM | CVAR_SERVERINFO , "Game version");
     com_shortversion = Cvar_RegisterString ("shortversion", Q3_VERSION, CVAR_ROM | CVAR_SERVERINFO , "Short game version");
