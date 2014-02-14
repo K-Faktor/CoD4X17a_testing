@@ -52,6 +52,7 @@ typedef void convariable_t; //For plugins
 #include "qcommon_io.h" // Com_Printf
 #include "server.h"     // client_t
 #include "sys_net.h"    // Tcp stuff
+#include "scr_vm.h"
 
 #include "plugins/plugin_declarations.h"
 #include "plugin_events.h"
@@ -156,7 +157,8 @@ void PHandler_TcpCloseConnection(int,int);
 int PHandler_CallerID();
 void PHandler_ChatPrintf(int,char *,...);
 void PHandler_CmdExecute_f( void ); // fake server command for use in plugin commands
-
+void PHandler_ScrAddMethod(char *name, xfunction_t function, qboolean replace, int pID);
+void PHandler_ScrAddFunction(char *name, xfunction_t function, qboolean replace, int pID);
 // --------------------------------------//
 //  Plugin Handler's own server commands //
 // --------------------------------------//
@@ -167,3 +169,6 @@ void PHandler_PluginList_f( void );
 void PHandler_PluginInfo_f( void );
 
 #endif /*PLUGIN_HANDLER_H*/
+
+
+

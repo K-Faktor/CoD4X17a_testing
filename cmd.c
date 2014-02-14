@@ -41,7 +41,7 @@
 =============================================================================
 */
 
-#define	MAX_CMD_BUFFER	16384
+#define	MAX_CMD_BUFFER	1024
 #define	MAX_CMD_LINE	1024
 
 typedef struct {
@@ -77,18 +77,34 @@ Adds command text at the end of the buffer, does NOT add a final \n
 ============
 */
 void Cbuf_AddText( const char *text ) {
-	int		l;
-	
-	l = strlen (text);
+	int		len;
+	byte*		new_buf;
+	len = strlen (text) +1;
 
-	if (cmd_text.cursize + l >= cmd_text.maxsize)
-	{
-		Com_Printf ("Cbuf_AddText: overflow\n");
-		Com_Printf ("Discarded text is: %s\n", text);
-		return;
+	if ( len + cmd_text.cursize > cmd_text.maxsize ) {
+
+		if(cmd_text.data == cmd_text_buf)
+		{
+			new_buf = realloc(NULL, len + cmd_text.cursize);
+			if(new_buf != NULL)
+			{
+				Com_Memcpy(new_buf, cmd_text_buf, len + cmd_text.cursize);
+			}
+		}else{
+			new_buf = realloc(cmd_text.data, len + cmd_text.cursize);
+		}
+
+		if(new_buf == NULL)
+		{
+			Com_PrintError( "Cbuf_AddText overflowed ; realloc failed\n" );
+			return;
+		}
+		cmd_text.data = new_buf;
+		cmd_text.maxsize = len + cmd_text.cursize;
 	}
-	Com_Memcpy(&cmd_text.data[cmd_text.cursize], text, l);
-	cmd_text.cursize += l;
+
+	Com_Memcpy(&cmd_text.data[cmd_text.cursize], text, len -1);
+	cmd_text.cursize += len -1;
 }
 
 /*
@@ -102,11 +118,29 @@ Adds a \n to the text
 void Cbuf_InsertText( const char *text ) {
 	int		len;
 	int		i;
+	byte*		new_buf;
 
 	len = strlen( text ) + 1;
 	if ( len + cmd_text.cursize > cmd_text.maxsize ) {
-		Com_Printf( "Cbuf_InsertText overflowed\n" );
-		return;
+
+		if(cmd_text.data == cmd_text_buf)
+		{
+			new_buf = realloc(NULL, len + cmd_text.cursize);
+			if(new_buf != NULL)
+			{
+				Com_Memcpy(new_buf, cmd_text_buf, len + cmd_text.cursize);
+			}
+		}else{
+			new_buf = realloc(cmd_text.data, len + cmd_text.cursize);
+		}
+
+		if(new_buf == NULL)
+		{
+			Com_PrintError( "Cbuf_InsertText overflowed ; realloc failed\n" );
+			return;
+		}
+		cmd_text.data = new_buf;
+		cmd_text.maxsize = len + cmd_text.cursize;
 	}
 
 	// move the existing command text
@@ -151,6 +185,8 @@ void Cbuf_ExecuteText (int exec_when, const char *text)
 		Com_Error (ERR_FATAL, "Cbuf_ExecuteText: bad exec_when");
 	}
 }
+
+
 
 /*
 ============
@@ -234,6 +270,13 @@ void Cbuf_Execute (void)
 // execute the command line
 
 		Cmd_ExecuteString (line);		
+	}
+
+	if( cmd_text.cursize == 0 && cmd_text.data != cmd_text_buf)
+	{
+		free(cmd_text.data);
+		cmd_text.data = cmd_text_buf;
+		cmd_text.maxsize = MAX_CMD_BUFFER;
 	}
 }
 
@@ -320,10 +363,8 @@ qboolean Cmd_RemoveCommand( const char *cmd_name ) {
 
 
 void Cmd_Exec_f( void ) {
-	char *f, *f_ptr;
-	int len, i;
+	char *f;
 	char filename[MAX_QPATH];
-	char line[8192];
 
 	if ( Cmd_Argc() != 2 ) {
 		Com_Printf( "exec <filename> : execute a script file\n" );
@@ -332,37 +373,15 @@ void Cmd_Exec_f( void ) {
 
 	Q_strncpyz( filename, Cmd_Argv( 1 ), sizeof( filename ) );
 	COM_DefaultExtension( filename, sizeof( filename ), ".cfg" );
-	len = FS_ReadFile( filename, (void **)&f );
+	FS_ReadFile( filename, (void **)&f );
 	if ( !f ) {
 		Com_Printf( "couldn't exec %s\n",Cmd_Argv( 1 ) );
 		return;
 	}
 	Com_Printf( "execing %s\n",Cmd_Argv( 1 ) );
-	f_ptr = f;
-	do
-	{
-	    for(i = 0; *f_ptr != '\n' && len > 0 && i < sizeof(line) -2; i++)
-	    {
-		if(f_ptr[0] == '/' && f_ptr[1] == '*')
-		{
-			while((f_ptr[0] != '*' || f_ptr[1] != '/') && len > 0)
-			{
-				len--;
-				f_ptr++;
-			}
-			if(len > 2)
-				f_ptr += 2;
-		}
-		line[i] = *f_ptr;
-		len--;
-		f_ptr++;
-	    }
-	    line[i] = '\n';
-	    line[i+1] = '\0';
-	    Cbuf_InsertText( line );
-	    Cbuf_Execute( );
-	    if(*f_ptr == '\n') f_ptr++;
-	}while(len > 0);
+
+	Cbuf_InsertText( f );
+
 	FS_FreeFile( f );
 }
 

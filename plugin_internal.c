@@ -23,7 +23,6 @@
 
 #include "plugin_handler.h"
 
-
 /*==========================================*
  *                                          *
  *   Plugin Handler's internal functions    *
@@ -391,3 +390,98 @@ P_P_F int PHandler_CallerID() // P_P_F for no-inline :P
     }
     return -1;
 }
+
+
+
+void PHandler_ScrAddFunction(char *name, xfunction_t function, qboolean replace, int pID)
+{
+    int i;
+
+    if(pID>=MAX_PLUGINS){
+        Com_Printf("Error: tried adding a script command for a plugin with non existent pID. pID supplied: %d.\n",pID);
+        return;
+    }else if(pID<0){
+        Com_Printf("Plugin Handler error: Plugin_ScrAddFunction or Plugin_ScrReplaceFunction called from not within a plugin or from a disabled plugin!\n");
+        return;
+    }
+    if(!pluginFunctions.plugins[pID].loaded){
+        Com_Printf("Error: Tried adding a command for not loaded plugin! PID: %d.\n",pID);
+    }
+    Com_Printf("Adding a plugin script function for plugin %d, command name: %s.\n",pID, name);
+    for(i = 0; i < (sizeof(pluginFunctions.plugins[0].scr_functions) / sizeof(pluginCmd_t)); i++ )
+    {
+        if(pluginFunctions.plugins[pID].scr_functions[i].xcommand == NULL)
+        {
+            break;
+        }
+    }
+    if(i == (sizeof(pluginFunctions.plugins[0].scr_functions) / sizeof(pluginCmd_t)))
+    {
+        Com_PrintError("Exceeded maximum number of scrip-functions (%d) for plugin\n", (sizeof(pluginFunctions.plugins[0].scr_functions) / sizeof(pluginCmd_t)));
+        return;
+    }
+    if(strlen(name) >= sizeof(pluginFunctions.plugins[0].scr_functions[0].name))
+    {
+        Com_PrintError("Exceeded maximum length of name for scrip-method: %s (%d) for plugin %s\n", name, sizeof(pluginFunctions.plugins[0].scr_functions[0].name) ,name);
+        return;
+    }
+    if(replace == qtrue)
+    {
+        Scr_RemoveFunction(name);
+    }
+    if(Scr_AddFunction(name, function, qfalse) == qfalse)
+    {
+        Com_PrintError("Failed to add this script function: %s for plugin\n", name);
+        return;
+    }
+    Q_strncpyz(pluginFunctions.plugins[pID].scr_functions[i].name, name, sizeof(pluginFunctions.plugins[0].scr_functions[0].name));
+    pluginFunctions.plugins[pID].scr_functions[i].xcommand = function;
+    pluginFunctions.plugins[pID].scriptfunctions ++;
+}
+
+void PHandler_ScrAddMethod(char *name, xfunction_t function, qboolean replace, int pID)
+{
+    int i;
+
+    if(pID>=MAX_PLUGINS){
+        Com_Printf("Error: tried adding a script command for a plugin with non existent pID. pID supplied: %d.\n",pID);
+        return;
+    }else if(pID<0){
+        Com_Printf("Plugin Handler error: Plugin_ScrAddMethod or Plugin_ScrReplaceMethod called from not within a plugin or from a disabled plugin!\n");
+        return;
+    }
+    if(!pluginFunctions.plugins[pID].loaded){
+        Com_Printf("Error: Tried adding a command for not loaded plugin! PID: %d.\n",pID);
+    }
+    Com_Printf("Adding a plugin script method for plugin %d, method name: %s.\n",pID, name);
+    for(i = 0; i < (sizeof(pluginFunctions.plugins[0].scr_methods) / sizeof(pluginCmd_t)); i++ )
+    {
+        if(pluginFunctions.plugins[pID].scr_methods[i].xcommand == NULL)
+        {
+            break;
+        }
+    }
+    if(i == (sizeof(pluginFunctions.plugins[0].scr_methods) / sizeof(pluginCmd_t)))
+    {
+        Com_PrintError("Exceeded maximum number of scrip-methods (%d) for plugin\n", (sizeof(pluginFunctions.plugins[0].scr_methods) / sizeof(pluginCmd_t)));
+        return;
+    }
+    if(strlen(name) >= sizeof(pluginFunctions.plugins[0].scr_methods[0].name))
+    {
+        Com_PrintError("Exceeded maximum length of name for scrip-method: %s (%d) for plugin %s\n", name, sizeof(pluginFunctions.plugins[0].scr_methods[0].name) ,name);
+        return;
+    }
+    if(replace == qtrue)
+    {
+        Scr_RemoveMethod(name);
+    }
+    if(Scr_AddMethod(name, function, qfalse) == qfalse)
+    {
+        Com_PrintError("Failed to add this script function: %s for plugin\n", name);
+        return;
+    }
+    Q_strncpyz(pluginFunctions.plugins[pID].scr_methods[i].name, name, sizeof(pluginFunctions.plugins[0].scr_methods[0].name));
+    pluginFunctions.plugins[pID].scr_methods[i].xcommand = function;
+    pluginFunctions.plugins[pID].scriptmethods ++;
+}
+

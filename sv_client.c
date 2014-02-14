@@ -761,13 +761,13 @@ void SV_UserinfoChanged( client_t *cl ) {
 	// name for C code
 	Q_strncpyz( cl->name, Info_ValueForKey (cl->userinfo, "name"), sizeof(cl->name) );
 
-	if(!Q_isprintstring(cl->name) || strstr(cl->name,"ID_") || Q_PrintStrlen(cl->name) < 3){
+	if(!Q_isprintstring(cl->name) || strstr(cl->name,"ID_") || strstr(cl->name,"///") || Q_PrintStrlen(cl->name) < 3){
 		if(cl->state == CS_ACTIVE){
 			if(!Q_isprintstring(cl->name)) SV_SendServerCommand(cl, "c \"^5Playernames can not contain advanced ASCII-characters\"");
 			if(strlen(cl->name) < 3) SV_SendServerCommand(cl, "c \"^5Playernames can not be shorter than 3 characters\"");
 		}
 		if(cl->uid <= 0){
-		    Com_sprintf(cl->name, 16, "ID_UNKNOWN_%i", cl - svs.clients);
+		    Com_sprintf(cl->name, 16, "CID_%i", cl - svs.clients);
 		    cl->usernamechanged = UN_NEEDUID;
 		} else {
 		    Com_sprintf(cl->name, 16, "ID_%i:%i", cl->uid / 100000000, cl->uid % 100000000);
