@@ -41,7 +41,7 @@ qboolean PHandler_Hash(pluginHash_t algo, void *in, size_t inSize, void *out, si
 	    return qfalse;
     }
     if(hs->hashsize >= outSize){
-        return false;
+        return qfalse;
     }
     hs->init(&md);
     hs->process(&md, in, inSize);

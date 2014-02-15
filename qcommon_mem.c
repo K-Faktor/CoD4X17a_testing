@@ -20,7 +20,6 @@
 ===========================================================================
 */
 
-#include <malloc.h>
 #include <string.h>
 #include "q_shared.h"
 #include "qcommon_mem.h"
@@ -34,7 +33,7 @@ void Mem_Init()
     int sizeofmemory = 1024*1024*MEM_SIZE;
 
 
-    memory = memalign(0x1000, sizeofmemory);
+    memory = calloc(1, sizeofmemory);
     memset(memory, 0, sizeofmemory);
     memset((void*)0x1407e7a0, 0, 0x21C);
     *(int**)(0x1407e7a0) = memory;

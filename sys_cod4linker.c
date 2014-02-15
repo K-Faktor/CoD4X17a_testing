@@ -49,7 +49,6 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <malloc.h>
 #include <pwd.h>
 #include <fcntl.h>
 #include <semaphore.h>
@@ -272,6 +271,10 @@ void _isdead()
 
 }
 
+void* _memalign(int align, int numbytes)
+{
+    return calloc(1, numbytes);
+}
 
 void Sys_CoD4Linker()
 {
@@ -350,7 +353,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_pthread_mutexattr_destroy , _isdead_dbg );
      Sys_CoD4LinkObject(LD_fclose , fclose );
      Sys_CoD4LinkObject(LD__ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_ , _ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_ );
-     Sys_CoD4LinkObject(LD_memalign , memalign );
+     Sys_CoD4LinkObject(LD_memalign , _memalign );
      Sys_CoD4LinkObject(LD__setjmp , _setjmp );
      Sys_CoD4LinkObject(LD__ZNKSs4findEPKcjj , _ZNKSs4findEPKcjj );
      Sys_CoD4LinkObject(LD_acos , acos );
