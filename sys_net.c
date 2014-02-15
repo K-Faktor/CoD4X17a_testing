@@ -63,6 +63,8 @@ typedef unsigned short sa_family_t;
 typedef u_long	ioctlarg_t;
 #	define socketError		WSAGetLastError( )
 
+#define NET_NOSIGNAL MSG_NOSIGNAL
+
 static WSADATA	winsockdata;
 static qboolean	winsockInitialized = qfalse;
 
@@ -72,6 +74,12 @@ static qboolean	winsockInitialized = qfalse;
 		// needed for socklen_t on OSX 10.2
 #		define _BSD_SOCKLEN_T_
 #	endif
+
+#ifdef MACOS_X
+    #define NET_NOSIGNAL SO_NOSIGPIPE
+#else
+    #define NET_NOSIGNAL MSG_NOSIGNAL
+#endif
 
 #	include <sys/socket.h>
 #	include <errno.h>
@@ -102,7 +110,7 @@ typedef int SOCKET;
 #endif
 
 
-#define IPEFF_EF 0b10111000
+#define IPEFF_EF 0xB8
 
 
 #define	MAX_IPS		32
@@ -2153,7 +2161,7 @@ int NET_TcpSendData( int sock, const void *data, int length ) {
 
 	do
 	{
-		state = send( sock, data, length, MSG_NOSIGNAL | MSG_MORE); // FIX: flag NOSIGNAL prevents SIGPIPE in case of connection problems
+		state = send( sock, data, length, NET_NOSIGNAL); // FIX: flag NOSIGNAL prevents SIGPIPE in case of connection problems
 
 		if(state == SOCKET_ERROR)
 		{

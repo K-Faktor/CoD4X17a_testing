@@ -35,7 +35,6 @@
 #include <termios.h>
 #include <errno.h>
 #include <assert.h>
-#include <fpu_control.h>
 #include <time.h>
 #include <math.h>
 #include <sys/socket.h>
