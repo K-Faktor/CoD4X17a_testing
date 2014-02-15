@@ -37,7 +37,6 @@
 #include <assert.h>
 #include <fpu_control.h>
 #include <time.h>
-#include <wait.h>
 #include <math.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -295,7 +294,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_sem_trywait , sem_trywait );
      Sys_CoD4LinkObject(LD__ZdaPv , _ZdaPv );
      Sys_CoD4LinkObject(LD_sqrtf , sqrtf );
-     Sys_CoD4LinkObject(LD_signal , signal );
+     Sys_CoD4LinkObject(LD_signal , _isdead_dbg );
      Sys_CoD4LinkObject(LD___xstat , __xstat );
      Sys_CoD4LinkObject(LD_realloc , realloc );
      Sys_CoD4LinkObject(LD_isspace , isspace );

@@ -44,8 +44,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
-#include <wait.h>
-#include <fpu_control.h>
 
 #define MAX_QUED_EVENTS 256
 
@@ -268,15 +266,6 @@ void Sys_DoSignalAction( int signal, const char* sigstring )
 }
 
 
-
-void Sys_TermProcess( )
-{
-    int status;
-    wait(&status);
-}
-
-
-
 /*
 =================
 Sys_ConsoleInput
@@ -491,9 +480,6 @@ int Sys_Main(char* commandLine){
     */
     while ( 1 )
     {
-        static int fpu_word = _FPU_DEFAULT;
-        _FPU_SETCW( fpu_word );
-
         Com_Frame();
     }
 

@@ -45,7 +45,7 @@
 #include <sys/stat.h>
 #include <pwd.h>
 #include <execinfo.h>
-
+#include <wait.h>
 
 static char homePath[MAX_OSPATH];
 
@@ -165,3 +165,8 @@ void Sys_PlatformInit( void )
 
 }
 
+void Sys_TermProcess( )
+{
+    int status;
+    wait(&status);
+}
