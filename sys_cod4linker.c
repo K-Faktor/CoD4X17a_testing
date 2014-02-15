@@ -274,10 +274,20 @@ void* _memalign(int align, int numbytes)
     return calloc(1, numbytes + align);
 }
 
-int* __errno_location()
+int* ___errno_location()
 {
     static int _errorno = 0;
     return &_errorno;
+}
+
+int ___xstat(int __ver, const char *__filename, struct stat *__stat_buf)
+{
+    return stat(__filename, __stat_buf);
+}
+
+int ___fxstat(int __ver, int __filedesc, struct stat *__stat_buf)
+{
+    return fstat(__filedesc, __stat_buf);
 }
 
 
@@ -285,7 +295,7 @@ void Sys_CoD4Linker()
 {
      Sys_CoD4LinkObject(LD_fileno , fileno );
      Sys_CoD4LinkObject(LD_fputs , fputs );
-     Sys_CoD4LinkObject(LD___errno_location , __errno_location );
+     Sys_CoD4LinkObject(LD___errno_location , ___errno_location );
      Sys_CoD4LinkObject(LD_sprintf , sprintf );
      Sys_CoD4LinkObject(LD_srand , srand );
      Sys_CoD4LinkObject(LD_mkdir , mkdir );
@@ -301,7 +311,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD__ZdaPv , _ZdaPv );
      Sys_CoD4LinkObject(LD_sqrtf , sqrtf );
      Sys_CoD4LinkObject(LD_signal , _isdead_dbg );
-     Sys_CoD4LinkObject(LD___xstat , __xstat );
+     Sys_CoD4LinkObject(LD___xstat , ___xstat );
      Sys_CoD4LinkObject(LD_realloc , realloc );
      Sys_CoD4LinkObject(LD_isspace , isspace );
      Sys_CoD4LinkObject(LD_vsprintf , vsprintf );
@@ -422,7 +432,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_fcntl , fcntl );
      Sys_CoD4LinkObject(LD_rand , rand );
      Sys_CoD4LinkObject(LD_sscanf , sscanf );
-     Sys_CoD4LinkObject(LD___fxstat , __fxstat );
+     Sys_CoD4LinkObject(LD___fxstat , ___fxstat );
      Sys_CoD4LinkObject(LD_strncmp , strncmp );
      Sys_CoD4LinkObject(LD_vfprintf , vfprintf );
      Sys_CoD4LinkObject(LD___udivdi3 , _isdead_dbg );
