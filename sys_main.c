@@ -231,36 +231,28 @@ void Sys_Print( const char *msg )
 	CON_Print( msg );
 }
 
-
-
-
 /*
 =================
-Sys_SigHandler
+Sys_DoSignalAction
 =================
 */
-void Sys_SigHandler( int signal, struct sigcontext ctx )
+void Sys_DoSignalAction( int signal, const char* sigstring )
 {
 	static qboolean signalcaught = qfalse;
 	char termmsg[MAX_STRING_CHARS];
 
-	if( signal == SIGSEGV || signal == SIGTRAP || signal == SIGBUS || signal == SIGIOT || signal == SIGILL || signal == SIGFPE )
-	{
-		Sys_DumpCrash( signal, &ctx );
-	}
-	Com_Printf( "Received signal: %s, exiting...\n", strsignal(signal) );
+	Com_Printf( "Received signal: %s, exiting...\n", sigstring );
 
 	if( signalcaught )
 	{
-		Com_Printf( "DOUBLE SIGNAL FAULT: Received signal: %s, exiting...\n",
-			strsignal(signal));
+		Com_Printf( "DOUBLE SIGNAL FAULT: Received signal: %s, exiting...\n", sigstring);
 	}
 
 	else
 	{
 		signalcaught = qtrue;
-		Com_Printf("Server received signal: %s\nShutting down server...\n", strsignal(signal));
-		Com_sprintf(termmsg, sizeof(termmsg), "\nServer received signal: %s\nTerminating server...", strsignal(signal));
+		Com_Printf("Server received signal: %s\nShutting down server...\n", sigstring);
+		Com_sprintf(termmsg, sizeof(termmsg), "\nServer received signal: %s\nTerminating server...", sigstring);
 		SV_Shutdown( termmsg );
 
 		Sys_EnterCriticalSection( 2 );
@@ -274,6 +266,7 @@ void Sys_SigHandler( int signal, struct sigcontext ctx )
 	else
 		Sys_Exit( 2 );
 }
+
 
 
 void Sys_TermProcess( )
@@ -306,36 +299,6 @@ void Sys_PrintBinVersion( const char* name ) {
 
 	fprintf( stdout, " local install: %s\n", name );
 	fprintf( stdout, "%s\n\n", sep );
-}
-
-
-/*
-==============
-Sys_PlatformInit
-
-Unix specific initialisation
-==============
-*/
-void Sys_PlatformInit( void )
-{
-    struct sigaction sa;
-    sa.sa_handler = (void *)Sys_SigHandler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART;
-
-    sigaction( SIGHUP, &sa, NULL );
-    sigaction( SIGQUIT, &sa, NULL );
-    sigaction( SIGTRAP, &sa, NULL );
-    sigaction( SIGIOT, &sa, NULL );
-    sigaction( SIGBUS, &sa, NULL );
-
-    sigaction( SIGILL, &sa, NULL );
-    sigaction( SIGFPE, &sa, NULL );
-    sigaction( SIGSEGV, &sa, NULL ); // No corefiles get generated with it
-    sigaction( SIGTERM, &sa, NULL );
-    sigaction( SIGINT, &sa, NULL );
-//  sigaction( SIGCHLD, &sa, NULL );
-
 }
 
 
@@ -535,3 +498,4 @@ int Sys_Main(char* commandLine){
     }
 
 }
+

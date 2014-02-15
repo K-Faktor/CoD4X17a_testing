@@ -27,7 +27,6 @@
 
 #include "q_shared.h"
 #include <setjmp.h>
-#include <signal.h>
 
 unsigned int Sys_Milliseconds( void );
 unsigned long long Sys_MillisecondsLong( void );
@@ -38,7 +37,6 @@ unsigned long long Sys_Microseconds( void );
 int Sys_Seconds( void );
 void Sys_Quit( void );
 void Sys_Print( const char *msg );
-void Sys_SigHandler( int signal, struct sigcontext ctx );
 void Sys_TermProcess(void);
 char *Sys_ConsoleInput(void);
 void Sys_AnsiColorPrint( const char *msg );
@@ -69,11 +67,12 @@ char **Sys_ListFiles( const char *directory, const char *extension, char *filter
 void Sys_FreeFileList( char **list );
 const char* Sys_GetUsername();
 void Sys_SetExitCmdline(const char *);
+void Sys_DoSignalAction(int signal, const char *);
 void Sys_SetExeFile(const char *);
 int Sys_Main(char* commandLine);
 const char* Sys_GetCommandline( void );
 void Sys_ReplaceProcess( char *cmdline );
-void Sys_DumpCrash(int signal, struct sigcontext *ctx);
+void Sys_PlatformInit();
 #endif
 
 

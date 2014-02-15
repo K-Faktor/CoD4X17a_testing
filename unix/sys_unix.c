@@ -21,16 +21,16 @@
 */
 
 
-#include "q_shared.h"
-#include "q_platform.h"
-#include "qcommon_mem.h"
-#include "qcommon_io.h"
-#include "qcommon.h"
-#include "sys_main.h"
-#include "cmd.h"
-#include "sys_cod4defs.h"
-#include "sec_crypto.h"
-#include "sec_update.h"
+#include "../q_shared.h"
+#include "../q_platform.h"
+#include "../qcommon_mem.h"
+#include "../qcommon_io.h"
+#include "../qcommon.h"
+#include "../sys_main.h"
+#include "../cmd.h"
+#include "../sys_cod4defs.h"
+#include "../sec_crypto.h"
+#include "../sec_update.h"
 
 #include <sys/resource.h>
 #include <libgen.h>
@@ -187,82 +187,6 @@ qboolean Sys_MemoryProtectReadonly(void* startoffset, int len)
 	return qtrue;
 }
 
-static char homePath[MAX_OSPATH];
-
-/*
-==================
-Sys_DefaultHomePath
-==================
-*/
-
-
-const char *Sys_DefaultHomePath(void)
-{
-	char *p;
-
-	if( !*homePath )
-	{
-		if( ( p = getenv( "HOME" ) ) != NULL )
-		{
-			Com_sprintf(homePath, sizeof(homePath), "%s%c", p, PATH_SEP);
-#ifdef MACOS_X
-			Q_strcat(homePath, sizeof(homePath),
-				"Library/Application Support/");
-
-			Q_strcat(homePath, sizeof(homePath), HOMEPATH_NAME_MACOSX);
-#else
-			Q_strcat(homePath, sizeof(homePath), HOMEPATH_NAME_UNIX);
-#endif
-		}
-	}
-
-	return homePath;
-}
-
-#ifndef MACOS_X
-
-
-/*
-================
-Sys_TempPath
-================
-*/
-
-const char *Sys_TempPath( void )
-{
-	const char *TMPDIR = getenv( "TMPDIR" );
-
-	if( TMPDIR == NULL || TMPDIR[ 0 ] == '\0' )
-		return "/tmp";
-	else
-		return TMPDIR;
-}
-
-qboolean Sys_DirectoryHasContent(const char *dir)
-{
-  DIR *hdir;
-  struct dirent *hfiles;
-
-  hdir = opendir(dir);
-  if ( hdir )
-  {
-	hfiles = readdir(hdir);
-    while ( hfiles )
-    {
-        if ( hfiles->d_reclen != 4 || hfiles->d_name[0] != 46 )
-		{
-	          closedir(hdir);
-		  return qtrue;
-		}
-		hfiles = readdir(hdir);
-    }
-	closedir(hdir);
-  }
-  return qfalse;
-}
-
-
-#endif
 
 /*
 ==============================================================
@@ -442,6 +366,32 @@ char **Sys_ListFiles( const char *directory, const char *extension, char *filter
 	return listCopy;
 }
 
+
+qboolean Sys_DirectoryHasContent(const char *dir)
+{
+  DIR *hdir;
+  struct dirent *hfiles;
+
+  hdir = opendir(dir);
+  if ( hdir )
+  {
+	hfiles = readdir(hdir);
+    while ( hfiles )
+    {
+        if ( hfiles->d_reclen != 4 || hfiles->d_name[0] != 46 )
+		{
+	          closedir(hdir);
+		  return qtrue;
+		}
+		hfiles = readdir(hdir);
+    }
+	closedir(hdir);
+  }
+  return qfalse;
+}
+
+
+
 /*
 ==================
 Sys_FreeFileList
@@ -519,29 +469,3 @@ int main(int argc, char* argv[])
     return Sys_Main(commandLine);
 }
 
-void Sys_DumpCrash(int signal,struct sigcontext *ctx)
-{
-	void** traces;
-	char** symbols;
-	int numFrames;
-	int i;
-	char hash[65];
-	long unsigned size = sizeof(hash);
-	
-	Com_Printf("This program has crashed with signal: %s\n", strsignal(signal));
-	Com_Printf("The current Gameversion is: %s %s %s type '%c' build %i %s\n", GAME_STRING,Q3_VERSION,PLATFORM_STRING, SEC_TYPE,BUILD_NUMBER, __DATE__); 
-	Sec_HashFile(SEC_HASH_SHA256, Sys_ExeFile(), hash, &size, qfalse);
-	//Q_strncpyz(hash, "File Hashing has not been implemented yet", sizeof(hash));
-	hash[64] = '\0';
-	Com_Printf("File is %s Hash is: %s\n", Sys_ExeFile(), hash);
-	Com_Printf("---------- Crash Backtrace ----------\n");
-	traces = malloc(65536*sizeof(void*));
-	numFrames = backtrace(traces, 65536);
-	symbols = backtrace_symbols(traces, numFrames);
-	for(i = 0; i < numFrames; i++)
-		Com_Printf("%5d: %s\n", numFrames - i -1, symbols[i]);
-	Com_Printf("\n-- Registers ---\n");
-	Com_Printf("edi 0x%lx\nesi 0x%lx\nebp 0x%lx\nesp 0x%lx\neax 0x%lx\nebx 0x%lx\necx 0x%lx\nedx 0x%lu\neip 0x%lx\n",ctx->edi,ctx->esi,ctx->ebp,ctx->esp,ctx->eax,ctx->ebx,ctx->ecx,ctx->edx,ctx->eip);
-	Com_Printf("-------- Backtrace Completed --------\n");
-	free(traces);
-}
