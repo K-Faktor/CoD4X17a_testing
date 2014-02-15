@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 #include "q_shared.h"
 #include "qcommon_io.h"
 
@@ -59,24 +60,6 @@ int	LongNoSwap (int l)
 {
 	return l;
 }
-
-
-
-int tolower( int c ) {
-	if ( c >= 'A' && c <= 'Z' ) {
-		c += 'a' - 'A';
-	}
-	return c;
-}
-
-
-int toupper( int c ) {
-	if ( c >= 'a' && c <= 'z' ) {
-		c += 'A' - 'a';
-	}
-	return c;
-}
-
 
 int Q_isprint( int c )
 {

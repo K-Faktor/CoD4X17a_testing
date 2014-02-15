@@ -23,6 +23,7 @@
 
 
 #include <string.h>
+#include <ctype.h>
 #include "q_shared.h"
 #include "cmd_completion.h"
 #include "qcommon_io.h"

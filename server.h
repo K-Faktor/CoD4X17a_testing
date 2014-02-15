@@ -328,7 +328,7 @@ typedef struct {
 	int			secret;
 	unsigned int		frameNextSecond;
 	unsigned int		frameNextTenSeconds;
-	connectqueue_t		connectqueue[10];
+	connectqueue_t		connectqueue[11];
 }serverStaticExt_t;
 
 typedef struct {

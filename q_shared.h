@@ -162,8 +162,6 @@ short   ShortSwap (short l);
 short	ShortNoSwap (short l);
 int    LongSwap (int l);
 int	LongNoSwap (int l);
-int tolower( int c );
-int toupper( int c );
 
 int Q_isprint( int c );
 int Q_islower( int c );
