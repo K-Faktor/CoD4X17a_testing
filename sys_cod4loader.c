@@ -224,12 +224,14 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	Sys_PatchImageWithBlock(patchblock_Pmove_GetGravity, sizeof(patchblock_Pmove_GetGravity));
 	Sys_PatchImageWithBlock(patchblock_ClientConnect_NoPassword, sizeof(patchblock_ClientConnect_NoPassword));
 	Com_Memset((void*)0x80b4872, 0x90, 41); //In G_RegisterCvars()
+	Com_Memset((void*)0x80b478b, 0x90, 108); //In G_RegisterCvars() (sv_maxclients)
 	Sys_PatchImageWithBlock(patchblock_G_RegisterCvars, sizeof(patchblock_G_RegisterCvars));
 	Sys_PatchImageWithBlock(patchblock_Scr_AddSourceBuffer_Ignore_fs_game, sizeof(patchblock_Scr_AddSourceBuffer_Ignore_fs_game));  //Maybe script unlock ?
 	Sys_PatchImageWithBlock(patchblock_Scr_AddSourceBuffer_Ignore_fs_game2, sizeof(patchblock_Scr_AddSourceBuffer_Ignore_fs_game2));  //Script unlock
 	Sys_PatchImageWithBlock(patchblock_SV_SpawnServer, sizeof(patchblock_SV_SpawnServer));  //Skip useless check for cvar: sv_dedicated
 	Com_Memset((void*)0x8174da9, 0x90, 5); //In SV_SpawnServer()  Don't overwrite sv.frameusec  (was before unknown write only variable)
 	Com_Memset((void*)0x8174db5, 0x90, 42); //In SV_SpawnServer()  Don't set cvar cl_paused as well as nextmap
+	Com_Memset((void*)0x8174b9b, 0x90, 116); //In SV_SpawnServer()  Removal of sv_maxclients amd ui_maxclients Cvar_Register()
 //	Sys_PatchImageWithBlock(patchblock_SV_SendServerCommand, sizeof(patchblock_SV_SendServerCommand));  //Skip useless check for cvar: sv_dedicated
 	Com_Memset((void*)0x8204acf, 0x90, 16); //In ???() Skip useless check for cvar: sv_dedicated
 	Com_Memset((void*)0x8204ce9, 0x90, 16); //In ???() Skip useless check for cvar: sv_dedicated

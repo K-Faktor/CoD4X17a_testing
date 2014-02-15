@@ -123,15 +123,11 @@ void G_SetSavePersist(int val){
 
 __cdecl void G_RegisterCvarsCallback( ){
 
-    cvar_t** tmp;
-
     g_speed = Cvar_RegisterInt("g_speed", 190, 1, 6000, 0, "Player's global movement speed is set here");
     g_disabledefcmdprefix = Cvar_RegisterBool("g_disabledefcmdprefix", qtrue, 0, "Disable the interpretation of the !-sign as command");
     g_allowConsoleSay = Cvar_RegisterBool("g_allowConsoleSay", qtrue, CVAR_ARCHIVE, "Flag whether to allow chat from ingame console");
     //g_maxclients
-    tmp = (cvar_t**)(0x84bcfe8);
-    *tmp = Cvar_RegisterInt("sv_maxclients", 32, 1, 64, CVAR_ARCHIVE,"The maximum number of clients that can connect to a server");
-
+    *(cvar_t**)0x84bcfe8 = sv_maxclients;
 }
 
 /*
