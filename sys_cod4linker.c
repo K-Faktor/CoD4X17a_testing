@@ -270,9 +270,16 @@ void _isdead()
 }
 
 void* _memalign(int align, int numbytes)
-{
-    return calloc(1, numbytes);
+{/* This can cause crash */
+    return calloc(1, numbytes + align);
 }
+
+int* __errno_location()
+{
+    static int _errorno = 0;
+    return &_errorno;
+}
+
 
 void Sys_CoD4Linker()
 {

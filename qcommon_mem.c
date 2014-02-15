@@ -26,14 +26,25 @@
 
 #define MEM_SIZE 140 //Megabyte
 
+void* Mem_AlignedAlloc(unsigned int align, unsigned int size)
+{
+    void* newmem;
+
+    newmem = calloc(1, size + align);
+    if(newmem == NULL)
+        return NULL;
+
+    return (void*)((unsigned int)newmem + ((unsigned int)newmem % align));
+
+}
+
 void Mem_Init()
 {
 
     void *memory;
     int sizeofmemory = 1024*1024*MEM_SIZE;
 
-
-    memory = calloc(1, sizeofmemory);
+    memory = Mem_AlignedAlloc(0x1000, sizeofmemory);
     memset(memory, 0, sizeofmemory);
     memset((void*)0x1407e7a0, 0, 0x21C);
     *(int**)(0x1407e7a0) = memory;
