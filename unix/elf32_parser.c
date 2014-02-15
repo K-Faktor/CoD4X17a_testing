@@ -24,9 +24,9 @@
 #include <string.h>
 #include <elf.h>
 #include <stdlib.h>
-#include "qcommon_io.h" // Com_Printf
-#include "g_shared.h"   // qboolean
-#include "elf32_parser.h"
+#include "../qcommon_io.h" // Com_Printf
+#include "../g_shared.h"   // qboolean
+#include "../elf32_parser.h"
 
 int ELF32_GetStrTable(char *fname, char **output,elf_data_t *text)
 {

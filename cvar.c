@@ -315,12 +315,12 @@ static qboolean Cvar_ValidateNewVar(const char* var_name, cvarType_t type, CvarV
 	switch(type)
 	{
 		case CVAR_BOOL:
-			if((*value).boolean > 1 || (*value).boolean < 0)
+			if((*value).boolean > 1)
 			{
 				(*value).boolean = 0;
 				return qfalse;
 			}
-			return retval;
+			return retval; 
 		case CVAR_FLOAT:
 			if(isnan((*limits).fmax) || isnan((*limits).fmin) || isnan((*value).floatval))
 			{
