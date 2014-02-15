@@ -48,8 +48,18 @@
 
 #define DLL_PUBLIC __attribute__ ((visibility ("default")))
 #define DLL_LOCAL __attribute__ ((visibility ("hidden")))
+
+#ifdef __linux
+
 #define __optimize2 __attribute__ ((optimize("-O2")))
-#define __optimize3 __attribute__ ((optimize("-O2"))) __attribute__ ((noinline)) 
+#define __optimize3 __attribute__ ((optimize("-O3"))) __attribute__ ((noinline)) 
+
+#else
+
+#define __optimize2
+#define __optimize3
+
+#endif
 
 #define REGPARM(X)   __attribute__ ((regparm(X)))
 
