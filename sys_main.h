@@ -74,5 +74,6 @@ const char* Sys_GetCommandline( void );
 void Sys_ReplaceProcess( char *cmdline );
 void Sys_PlatformInit();
 char *Sys_StripAppBundle( char *dir );
+const char *Sys_Basename( char *path );
 #endif
 

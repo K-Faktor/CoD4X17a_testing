@@ -469,3 +469,14 @@ int main(int argc, char* argv[])
     return Sys_Main(commandLine);
 }
 
+
+/*
+==================
+Sys_Basename
+==================
+*/
+const char *Sys_Basename( char *path )
+{
+	return basename( path );
+}
+
