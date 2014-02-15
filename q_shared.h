@@ -112,8 +112,6 @@ typedef enum {qfalse, qtrue}	qboolean;
 #define Q_vsnprintf vsnprintf
 #endif
 
-#define true '1'
-#define false '0'
 #define Q_COLOR_ESCAPE	'^'
 #define Q_IsColorString(p)	( p && *(p) == Q_COLOR_ESCAPE && *((p)+1) && *((p)+1) != Q_COLOR_ESCAPE )
 

@@ -2530,7 +2530,7 @@ int NET_TcpClientGetData(int sock, void* buf, int* buflen){
 	if(sock < 1)
 		return -1;
 
-	while(true){
+	while(qtrue){
 
 		ret = recv(sock, buf + readcount, *buflen - readcount, MSG_DONTWAIT);
 

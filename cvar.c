@@ -653,7 +653,7 @@ static cvar_t *Cvar_Register(const char* var_name, cvarType_t type, unsigned sho
 		var->type = type;
 
 		// Take the latched value now
-		Cvar_Set2( var_name, latchedStr, true );
+		Cvar_Set2( var_name, latchedStr, qtrue );
 		return var;
 	}
 	if(!var)
