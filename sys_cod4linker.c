@@ -326,7 +326,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD__ZNSs12_M_leak_hardEv , _ZNSs12_M_leak_hardEv );
      Sys_CoD4LinkObject(LD_write , write );
      Sys_CoD4LinkObject(LD_sendto , sendto );
-     Sys_CoD4LinkObject(LD_sem_timedwait , sem_timedwait );
+     Sys_CoD4LinkObject(LD_sem_timedwait , _isdead_dbg );
      Sys_CoD4LinkObject(LD_pow , pow );
      Sys_CoD4LinkObject(LD_dlclose , dlclose );
      Sys_CoD4LinkObject(LD_toupper , toupper );
