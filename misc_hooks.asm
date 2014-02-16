@@ -19,44 +19,58 @@
 
 
 
+
 SECTION .text
 
 global SL_Init
 SL_Init:
-    jmp 0x8150928
+	jmp dword [oSL_Init]
 
 global Swap_Init
 Swap_Init:
-    jmp 0x81aa7b6
+	jmp dword [oSwap_Init]
 
 global CSS_InitConstantConfigStrings
 CSS_InitConstantConfigStrings:
-    jmp 0x8185a72
+	jmp dword [oCSS_InitConstantConfigStrings]
 
 global Con_InitChannels
 Con_InitChannels:
-    jmp 0x82096be
+	jmp dword [oCon_InitChannels]
 
 global SEH_UpdateLanguageInfo
 SEH_UpdateLanguageInfo:
-    jmp 0x8180432
+	jmp dword [oSEH_UpdateLanguageInfo]
 
 global SetAnimCheck
 SetAnimCheck:
-    jmp 0x81423f0
+	jmp dword [oSetAnimCheck]
 
 global BG_IsWeaponValid
 BG_IsWeaponValid:
-    jmp 0x805f4fe
+	jmp dword [oBG_IsWeaponValid]
 
 global SEH_StringEd_GetString
 SEH_StringEd_GetString:
-    jmp 0x817fbe0
+	jmp dword [oSEH_StringEd_GetString]
 
 global DObjInit
 DObjInit:
-    jmp 0x81acb00
+	jmp dword [oDObjInit]
 
 global SL_RemoveRefToString
 SL_RemoveRefToString:
-    jmp 0x8150e24
+	jmp dword [oSL_RemoveRefToString]
+
+SECTION .rodata
+
+oSL_Init dw 0x8150928
+oSwap_Init dw 0x81aa7b6
+oCSS_InitConstantConfigStrings dw 0x8185a72
+oCon_InitChannels dw 0x82096be
+oSEH_UpdateLanguageInfo dw 0x8180432
+oSetAnimCheck dw 0x81423f0
+oBG_IsWeaponValid dw 0x805f4fe
+oSEH_StringEd_GetString dw 0x817fbe0
+oDObjInit dw 0x81acb00
+oSL_RemoveRefToString dw 0x8150e24

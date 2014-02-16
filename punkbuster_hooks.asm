@@ -19,32 +19,43 @@
 
 
 
+
 SECTION .text
 
 global PbServerInitialize
 PbServerInitialize:
-    jmp 0x810ecde
+	jmp dword [oPbServerInitialize]
 
 global PbServerProcessEvents
 PbServerProcessEvents:
-    jmp 0x810ef08
+	jmp dword [oPbServerProcessEvents]
 
 global PbAuthClient
 PbAuthClient:
-    jmp 0x810e47a
+	jmp dword [oPbAuthClient]
 
 global PbPassConnectString
 PbPassConnectString:
-    jmp 0x810e47a
+	jmp dword [oPbPassConnectString]
 
 global PbSvAddEvent
 PbSvAddEvent:
-    jmp 0x810ea20
+	jmp dword [oPbSvAddEvent]
 
 global PbCaptureConsoleOutput
 PbCaptureConsoleOutput:
-    jmp 0x810e66a
+	jmp dword [oPbCaptureConsoleOutput]
 
 global PbServerForceProcess
 PbServerForceProcess:
-    jmp 0x810ee36
+	jmp dword [oPbServerForceProcess]
+
+SECTION .rodata
+
+oPbServerInitialize dw 0x810ecde
+oPbServerProcessEvents dw 0x810ef08
+oPbAuthClient dw 0x810e47a
+oPbPassConnectString dw 0x810e47a
+oPbSvAddEvent dw 0x810ea20
+oPbCaptureConsoleOutput dw 0x810e66a
+oPbServerForceProcess dw 0x810ee36

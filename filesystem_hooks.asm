@@ -23,20 +23,28 @@ SECTION .text
 
 global FS_ShutdownIwdPureCheckReferences
 FS_ShutdownIwdPureCheckReferences:
-    jmp  0x81866b6
+    jmp dword [oFS_ShutdownIwdPureCheckReferences]
 
 global FS_ShutdownServerIwdNames
 FS_ShutdownServerIwdNames:
-    jmp  0x8186cfe
+    jmp dword [oFS_ShutdownServerIwdNames]
 
 global FS_ShutdownServerReferencedIwds
 FS_ShutdownServerReferencedIwds:
-    jmp  0x818789c
+    jmp dword [oFS_ShutdownServerReferencedIwds]
 
 global FS_ShutdownServerReferencedFFs
 FS_ShutdownServerReferencedFFs:
-    jmp  0x8187850
+    jmp dword [oFS_ShutdownServerReferencedFFs]
 
 global FS_LoadedIwdPureChecksums
 FS_LoadedIwdPureChecksums:
-    jmp  0x81283f2
+    jmp dword [oFS_LoadedIwdPureChecksums]
+	
+SECTION .rodata	
+	
+oFS_ShutdownIwdPureCheckReferences dw 0x81866b6
+oFS_ShutdownServerIwdNames dw 0x8186cfe
+oFS_ShutdownServerReferencedIwds dw 0x818789c
+oFS_ShutdownServerReferencedFFs dw 0x8187850
+oFS_LoadedIwdPureChecksums dw 0x81283f2

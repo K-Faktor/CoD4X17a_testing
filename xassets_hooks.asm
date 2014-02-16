@@ -19,28 +19,38 @@
 
 
 
+
 SECTION .text
 
 global DB_SetInitializing
 DB_SetInitializing:
-    jmp 0x820337c
+	jmp dword [oDB_SetInitializing]
 
 global DB_FileExists
 DB_FileExists:
-    jmp 0x8204424
+	jmp dword [oDB_FileExists]
 
 global DB_ModFileExists
 DB_ModFileExists:
-    jmp 0x8204470
+	jmp dword [oDB_ModFileExists]
 
 global DB_LoadXAssets
 DB_LoadXAssets:
-    jmp 0x8205e86
+	jmp dword [oDB_LoadXAssets]
 
 global DB_GetXAssetTypeSize
 DB_GetXAssetTypeSize:
-    jmp 0x81da6ce
+	jmp dword [oDB_GetXAssetTypeSize]
 
 global XAnimInit
 XAnimInit:
-    jmp 0x81b649c
+	jmp dword [oXAnimInit]
+
+SECTION .rodata
+
+oDB_SetInitializing dw 0x820337c
+oDB_FileExists dw 0x8204424
+oDB_ModFileExists dw 0x8204470
+oDB_LoadXAssets dw 0x8205e86
+oDB_GetXAssetTypeSize dw 0x81da6ce
+oXAnimInit dw 0x81b649c

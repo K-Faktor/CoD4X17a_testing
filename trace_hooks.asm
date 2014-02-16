@@ -19,16 +19,23 @@
 
 
 
+
 SECTION .text
 
 global CM_TraceBox
 CM_TraceBox:
-    jmp 0x811a5a2
+	jmp dword [oCM_TraceBox]
 
 global CM_TempBoxModel
 CM_TempBoxModel:
-    jmp 0x811c442
+	jmp dword [oCM_TempBoxModel]
 
 global CM_TransformedBoxTrace
 CM_TransformedBoxTrace:
-    jmp 0x811e3c2
+	jmp dword [oCM_TransformedBoxTrace]
+
+SECTION .rodata
+
+oCM_TraceBox dw 0x811a5a2
+oCM_TempBoxModel dw 0x811c442
+oCM_TransformedBoxTrace dw 0x811e3c2

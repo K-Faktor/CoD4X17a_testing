@@ -19,225 +19,284 @@
 
 
 
+
 SECTION .text
 
 global Scr_InitVariables
 Scr_InitVariables:
-      jmp 0x815288a
+	jmp dword [oScr_InitVariables]
 
 global Scr_Init
 Scr_Init:
-      jmp 0x815d8e2
+	jmp dword [oScr_Init]
 
 global Scr_Settings
 Scr_Settings:
-      jmp 0x815cf90
+	jmp dword [oScr_Settings]
 
 global Scr_AddEntity
 Scr_AddEntity:
-      jmp 0x80c7770
+	jmp dword [oScr_AddEntity]
 
 global Scr_Cleanup
 Scr_Cleanup:
-      jmp 0x815cf84
+	jmp dword [oScr_Cleanup]
 
 global GScr_Shutdown
 GScr_Shutdown:
-      jmp 0x80bf610
+	jmp dword [oGScr_Shutdown]
 
 global Scr_AllocArray
 Scr_AllocArray:
-      jmp 0x8153cca
+	jmp dword [oScr_AllocArray]
 
 global Scr_GetNumParam
 Scr_GetNumParam:
-      jmp 0x815d01e
+	jmp dword [oScr_GetNumParam]
 
 global Scr_GetInt
 Scr_GetInt:
-      jmp 0x8160fee
+	jmp dword [oScr_GetInt]
 
 global Scr_GetFloat
 Scr_GetFloat:
-      jmp 0x816094c
+	jmp dword [oScr_GetFloat]
 
 global Scr_GetString
 Scr_GetString:
-      jmp 0x8160932
+	jmp dword [oScr_GetString]
 
 global Scr_GetEntity
 Scr_GetEntity:
-      jmp 0x80c76ec
+	jmp dword [oScr_GetEntity]
 
 global Scr_GetConstString
 Scr_GetConstString:
-      jmp 0x816074c
+	jmp dword [oScr_GetConstString]
 
 global Scr_GetType
 Scr_GetType:
-      jmp 0x815f7c8
+	jmp dword [oScr_GetType]
 
 global Scr_GetVector
 Scr_GetVector:
-      jmp 0x815ffe6
+	jmp dword [oScr_GetVector]
 
 global Scr_Error
 Scr_Error:
-      jmp 0x815e9f4
+	jmp dword [oScr_Error]
 
 global Scr_SetLoading
 Scr_SetLoading:
-      jmp 0x815cfba
+	jmp dword [oScr_SetLoading]
 
 global Scr_ParamError
 Scr_ParamError:
-      jmp 0x815f20e
+	jmp dword [oScr_ParamError]
 
 global Scr_ObjectError
 Scr_ObjectError:
-      jmp 0x815f134
+	jmp dword [oScr_ObjectError]
 
 global Scr_AddInt
 Scr_AddInt:
-      jmp 0x815f01a
+	jmp dword [oScr_AddInt]
 
 global Scr_AddFloat
 Scr_AddFloat:
-      jmp 0x815ef9a
+	jmp dword [oScr_AddFloat]
 
 global Scr_AddBool
 Scr_AddBool:
-      jmp 0x815eac6
+	jmp dword [oScr_AddBool]
 
 global Scr_AddString
 Scr_AddString:
-      jmp 0x815ec68
+	jmp dword [oScr_AddString]
 
 global Scr_AddUndefined
 Scr_AddUndefined:
-      jmp 0x815eea2
+	jmp dword [oScr_AddUndefined]
 
 global Scr_AddVector
 Scr_AddVector:
-      jmp 0x815ee12
+	jmp dword [oScr_AddVector]
 
 global Scr_AddArray
 Scr_AddArray:
-      jmp 0x815d5c0
+	jmp dword [oScr_AddArray]
 
 global Scr_MakeArray
 Scr_MakeArray:
-      jmp 0x815ed8a
+	jmp dword [oScr_MakeArray]
 
 global Scr_Notify
 Scr_Notify:
-      jmp 0x80c7604
+	jmp dword [oScr_Notify]
 
 global Scr_NotifyNum
 Scr_NotifyNum:
-      jmp 0x815e762
+	jmp dword [oScr_NotifyNum]
 
 ;Not working :(
 global Scr_PrintPrevCodePos
 Scr_PrintPrevCodePos:
-      jmp 0x814ef6e
+	jmp dword [oScr_PrintPrevCodePos]
 
 global Scr_GetFunctionHandle
 Scr_GetFunctionHandle:
-      jmp 0x814c1b4
+	jmp dword [oScr_GetFunctionHandle]
 
 global Scr_ExecEntThread
 Scr_ExecEntThread:
-      jmp 0x80c765c
+	jmp dword [oScr_ExecEntThread]
 
 global Scr_ExecThread
 Scr_ExecThread:
-      jmp 0x8165032
+	jmp dword [oScr_ExecThread]
 
 global Scr_FreeThread
 Scr_FreeThread:
-      jmp 0x815d062
+	jmp dword [oScr_FreeThread]
 
 global Scr_CreateCanonicalFilename
 Scr_CreateCanonicalFilename:
-      jmp 0x81516ee
+	jmp dword [oScr_CreateCanonicalFilename]
 
 global FindVariable
 FindVariable:
-      jmp 0x81542d4
+	jmp dword [oFindVariable]
 
 global FindObject
 FindObject:
-      jmp 0x8152294
+	jmp dword [oFindObject]
 
 global GetNewVariable
 GetNewVariable:
-      jmp 0x81545ce
+	jmp dword [oGetNewVariable]
 
 global ScriptParse
 ScriptParse:
-      jmp 0x816b5da
+	jmp dword [oScriptParse]
 
 global GetObjectA
 GetObjectA:
-      jmp 0x8154046
+	jmp dword [oGetObjectA]
 
 global GetVariable
 GetVariable:
-      jmp 0x815540a
+	jmp dword [oGetVariable]
 
 global ScriptCompile
 ScriptCompile:
-      jmp 0x81491d8
+	jmp dword [oScriptCompile]
 
 global Scr_AddSourceBuffer
 Scr_AddSourceBuffer:
-      jmp 0x814fbac
+	jmp dword [oScr_AddSourceBuffer]
 
 global Scr_InitAllocNode
 Scr_InitAllocNode:
-      jmp 0x814fea6
+	jmp dword [oScr_InitAllocNode]
 
 global Scr_BeginLoadScripts
 Scr_BeginLoadScripts:
-      jmp 0x814c266
+	jmp dword [oScr_BeginLoadScripts]
 
 global Scr_SetClassMap
 Scr_SetClassMap:
-      jmp 0x8153a3a
+	jmp dword [oScr_SetClassMap]
 
 global Scr_AddFields
 Scr_AddFields:
-      jmp 0x81535ba
+	jmp dword [oScr_AddFields]
 
 global Scr_SetGenericField
 Scr_SetGenericField:
-      jmp 0x80c7eae
+	jmp dword [oScr_SetGenericField]
 
 global Scr_GetGenericField
 Scr_GetGenericField:
-      jmp 0x80c7d36
+	jmp dword [oScr_GetGenericField]
 
 global GScr_AddFieldsForHudElems
 GScr_AddFieldsForHudElems:
-      jmp 0x808db80
+	jmp dword [oGScr_AddFieldsForHudElems]
 
 global GScr_AddFieldsForRadiant
 GScr_AddFieldsForRadiant:
-      jmp 0x80c77ec
+	jmp dword [oGScr_AddFieldsForRadiant]
 
 global Scr_AddHudElem
 Scr_AddHudElem:
-      jmp 0x80c7746
+	jmp dword [oScr_AddHudElem]
 
 global Scr_FreeHudElem
 Scr_FreeHudElem:
-      jmp 0x80c778e
+	jmp dword [oScr_FreeHudElem]
 
 global Scr_EndLoadScripts
 Scr_EndLoadScripts:
-      jmp 0x814bcee
+	jmp dword [oScr_EndLoadScripts]
 
 global Scr_ConstructMessageString
 Scr_ConstructMessageString:
-      jmp 0x80c02aa
+	jmp dword [oScr_ConstructMessageString]
+
+SECTION .rodata
+
+oScr_InitVariables dw 0x815288a
+oScr_Init dw 0x815d8e2
+oScr_Settings dw 0x815cf90
+oScr_AddEntity dw 0x80c7770
+oScr_Cleanup dw 0x815cf84
+oGScr_Shutdown dw 0x80bf610
+oScr_AllocArray dw 0x8153cca
+oScr_GetNumParam dw 0x815d01e
+oScr_GetInt dw 0x8160fee
+oScr_GetFloat dw 0x816094c
+oScr_GetString dw 0x8160932
+oScr_GetEntity dw 0x80c76ec
+oScr_GetConstString dw 0x816074c
+oScr_GetType dw 0x815f7c8
+oScr_GetVector dw 0x815ffe6
+oScr_Error dw 0x815e9f4
+oScr_SetLoading dw 0x815cfba
+oScr_ParamError dw 0x815f20e
+oScr_ObjectError dw 0x815f134
+oScr_AddInt dw 0x815f01a
+oScr_AddFloat dw 0x815ef9a
+oScr_AddBool dw 0x815eac6
+oScr_AddString dw 0x815ec68
+oScr_AddUndefined dw 0x815eea2
+oScr_AddVector dw 0x815ee12
+oScr_AddArray dw 0x815d5c0
+oScr_MakeArray dw 0x815ed8a
+oScr_Notify dw 0x80c7604
+oScr_NotifyNum dw 0x815e762
+oScr_PrintPrevCodePos dw 0x814ef6e
+oScr_GetFunctionHandle dw 0x814c1b4
+oScr_ExecEntThread dw 0x80c765c
+oScr_ExecThread dw 0x8165032
+oScr_FreeThread dw 0x815d062
+oScr_CreateCanonicalFilename dw 0x81516ee
+oFindVariable dw 0x81542d4
+oFindObject dw 0x8152294
+oGetNewVariable dw 0x81545ce
+oScriptParse dw 0x816b5da
+oGetObjectA dw 0x8154046
+oGetVariable dw 0x815540a
+oScriptCompile dw 0x81491d8
+oScr_AddSourceBuffer dw 0x814fbac
+oScr_InitAllocNode dw 0x814fea6
+oScr_BeginLoadScripts dw 0x814c266
+oScr_SetClassMap dw 0x8153a3a
+oScr_AddFields dw 0x81535ba
+oScr_SetGenericField dw 0x80c7eae
+oScr_GetGenericField dw 0x80c7d36
+oGScr_AddFieldsForHudElems dw 0x808db80
+oGScr_AddFieldsForRadiant dw 0x80c77ec
+oScr_AddHudElem dw 0x80c7746
+oScr_FreeHudElem dw 0x80c778e
+oScr_EndLoadScripts dw 0x814bcee
+oScr_ConstructMessageString dw 0x80c02aa

@@ -22,9 +22,12 @@ SECTION .text
 
 global SV_Cmd_TokenizeString
 SV_Cmd_TokenizeString:
-    jmp 0x811139c
+    jmp dword [oSV_Cmd_TokenizeString]
 
 global SV_Cmd_EndTokenizedString
 SV_Cmd_EndTokenizedString:
-    jmp 0x8110d8c
+    jmp dword [oSV_Cmd_EndTokenizedString]
 
+SECTION .rodata
+oSV_Cmd_TokenizeString dw 0x811139c
+oSV_Cmd_EndTokenizedString dw 0x8110d8c
