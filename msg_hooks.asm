@@ -52,10 +52,10 @@ MSG_SetDefaultUserCmd:
 
 SECTION .rodata
 
-oGetMinBitCount dw 0x8130500
-oMSG_WriteDeltaClient dw 0x813f49c
-oMSG_WriteDeltaField dw 0x813e22a
-oMSG_WriteDeltaPlayerstate dw 0x813f5a6
-oMSG_WriteEntityIndex dw 0x813de54
-oMSG_ReadDeltaUsercmdKey dw 0x81392ae
-oMSG_SetDefaultUserCmd dw 0x8130ad0
+oGetMinBitCount dd 0x8130500
+oMSG_WriteDeltaClient dd 0x813f49c
+oMSG_WriteDeltaField dd 0x813e22a
+oMSG_WriteDeltaPlayerstate dd 0x813f5a6
+oMSG_WriteEntityIndex dd 0x813de54
+oMSG_ReadDeltaUsercmdKey dd 0x81392ae
+oMSG_SetDefaultUserCmd dd 0x8130ad0

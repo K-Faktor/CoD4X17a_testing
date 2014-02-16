@@ -52,10 +52,10 @@ PbServerForceProcess:
 
 SECTION .rodata
 
-oPbServerInitialize dw 0x810ecde
-oPbServerProcessEvents dw 0x810ef08
-oPbAuthClient dw 0x810e47a
-oPbPassConnectString dw 0x810e47a
-oPbSvAddEvent dw 0x810ea20
-oPbCaptureConsoleOutput dw 0x810e66a
-oPbServerForceProcess dw 0x810ee36
+oPbServerInitialize dd 0x810ecde
+oPbServerProcessEvents dd 0x810ef08
+oPbAuthClient dd 0x810e47a
+oPbPassConnectString dd 0x810e47a
+oPbSvAddEvent dd 0x810ea20
+oPbCaptureConsoleOutput dd 0x810e66a
+oPbServerForceProcess dd 0x810ee36

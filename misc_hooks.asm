@@ -64,13 +64,13 @@ SL_RemoveRefToString:
 
 SECTION .rodata
 
-oSL_Init dw 0x8150928
-oSwap_Init dw 0x81aa7b6
-oCSS_InitConstantConfigStrings dw 0x8185a72
-oCon_InitChannels dw 0x82096be
-oSEH_UpdateLanguageInfo dw 0x8180432
-oSetAnimCheck dw 0x81423f0
-oBG_IsWeaponValid dw 0x805f4fe
-oSEH_StringEd_GetString dw 0x817fbe0
-oDObjInit dw 0x81acb00
-oSL_RemoveRefToString dw 0x8150e24
+oSL_Init dd 0x8150928
+oSwap_Init dd 0x81aa7b6
+oCSS_InitConstantConfigStrings dd 0x8185a72
+oCon_InitChannels dd 0x82096be
+oSEH_UpdateLanguageInfo dd 0x8180432
+oSetAnimCheck dd 0x81423f0
+oBG_IsWeaponValid dd 0x805f4fe
+oSEH_StringEd_GetString dd 0x817fbe0
+oDObjInit dd 0x81acb00
+oSL_RemoveRefToString dd 0x8150e24

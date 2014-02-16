@@ -48,9 +48,9 @@ XAnimInit:
 
 SECTION .rodata
 
-oDB_SetInitializing dw 0x820337c
-oDB_FileExists dw 0x8204424
-oDB_ModFileExists dw 0x8204470
-oDB_LoadXAssets dw 0x8205e86
-oDB_GetXAssetTypeSize dw 0x81da6ce
-oXAnimInit dw 0x81b649c
+oDB_SetInitializing dd 0x820337c
+oDB_FileExists dd 0x8204424
+oDB_ModFileExists dd 0x8204470
+oDB_LoadXAssets dd 0x8205e86
+oDB_GetXAssetTypeSize dd 0x81da6ce
+oXAnimInit dd 0x81b649c

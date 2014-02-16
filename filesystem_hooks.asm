@@ -43,8 +43,8 @@ FS_LoadedIwdPureChecksums:
 	
 SECTION .rodata	
 	
-oFS_ShutdownIwdPureCheckReferences dw 0x81866b6
-oFS_ShutdownServerIwdNames dw 0x8186cfe
-oFS_ShutdownServerReferencedIwds dw 0x818789c
-oFS_ShutdownServerReferencedFFs dw 0x8187850
-oFS_LoadedIwdPureChecksums dw 0x81283f2
+oFS_ShutdownIwdPureCheckReferences dd 0x81866b6
+oFS_ShutdownServerIwdNames dd 0x8186cfe
+oFS_ShutdownServerReferencedIwds dd 0x818789c
+oFS_ShutdownServerReferencedFFs dd 0x8187850
+oFS_LoadedIwdPureChecksums dd 0x81283f2

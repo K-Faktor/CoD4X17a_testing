@@ -29,5 +29,5 @@ SV_Cmd_EndTokenizedString:
     jmp dword [oSV_Cmd_EndTokenizedString]
 
 SECTION .rodata
-oSV_Cmd_TokenizeString dw 0x811139c
-oSV_Cmd_EndTokenizedString dw 0x8110d8c
+oSV_Cmd_TokenizeString dd 0x811139c
+oSV_Cmd_EndTokenizedString dd 0x8110d8c

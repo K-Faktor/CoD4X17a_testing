@@ -52,10 +52,10 @@ G_SayTo:
 
 SECTION .rodata
 
-oG_RunFrame dw 0x80b61fc
-oG_LocalizedStringIndex dw 0x80cb218
-oClientCommand dw 0x80b070c
-oClientConnect dw 0x80a83d4
-oClientBegin dw 0x80a7700
-oStopFollowing dw 0x80af24c
-oG_SayTo dw 0x80ae6f4
+oG_RunFrame dd 0x80b61fc
+oG_LocalizedStringIndex dd 0x80cb218
+oClientCommand dd 0x80b070c
+oClientConnect dd 0x80a83d4
+oClientBegin dd 0x80a7700
+oStopFollowing dd 0x80af24c
+oG_SayTo dd 0x80ae6f4

@@ -36,6 +36,6 @@ CM_TransformedBoxTrace:
 
 SECTION .rodata
 
-oCM_TraceBox dw 0x811a5a2
-oCM_TempBoxModel dw 0x811c442
-oCM_TransformedBoxTrace dw 0x811e3c2
+oCM_TraceBox dd 0x811a5a2
+oCM_TempBoxModel dd 0x811c442
+oCM_TransformedBoxTrace dd 0x811e3c2

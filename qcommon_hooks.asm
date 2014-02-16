@@ -81,15 +81,15 @@ TempMalloc:
 
 SECTION .rodata
 
-oCom_InitParse dw 0x81a7a78
-oCom_Restart dw 0x8123586
-oCom_InitHunkMemory dw 0x8197174
-oHunk_InitDebugMemory dw 0x819752a
-oHunk_ClearTempMemory dw 0x81968a8
-oHunk_ClearTempMemoryHigh dw 0x81968b8
-oCom_Close dw 0x8121b82
-oHunk_AllocateTempMemory dw 0x8196fea
-oHunk_FreeTempMemory dw 0x81969d4
-oMem_BeginAlloc dw 0x81a74d0
-oMem_EndAlloc dw 0x81a750a
-oTempMalloc dw 0x8151dce
+oCom_InitParse dd 0x81a7a78
+oCom_Restart dd 0x8123586
+oCom_InitHunkMemory dd 0x8197174
+oHunk_InitDebugMemory dd 0x819752a
+oHunk_ClearTempMemory dd 0x81968a8
+oHunk_ClearTempMemoryHigh dd 0x81968b8
+oCom_Close dd 0x8121b82
+oHunk_AllocateTempMemory dd 0x8196fea
+oHunk_FreeTempMemory dd 0x81969d4
+oMem_BeginAlloc dd 0x81a74d0
+oMem_EndAlloc dd 0x81a750a
+oTempMalloc dd 0x8151dce
