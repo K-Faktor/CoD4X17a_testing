@@ -1895,7 +1895,7 @@ NET_GetCvars
 static qboolean NET_GetCvars( void ) {
 	int modified;
 
-	net_enabled = Cvar_RegisterInt( "net_enabled", 1, 0, 8, CVAR_LATCH | CVAR_ARCHIVE, "Enables / Disables Network" );
+	net_enabled = Cvar_RegisterInt( "net_enabled", 3, 0, 8, CVAR_LATCH | CVAR_ARCHIVE, "Enables / Disables Network" );
 
 	modified = net_enabled->modified;
 	net_enabled->modified = qfalse;
