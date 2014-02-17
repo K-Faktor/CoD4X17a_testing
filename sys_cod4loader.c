@@ -59,82 +59,6 @@
 
 
 void Sys_CoD4Linker();
-
-/*
-
-static qboolean Sys_LoadImagePrepareFile(const char* path)
-{
-        int rval;
-        char cmdline[MAX_OSPATH];
-        char copypath[MAX_OSPATH];
-        const char* dir;
-
-        if(path == NULL)
-            return qfalse;
-
-        //Get directory name
-        Q_strncpyz(copypath, path, sizeof(copypath)); //Copy 1st because the behaviour of dirname()is undefined
-        dir = Sys_Dirname( copypath );
-
-        //Test directory permissions:
-        if(access(dir, F_OK) != 0)
-        {
-            Com_PrintError("Directory %s seems not to exist: %s\n", dir, strerror(errno));
-            return qfalse;
-        }
-
-        if(access(dir, R_OK) != 0)
-        {
-            Com_PrintError("Read access to directory %s is denied: %s\n", dir, strerror(errno));
-            return qfalse;
-        }
-
-        if(access(dir, W_OK) != 0)
-        {
-            Com_PrintError("Write access to directory %s is denied: %s\n", dir, strerror(errno));
-            return qfalse;
-        }
-
-        if(access(path, F_OK) != 0)
-        {
-            Com_Printf("The file %s seems not to exist\n", path);
-
-            Com_Printf("Trying to download...\n");
-
-            Com_sprintf(cmdline, sizeof(cmdline), "wget -O %s %s", path, "http://update.iceops.in/cod4_lnxded.so");
-            rval = system( cmdline );
-            if(rval != 0)
-            {
-                Com_PrintError("Failed to download cod4_lnxded.so\nPlease make sure you are connected to the internet or install this file manually: %s\n", path);
-                return qfalse;
-            }
-
-            if(access(path, F_OK) != 0)
-            {
-                Com_PrintError("Failed to install cod4_lnxded.so\nPlease try to install this file manually: %s\n", path);
-                return qfalse;
-
-            }
-        }
-
-        if(access(path, R_OK) != 0)
-        {
-            Com_PrintError("Read access to file %s is denied: %s\n", path, strerror(errno));
-            return qfalse;
-        }
-
-        if(access(path, W_OK) != 0)
-        {
-            Com_PrintError("Write access to file %s is denied: %s\n", path, strerror(errno));
-            return qfalse;
-        }
-
-        return qtrue;
-}
-
-*/
-
-
 void Com_PatchError(void);
 void Cvar_PatchModifiedFlags();
 
@@ -257,9 +181,11 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetCall(0x80b4957, G_RegisterCvarsCallback);
 	SetJump(0x80c0b5a, GScr_LoadScripts);
 	SetJump(0x80bc03e, ExitLevel); //ToDo Maybe build GScr_ExitLevel directly
+#ifdef PUNKBUSTER
 	SetJump(0x810e6ea, PbSvGameQuery);
 	SetJump(0x810e5dc, PbSvSendToClient);
 	SetJump(0x810e5b0, PbSvSendToAddrPort);
+#endif
 	SetJump(0x817e988, SV_ClipMoveToEntity);
 	SetJump(0x81d5a14, Sys_Error);
 	SetJump(0x8122724, Com_PrintMessage);
@@ -325,7 +251,8 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 
 	SetJump(0x8110ff8, Cbuf_AddText_Wrapper_IW);
 	SetJump(0x8110f3e, Cbuf_InsertText_Wrapper_IW);
-
+	SetJump(0x8111bea, Cmd_ExecuteSingleCommand);
+	
 	*(char*)0x8215ccc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebd = '\0'; //adds a missing linebreak
@@ -349,13 +276,17 @@ void Sys_ImageRunInitFunctions()
     int i;
 
     void (*functions[])() = { (void*)0x81d8c1e, (void*)0x81b5d3c, (void*)0x81b104c, (void*)0x81a6040, (void*)0x8197bd4, (void*)0x8191cf4,
-                              (void*)0x818efac, (void*)0x810e59c, (void*)0x80f32cc, (void*)0x80f1354, (void*)0x80893b0, (void*)0x80803cc,
-                              (void*)0x807fe7c, (void*)0x807e95c, (void*)0x8076ee4, NULL };
+                              (void*)0x818efac, (void*)0x80f32cc, (void*)0x80f1354, (void*)0x80893b0, (void*)0x80803cc, (void*)0x807fe7c,
+		                      (void*)0x807e95c, (void*)0x8076ee4, NULL };
 
     for(i = 0; functions[i] != NULL; i++)
     {
         functions[i]();
     }
+#ifdef PUNKBUSTER	
+	void (*PbSv_Initializer)() = (void*)0x810e59c;
+	PbSv_Initializer();
+#endif
 
 }
 
