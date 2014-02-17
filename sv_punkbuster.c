@@ -32,6 +32,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef PUNKBUSTER
+
+
 #ifndef MAX_PACKETLEN
 #define MAX_PACKETLEN 1400
 #endif
@@ -161,3 +164,4 @@ void PbCaptureConsoleOutput_wrapper(const char *msg, int msglen)
 }
 
 
+#endif

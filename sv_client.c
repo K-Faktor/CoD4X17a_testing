@@ -333,10 +333,6 @@ A "connect" OOB command has been received
 ==================
 */
 
-#define PB_MESSAGE "PunkBuster Q_strncpyz( userinfo, Cmd_Argv(1), sizeof(userinfo) );Anti-Cheat software must be installed " \
-				"and Enabled in order to join this server. An updated game patch can be downloaded from " \
-				"www.idsoftware.com"
-
 __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	char		userinfo[MAX_INFO_STRING];
 	int			reconnectTime;
@@ -353,7 +349,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	int			challenge;
 	char			*password;
 	const char		*denied;
-	const char		*PunkBusterStatus;
+
 	
 	Q_strncpyz( userinfo, SV_Cmd_Argv(1), sizeof(userinfo) );
 	challenge = atoi( Info_ValueForKey( userinfo, "challenge" ) );
@@ -604,6 +600,10 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 		return;
         }
 
+#ifdef PUNKBUSTER
+
+	const char		*PunkBusterStatus;
+
 	if(strstr(Cvar_GetVariantString("noPbGuids"), newcl->originguid) && 32 == strlen(newcl->originguid) && newcl->authentication == 1){
 		newcl->noPb = qtrue;
 	}
@@ -616,7 +616,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 		    return;
 		}
 	}
-
+#endif
 	newcl->unknowndirectconnect1 = 0;	//Whatever it is ???
 	newcl->hasVoip = 1;
         newcl->gentity = SV_GentityNum(clientNum);

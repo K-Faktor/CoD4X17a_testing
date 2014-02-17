@@ -19,7 +19,7 @@
 ===========================================================================
 */
 
-
+#ifdef PUNKBUSTER
 
 __cdecl int PbSvSendToAddrPort(char* netdest, unsigned short port, int msgsize, char* message);
 __cdecl int PbSvSendToClient(int msgsize, char* message, int clientnum);
@@ -32,3 +32,5 @@ void __cdecl PbSvAddEvent( int event_type, int clientnum, int sizeofstring, char
 void __cdecl PbCaptureConsoleOutput(const char *msg, int size);
 void __cdecl PbServerForceProcess( );
 void PbCaptureConsoleOutput_wrapper(const char *msg, int msglen);
+
+#endif

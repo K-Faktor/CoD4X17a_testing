@@ -50,7 +50,9 @@
 cvar_t	*sv_protocol;
 cvar_t	*sv_privateClients;		// number of clients reserved for password
 cvar_t	*sv_hostname;
+#ifdef PUNKBUSTER
 cvar_t	*sv_punkbuster;
+#endif
 cvar_t	*sv_minPing;
 cvar_t	*sv_maxPing;
 cvar_t	*sv_queryIgnoreMegs;
@@ -885,8 +887,9 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 	    Info_SetValueForKey( infostring, "mod", "1");
 	}
 	Info_SetValueForKey( infostring, "voice", va("%i", sv_voice->boolean ) );
+#ifdef PUNKBUSTER
 	Info_SetValueForKey( infostring, "pb", va("%i", sv_punkbuster->boolean) );
-
+#endif
 	if( sv_maxPing->integer ) {
 		Info_SetValueForKey( infostring, "sv_maxPing", va("%i", sv_maxPing->integer) );
 	}
@@ -982,15 +985,16 @@ __optimize3 __regparm2 static void SVC_RemoteCommand( netadr_t *from, msg_t *msg
 	Com_Printf ("Rcon from %s: %s\n", NET_AdrToString (from), cmd_aux );
 
 	Com_BeginRedirect (sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_FlushRedirect);
-
+#ifdef PUNKBUSTER
 	if(!Q_stricmpn(cmd_aux, "pb_sv_", 6)){
 
 		Q_strchrrepl(cmd_aux, '\"', ' ');
 		Cmd_ExecuteSingleCommand(0,0, cmd_aux);
 		PbServerForceProcess();
-	}else{
+	}else
+#endif
 		Cmd_ExecuteSingleCommand(0,0, cmd_aux);
-	}
+	
 	Com_EndRedirect ();
 
 }
@@ -1008,9 +1012,6 @@ connectionless packets.
 __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg ) {
 	char	*s;
 	char	*c;
-	int	clnum;
-	int	i;
-	client_t *cl;
 
 	MSG_BeginReading( msg );
 	MSG_ReadLong( msg );		// skip the -1 marker
@@ -1029,8 +1030,13 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 
         } else if (!Q_stricmp(c, "rcon")) {
 		SVC_RemoteCommand( from, msg );
-
+#ifdef PUNKBUSTER
 	} else if (!Q_strncmp("PB_", (char *) &msg->data[4], 3)) {
+
+		int	clnum;
+		int	i;
+		client_t *cl;
+
 		//pb_sv_process here
 		SV_Cmd_EndTokenizedString();
 
@@ -1049,7 +1055,7 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 
 		PbSvAddEvent(13, clnum, msg->cursize-4, (char *)&msg->data[4]);
 		return;
-
+#endif
 	} else if (!Q_stricmp(c, "connect")) {
 		SV_DirectConnect( from );
 
@@ -1712,7 +1718,9 @@ void SV_InitCvarsOnce(void){
 	sv_protocol = Cvar_RegisterInt("protocol", PROTOCOL_VERSION, PROTOCOL_VERSION, PROTOCOL_VERSION, 0x44, "Protocol version");
 	sv_privateClients = Cvar_RegisterInt("sv_privateClients", 0, 0, 64, 4, "Maximum number of private clients allowed onto this server");
 	sv_hostname = Cvar_RegisterString("sv_hostname", "^5CoD4Host", 5, "Host name of the server");
+#ifdef PUNKBUSTER
 	sv_punkbuster = Cvar_RegisterBool("sv_punkbuster", qtrue, 0x15, "Enable PunkBuster on this server");
+#endif
 	sv_minPing = Cvar_RegisterInt("sv_minPing", 0, 0, 1000, 5, "Minimum allowed ping on the server");
 	sv_maxPing = Cvar_RegisterInt("sv_maxPing", 0, 0, 1000, 5, "Maximum allowed ping on the server");
 	sv_queryIgnoreMegs = Cvar_RegisterInt("sv_queryIgnoreMegs", 1, 0, 32, 0x11, "Number of megabytes of RAM to allocate for the querylimit IP-blacklist. 0 disables this feature");
@@ -2586,9 +2594,9 @@ __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 
 	// send a heartbeat to the master if needed
 	SV_MasterHeartbeat( HEARTBEAT_GAME );
-
+#ifdef PUNKBUSTER
 	PbServerProcessEvents();
-
+#endif
 	// if time is about to hit the 32nd bit, kick all clients
 	// and clear sv.time, rather
 	// than checking for negative time wraparound everywhere.

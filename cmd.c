@@ -962,11 +962,13 @@ A complete command line has been parsed, so try to execute it
 void	Cmd_ExecuteString( const char *text )
 {
 	cmd_function_t	*cmd, **prev;
+#ifdef PUNKBUSTER
 	/* Trap commands going to PunkBuster here */
 	if(!Q_stricmpn(text, "pb_sv_", 6))
 	{
 		PbSvAddEvent(14, -1, strlen(text), (char*)text);
 	}
+#endif
 	// execute the command line
 	Cmd_TokenizeString( text );		
 	if ( !Cmd_Argc() ) {

@@ -685,9 +685,9 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int socketfd, int c
 		    sourceRcon.redirectUser = connectionId+1;
 		    Com_BeginRedirect (sv_outputbuf, sizeof(sv_outputbuf), HL2Rcon_SourceRconFlushRedirect);
 		    Cmd_ExecuteSingleCommand(0,0, command);
-
+#ifdef PUNKBUSTER
 		    if(!Q_stricmpn(command, "pb_sv_", 6)) PbServerForceProcess();
-
+#endif
 		    Com_EndRedirect ();
 		    sourceRcon.redirectUser = 0;
 		    break;

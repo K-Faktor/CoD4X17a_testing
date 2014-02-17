@@ -314,6 +314,7 @@ P_P_F void Plugin_SetPlayerGUID(unsigned int clientslot, const char* guid)
 
 P_P_F void Plugin_SetPlayerNoPB(unsigned int clientslot)
 {
+#ifdef PUNKBUSTER
     client_t *cl;
     int PID = PHandler_CallerID();
     if(clientslot > sv_maxclients->integer)
@@ -322,6 +323,7 @@ P_P_F void Plugin_SetPlayerNoPB(unsigned int clientslot)
     }
     cl = &svs.clients[clientslot];
     cl->noPb = qtrue;
+#endif
 }
 
 P_P_F int Plugin_DoesServerUseUids(void)

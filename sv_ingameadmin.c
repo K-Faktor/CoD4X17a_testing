@@ -324,9 +324,9 @@ void SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	cmdInvoker.clientnum = clientnum;
 
 	Cmd_ExecuteSingleCommand( 0, 0, buffer );
-
+#ifdef PUNKBUSTER
 	if(!Q_stricmpn(buffer, "pb_sv_", 6)) PbServerForceProcess();
-
+#endif
 	SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\"", buffer);
 
 	cmdInvoker.currentCmdPower = i;

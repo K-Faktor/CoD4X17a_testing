@@ -47,9 +47,13 @@ void AddRedirectLocations()
 {
 /*
     To Add:
-    PbCaptureConsoleOutput(msg, MAXPRINTMSG);*/
-/*    HL2Rcon_SourceRconSendConsole( msg, msglen);
+#ifdef PUNKBUSTER
+    PbCaptureConsoleOutput(msg, MAXPRINTMSG);
+#endif
+*/
 
+/*
+    HL2Rcon_SourceRconSendConsole( msg, msglen);
     Com_PrintUDP( msg, msglen );
 */
 

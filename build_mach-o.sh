@@ -10,7 +10,6 @@ echo Compiling NASM...
 nasm -f macho qcommon_hooks.asm --prefix _
 nasm -f macho cmd_hooks.asm --prefix _
 nasm -f macho filesystem_hooks.asm --prefix _
-nasm -f macho punkbuster_hooks.asm --prefix _
 nasm -f macho xassets_hooks.asm --prefix _
 nasm -f macho trace_hooks.asm --prefix _
 nasm -f macho misc_hooks.asm --prefix _

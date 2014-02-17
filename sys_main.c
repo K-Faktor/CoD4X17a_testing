@@ -454,30 +454,7 @@ int Sys_Main(char* commandLine){
     Sys_InitCrashDumps();
     
     Com_Init( commandLine );
-    
-    // Moved
-    /*signal( SIGILL, Sys_SigHandler );
-    signal( SIGFPE, Sys_SigHandler );
-    signal( SIGSEGV, Sys_SigHandler ); // No corefiles get generated with it
-    signal( SIGTERM, Sys_SigHandler );
-    signal( SIGINT, Sys_SigHandler );
-*/
-/*
-    if(!PbServerInitialize()){
-        Com_Printf("Unable to initialize PunkBuster.  PunkBuster is disabled.\n");
-    }
 
-*/
-    // Forcing a SIGSEGV, tests of signal handlers
-    /*__asm__ volatile("mov $0xdeadbeef, %eax\n"
-	    "mov $0x00, %ebx\n"
-	    "mov $0x01, %ecx\n"
-	    "mov $0x02, %edx\n"
-	    "mov $0x03, %ebp\n"
-	    "mov $0x04, %esi\n"
-	    "mov $0x05, %edi\n"
-	    "call %ecx\n");
-    */
     while ( 1 )
     {
         Com_Frame();

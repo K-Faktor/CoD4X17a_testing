@@ -701,11 +701,12 @@ void Com_InitGamefunctions()
 
     Com_InitParse();
 
+#ifdef PUNKBUSTER
     Com_AddRedirect(PbCaptureConsoleOutput_wrapper);
-
     if(!PbServerInitialize()){
         Com_Printf("Unable to initialize PunkBuster.  PunkBuster is disabled.\n");
     }
+#endif
 
 }
 

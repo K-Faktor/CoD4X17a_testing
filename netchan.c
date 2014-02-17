@@ -524,7 +524,7 @@ __cdecl void QDECL NET_OutOfBandPrint( netsrc_t sock, netadr_t *adr, const char 
 ===============
 NET_OutOfBandData
 
-Sends a data message in an out-of-band datagram (only used for "PbSvSendToClient")
+Sends a data message in an out-of-band datagram
 ================
 */
 void NET_OutOfBandData( netsrc_t sock, netadr_t *adr, byte *format, int len ) {
@@ -580,7 +580,7 @@ void QDECL NET_PrintData( int sock, const char *format, ... ) {
 ===============
 NET_TCPData
 
-Sends a data message in an out-of-band datagram (only used for "PbSvSendToClient")
+Sends a data message in an out-of-band datagram
 ================
 */
 qboolean NET_SendData( int sock, msg_t* msg) {
