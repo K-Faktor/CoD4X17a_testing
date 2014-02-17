@@ -81,7 +81,6 @@ void MSG_Init( msg_t *buf, byte *data, int length ) {
 	buf->readcount = 0;
 	buf->bit = 0;
 	buf->lastRefEntity = 0;
-	buf->var_04 = 0;
 }
 
 void MSG_InitReadOnly( msg_t *buf, byte *data, int length ) {

@@ -50,8 +50,7 @@ typedef struct {
 	int		readcount;		//0x1c
 	int		bit;			//0x20	// for bitwise reads and writes
 	int		lastRefEntity;		//0x24
-	int		var_04;			//0x28
-} msg_t; //Size: 0x2c
+} msg_t; //Size: 0x28
 
 
 struct clientState_s;
