@@ -2830,7 +2830,7 @@ __optimize3 __regparm1 qboolean NET_Sleep(unsigned int usec)
 
 		}
 
-		if((tcp_socket != INVALID_SOCKET && FD_ISSET(tcp_socket, &fdr)) || (tcp_socket != INVALID_SOCKET && FD_ISSET(tcp6_socket, &fdr)))
+		if((tcp_socket != INVALID_SOCKET && FD_ISSET(tcp_socket, &fdr)) || (tcp6_socket != INVALID_SOCKET && FD_ISSET(tcp6_socket, &fdr)))
 		{
 			if(NET_TcpServerConnectEvent(&fdr))
 				netabort = qtrue;
