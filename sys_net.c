@@ -238,7 +238,7 @@ static int numIP;
 
 typedef struct{
 	netadr_t		remote;
-	unsigned int		lastMsgTime;
+	unsigned int	lastMsgTime;
 	int			connectionId;
 	int			serviceId;
 	tcpclientstate_t	state;
@@ -2360,8 +2360,8 @@ Find a new slot in the client array for state handling
 void NET_TcpServerOpenConnection(netadr_t *from, int newfd){
 
 	tcpConnections_t	*conn;
-	unsigned long long	oldestTimeAccepted = 0xFFFFFFFFFFFFFFFF;
-	unsigned long long	oldestTime = 0xFFFFFFFFFFFFFFFF;
+	uint32_t			oldestTimeAccepted = 0xFFFFFFFF;
+	uint32_t			oldestTime = 0xFFFFFFFF;
 	int			oldestAccepted = 0;
 	int			oldest = 0;
 	int			i;
