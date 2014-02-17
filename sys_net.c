@@ -1895,14 +1895,8 @@ NET_GetCvars
 static qboolean NET_GetCvars( void ) {
 	int modified;
 
-#ifdef DEDICATED
-	// I want server owners to explicitly turn on ipv6 support.
-	net_enabled = Cvar_RegisterInt( "net_enabled", 3, 0, 8, CVAR_LATCH | CVAR_ARCHIVE, "Enables / Disables Network" );
-#else
-	/* End users have it enabled so they can connect to ipv6-only hosts, but ipv4 will be
-	 * used if available due to ping */
-	net_enabled = Cvar_RegisterInt( "net_enabled", 1, 0, 8, CVAR_LATCH | CVAR_ARCHIVE, "Enables / Disables Network");
-#endif
+	net_enabled = Cvar_RegisterInt( "net_enabled", 1, 0, 8, CVAR_LATCH | CVAR_ARCHIVE, "Enables / Disables Network" );
+
 	modified = net_enabled->modified;
 	net_enabled->modified = qfalse;
 
@@ -2836,12 +2830,12 @@ __optimize3 __regparm1 qboolean NET_Sleep(unsigned int usec)
 
 		}
 
-/*		if(FD_ISSET(tcp_socket, &fdr) || FD_ISSET(tcp6_socket, &fdr))
+		if((tcp_socket != INVALID_SOCKET && FD_ISSET(tcp_socket, &fdr)) || (tcp_socket != INVALID_SOCKET && FD_ISSET(tcp6_socket, &fdr)))
 		{
 			if(NET_TcpServerConnectEvent(&fdr))
 				netabort = qtrue;
 		}
-*/
+
 	}
 	return netabort;
 }

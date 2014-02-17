@@ -36,6 +36,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <time.h>
+#include <mach/mach_time.h>
 #include <math.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -54,19 +55,21 @@
 
 struct lnx_stat
 {
-	dev_t         st_dev;      /* Device */
-	ino_t         st_ino;      /* INode */
-	mode_t        st_mode;     /* Zugriffsrechte */
-	nlink_t       st_nlink;    /* Anzahl harter Links */
-	uid_t         st_uid;      /* UID des Besitzers */
-	gid_t         st_gid;      /* GID des Besitzers */
-	dev_t         st_rdev;     /* Typ (wenn INode-Gerät) */
-	off_t         st_size;     /* Größe in Bytes*/
-	unsigned long st_blksize;  /* Blockgröße */
-	unsigned long st_blocks;   /* Allozierte Blocks */
-	time_t        _st_atime;    /* Letzter Zugriff */
-	time_t        _st_mtime;    /* Letzte Modifikation */
-	time_t        _st_ctime;    /* Letzte Aenderung */
+	uint64_t      st_dev;      /* Device */
+	uint32_t      st_pad1;
+	uint32_t      st_ino;      /* INode */
+	uint32_t      st_mode;     /* Zugriffsrechte */
+	uint32_t      st_nlink;    /* Anzahl harter Links */
+	uint32_t      st_uid;      /* UID des Besitzers */
+	uint32_t      st_gid;      /* GID des Besitzers */
+	uint64_t      st_rdev;     /* Typ (wenn INode-Gerät) */
+	uint32_t      st_pad2;
+	uint32_t      st_size;     /* Größe in Bytes*/
+	uint32_t      st_blksize;  /* Blockgröße */
+	uint32_t      st_blocks;   /* Allozierte Blocks */
+	struct timespec st_atim;    /* Letzter Zugriff */
+	struct timespec st_mtim;    /* Letzte Modifikation */
+	struct timespec st_ctim;    /* Letzte Aenderung */
 };
 
 #define __strtol_internal strtol
@@ -313,11 +316,10 @@ int ___xstat(int __ver, const char *__filename, struct lnx_stat *__stat_buf)
 	__stat_buf->st_size = tran_stat->st_size;	
 	__stat_buf->st_blksize = tran_stat->st_blksize;	
 	__stat_buf->st_blocks = tran_stat->st_blocks;
-/*
-    __stat_buf->_st_atime = tran_stat->st_atimespec;
-	__stat_buf->_st_mtime = tran_stat->st_mtimespec;
-	__stat_buf->_st_ctime = tran_stat->st_ctimespec;
-*/
+    __stat_buf->st_atim = tran_stat->st_atimespec;
+	__stat_buf->st_mtim = tran_stat->st_mtimespec;
+	__stat_buf->st_ctim = tran_stat->st_ctimespec;
+
 	return ret;
 }
 
@@ -338,11 +340,10 @@ int ___fxstat(int __ver, int __filedesc, struct lnx_stat *__stat_buf)
 	__stat_buf->st_size = tran_stat->st_size;	
 	__stat_buf->st_blksize = tran_stat->st_blksize;	
 	__stat_buf->st_blocks = tran_stat->st_blocks;
-/*
-	__stat_buf->_st_atime = tran_stat->st_atimespec;
-	__stat_buf->_st_mtime = tran_stat->st_mtimespec;
-	__stat_buf->_st_ctime = tran_stat->st_ctimespec;
-*/
+	__stat_buf->st_atim = tran_stat->st_atimespec;
+	__stat_buf->st_mtim = tran_stat->st_mtimespec;
+	__stat_buf->st_ctim = tran_stat->st_ctimespec;
+
 	return ret;
 }
 
