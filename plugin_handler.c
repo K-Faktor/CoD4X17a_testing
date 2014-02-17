@@ -170,7 +170,7 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
         return;
     }
     //Parse the pluginfile and extract function names string table
-    nstrings = ELF32_GetStrTable(realpath,&strings,&text);
+    nstrings = GetStrTable(realpath,&strings,&text);
     if(!nstrings){
         Com_Printf("%s is not a plugin file or is corrupt.\n", realpath);
         PHandler_CloseTempFile( realpath);

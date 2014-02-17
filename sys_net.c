@@ -2836,12 +2836,12 @@ __optimize3 __regparm1 qboolean NET_Sleep(unsigned int usec)
 
 		}
 
-		if(FD_ISSET(tcp_socket, &fdr) || FD_ISSET(tcp6_socket, &fdr))
+/*		if(FD_ISSET(tcp_socket, &fdr) || FD_ISSET(tcp6_socket, &fdr))
 		{
 			if(NET_TcpServerConnectEvent(&fdr))
 				netabort = qtrue;
 		}
-
+*/
 	}
 	return netabort;
 }

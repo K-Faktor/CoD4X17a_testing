@@ -28,7 +28,7 @@
 #include "../g_shared.h"   // qboolean
 #include "../elf32_parser.h"
 
-int ELF32_GetStrTable(char *fname, char **output,elf_data_t *text)
+int ELF32_GetStrTable(char *fname, char **output, elf_data_t *text)
 {
     Elf32_Ehdr *hdr;
     Elf32_Shdr *shdr;

@@ -116,7 +116,11 @@ __asm__ __volatile__(
 "	mov    %%esi,0x4(%%esp)\n"
 "	lea    -0x11c(%%ebp),%%ecx\n"
 "	mov    %%ecx,(%%esp)\n"
+#ifdef __linux
 "	call   memcpy\n"
+#else					 
+"	call   _memcpy\n"
+#endif					 
 "	mov    0x158(%%edi),%%eax\n"
 "	mov    %%eax,-0x120(%%ebp)\n"
 "	mov    0x3168(%%edi),%%ebx\n"
@@ -131,7 +135,11 @@ __asm__ __volatile__(
 "	movl   $0x0,0x4(%%esp)\n"
 "	mov    %%edi,(%%esp)\n"
 "	mov    $0x804a42c, %%eax\n"
+#ifdef __linux
 "	call   memset\n"
+#else					 					 
+"	call   _memset\n"
+#endif					 
 
 //Set gravity to g_gravity
 /*

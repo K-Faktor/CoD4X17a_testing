@@ -27,3 +27,4 @@ typedef struct{
 }elf_data_t;
 
 int ELF32_GetStrTable(char *fname, char **output,elf_data_t *text);
+int GetStrTable(char *fname, char **output,elf_data_t *text);

@@ -31,6 +31,7 @@
 #include "../sys_cod4defs.h"
 #include "../sec_crypto.h"
 #include "../sec_update.h"
+#include "../elf32_parser.h"
 
 #include <sys/resource.h>
 #include <libgen.h>
@@ -171,3 +172,7 @@ void Sys_TermProcess( )
     wait(&status);
 }
 
+int GetStrTable(char* fname, char **output, elf_data_t *text)
+{
+		return ELF32_GetStrTable(fname, output, text);
+}

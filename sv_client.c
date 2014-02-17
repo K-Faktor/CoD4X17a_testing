@@ -338,7 +338,7 @@ A "connect" OOB command has been received
 				"www.idsoftware.com"
 
 __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
-	char			userinfo[MAX_INFO_STRING];
+	char		userinfo[MAX_INFO_STRING];
 	int			reconnectTime;
 	int			c;
 	int			j;
@@ -354,7 +354,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	char			*password;
 	const char		*denied;
 	const char		*PunkBusterStatus;
-
+	
 	Q_strncpyz( userinfo, SV_Cmd_Argv(1), sizeof(userinfo) );
 	challenge = atoi( Info_ValueForKey( userinfo, "challenge" ) );
 	qport = atoi( Info_ValueForKey( userinfo, "qport" ) );
@@ -372,7 +372,6 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 		NET_OutOfBandPrint( NS_SERVER, from, "error\nNo or bad challenge for address.\n" );
 		return;
 	}
-
 	newcl = NULL;
 
 	// quick reject
@@ -633,7 +632,6 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
 		return;
 	}
-
 	svse.challenges[c].connected = qtrue;
 
 	Com_Printf( "Going from CS_FREE to CS_CONNECTED for %s num %i guid %s from: %s\n", nick, clientNum, newcl->pbguid, NET_AdrToConnectionString(from));

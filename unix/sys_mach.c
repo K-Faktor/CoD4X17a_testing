@@ -31,6 +31,7 @@
 #include "../sys_cod4defs.h"
 #include "../sec_crypto.h"
 #include "../sec_update.h"
+#include "../elf32_parser.h"
 
 #include <sys/resource.h>
 #include <libgen.h>
@@ -84,10 +85,38 @@ Unix specific initialisation
 */
 void Sys_PlatformInit( void )
 {
-
-
+	void *allocptr = (void*)0x8040000;  /* Image base of cod4_lnxded-bin */ 
+	void *received_mem;
+	int pagesize = getpagesize();
+	
+	allocptr += 0xa1bc; /* Offset of .plt */
+	received_mem = mmap(allocptr - ((int)allocptr % pagesize), 0xa60 + 0x4 + 0x1bf1a4 + 0x3c + 0x36898 + pagesize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FIXED | MAP_ANON, 0, 0);
+	if(received_mem != allocptr - ((int)allocptr % pagesize))
+	{
+		printf("Allocation of memory at address %p has failed.\n", allocptr);
+		exit(1);
+	}
+	allocptr += 0xa60;
+	
+	allocptr += 0x4; /* Offset of .text */	
+	allocptr += 0x1bf1a4;
+	
+	allocptr += 0x3c; /* Offset of .rodata */	
+	allocptr += 0x36898;
+	
+	allocptr += 0x2aee8; /* Offset of .data */		
+	received_mem = mmap(allocptr - ((int)allocptr % pagesize), 0x9454 + 0x2c + 0xc182240 + pagesize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_FIXED | MAP_ANON, 0, 0);
+	if(received_mem != allocptr - ((int)allocptr % pagesize))
+	{
+		printf("Allocation of memory at address %p has failed\n", allocptr);
+		exit(1);
+	}
+	allocptr += 0x9454;
+	
+	allocptr += 0x2c; /* Offset of .bss */
+	allocptr += 0xc182240;
+	
 }
-
 /*
 =================
 Sys_StripAppBundle
@@ -112,4 +141,14 @@ const char *Sys_StripAppBundle( const char *dir )
 		return dir;
 	Q_strncpyz(cwd, Sys_Dirname(cwd), sizeof(cwd));
 	return cwd;
+}
+
+void Sys_TermProcess( )
+{
+
+}
+
+int GetStrTable(char* fname, char **output, elf_data_t *text)
+{
+	return qfalse;
 }
