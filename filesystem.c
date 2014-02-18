@@ -422,23 +422,6 @@ qboolean FS_FCloseFile( fileHandle_t f ) {
 
 
 /*
-==================
-Sys_Mkdir
-==================
-*/
-qboolean Sys_Mkdir( const char *path )
-{
-	int result = mkdir( path, 0750 );
-
-	if( result != 0 )
-		return errno == EEXIST;
-
-	return qtrue;
-}
-
-
-
-/*
 ================
 FS_filelength
 
@@ -3551,8 +3534,5 @@ void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames ) {
 
 qboolean FS_SetPermissionsExec(const char* ospath)
 {
-        if(chmod(ospath, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)!=0){
-		return qfalse;
-        }
-	return qtrue;
+	return Sys_SetPermissionsExec( ospath );
 }

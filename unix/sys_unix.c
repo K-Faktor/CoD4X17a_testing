@@ -480,3 +480,25 @@ const char *Sys_Basename( char *path )
 	return basename( path );
 }
 
+/*
+==================
+Sys_Mkdir
+==================
+*/
+qboolean Sys_Mkdir( const char *path )
+{
+	int result = mkdir( path, 0750 );
+
+	if( result != 0 )
+		return errno == EEXIST;
+
+	return qtrue;
+}
+
+qboolean Sys_SetPermissionsExec(const char* ospath)
+{
+        if(chmod(ospath, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH)!=0){
+		return qfalse;
+        }
+	return qtrue;
+}

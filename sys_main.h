@@ -75,5 +75,8 @@ void Sys_ReplaceProcess( char *cmdline );
 void Sys_PlatformInit();
 const char *Sys_StripAppBundle( const char *dir );
 const char *Sys_Basename( char *path );
+qboolean Sys_Mkdir( const char *path );
+qboolean Sys_SetPermissionsExec(const char* ospath);
 #endif
+
 
