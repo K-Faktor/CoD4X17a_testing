@@ -379,7 +379,7 @@ qboolean Sys_DirectoryHasContent(const char *dir)
 	hfiles = readdir(hdir);
     while ( hfiles )
     {
-        if ( hfiles->d_reclen != 4 || hfiles->d_name[0] != 46 )
+        if ( hfiles->d_reclen != 4 || hfiles->d_name[0] != '.' )
 		{
 	          closedir(hdir);
 		  return qtrue;
@@ -423,7 +423,7 @@ const char* Sys_GetUsername()
         struct passwd *passwdstr = getpwuid(getuid());
 
         if(passwdstr == NULL)
-            return "codadmin";
+            return "CoD-Admin";
 
         return passwdstr->pw_name;
 
@@ -521,7 +521,6 @@ void Sys_SleepSec(int seconds)
 Sys_Backtrace
 ==================
 */
-
 
 int Sys_Backtrace(void** buffer, int size)
 {
