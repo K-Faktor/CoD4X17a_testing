@@ -50,7 +50,7 @@
 #include <pwd.h>
 #include <fcntl.h>
 #include <semaphore.h>
-
+#include <malloc.h>
 
 #define __strtol_internal strtol
 #define __strtod_internal strtod
@@ -269,11 +269,6 @@ void _isdead()
 
 }
 
-void* _memalign(int align, int numbytes)
-{/* This can cause crash */
-    return calloc(1, numbytes + align);
-}
-
 int* ___errno_location()
 {
     static int _errorno = 0;
@@ -368,7 +363,7 @@ void Sys_CoD4Linker()
      Sys_CoD4LinkObject(LD_pthread_mutexattr_destroy , _isdead_dbg );
      Sys_CoD4LinkObject(LD_fclose , fclose );
      Sys_CoD4LinkObject(LD__ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_ , _ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_ );
-     Sys_CoD4LinkObject(LD_memalign , _memalign );
+     Sys_CoD4LinkObject(LD_memalign , memalign );
      Sys_CoD4LinkObject(LD__setjmp , _setjmp );
      Sys_CoD4LinkObject(LD__ZNKSs4findEPKcjj , _ZNKSs4findEPKcjj );
      Sys_CoD4LinkObject(LD_acos , acos );
