@@ -62,7 +62,6 @@ typedef struct {
 	//Remote address
 	netadr_t		remoteAddress;			// (0x10)
 	short			qport;				// qport value to write when transmitting (0x24)
-
 	// incoming fragment assembly buffer
 	int			fragmentSequence;
 	int			fragmentLength;	

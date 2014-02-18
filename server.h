@@ -127,7 +127,6 @@ typedef struct client_s {//90b4f8c
 	int			demoMaxDeltaFrames;
 	int			demoDeltaFrameCount;
 
-	int			pbfailcounter;
 	int			authentication;
 	qboolean		playerauthorized;
 	qboolean		noPb;
@@ -156,7 +155,7 @@ typedef struct client_s {//90b4f8c
 	char			loginname[32];
 	//Free Space
 	qboolean		enteredWorldForFirstTime;
-	byte			free[658];
+	byte			free[662];
 	char			name[64];
 
 	int			unknownUsercmd1;	//0x63c

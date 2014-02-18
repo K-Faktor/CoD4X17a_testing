@@ -22,6 +22,7 @@
 
 
 #include "plugin_handler.h"
+#include <execinfo.h>
 
 /*==========================================*
  *                                          *
