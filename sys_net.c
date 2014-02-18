@@ -63,7 +63,7 @@ typedef unsigned short sa_family_t;
 typedef u_long	ioctlarg_t;
 #	define socketError		WSAGetLastError( )
 
-#define NET_NOSIGNAL 0x0
+#define NET_NOSIGNAL MSG_NOSIGNAL
 
 static WSADATA	winsockdata;
 static qboolean	winsockInitialized = qfalse;
