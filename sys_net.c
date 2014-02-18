@@ -2199,7 +2199,7 @@ int NET_TcpServerGetPacket(tcpConnections_t *conn, void *netmsg, int maxsize, qb
 	int ret;
 
 
-	ret = recv(conn->sock, netmsg, maxsize , MSG_DONTWAIT);
+	ret = recv(conn->sock, netmsg, maxsize , 0);
 
 	if(ret == SOCKET_ERROR){
 
@@ -2532,7 +2532,7 @@ int NET_TcpClientGetData(int sock, void* buf, int* buflen){
 
 	while(qtrue){
 
-		ret = recv(sock, buf + readcount, *buflen - readcount, MSG_DONTWAIT);
+		ret = recv(sock, buf + readcount, *buflen - readcount, 0);
 
 		if(ret == SOCKET_ERROR){
 
