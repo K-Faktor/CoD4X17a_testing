@@ -22,8 +22,7 @@
 
 
 #include "plugin_handler.h"
-#include <execinfo.h>
-
+#include "sys_main.h"
 /*==========================================*
  *                                          *
  *   Plugin Handler's internal functions    *
@@ -381,7 +380,7 @@ P_P_F int PHandler_CallerID() // P_P_F for no-inline :P
 {
     void *funcptrs[3];
     int i,j;
-    j = backtrace(funcptrs,3);
+    j = Sys_Backtrace(funcptrs,3);
     if(j<3){
     Com_Error(ERR_FATAL,"PHandler_CallerID: backtrace failed to return function pointers! Possible exploit detected! Terminating the server...\n");
     }

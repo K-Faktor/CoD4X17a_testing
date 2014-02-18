@@ -46,6 +46,7 @@
 #include <pwd.h>
 #include <execinfo.h>
 
+
 /*
 ==================
 Sys_RandomBytes
@@ -513,4 +514,16 @@ Sys_SleepSec
 void Sys_SleepSec(int seconds)
 {
     sleep(seconds);
+}
+
+/*
+==================
+Sys_Backtrace
+==================
+*/
+
+
+int Sys_Backtrace(void** buffer, int size)
+{
+    return backtrace(buffer, size);
 }

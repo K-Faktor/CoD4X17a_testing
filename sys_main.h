@@ -79,6 +79,7 @@ qboolean Sys_Mkdir( const char *path );
 qboolean Sys_SetPermissionsExec(const char* ospath);
 
 void Sys_SleepSec(int seconds);
+int Sys_Backtrace(void** buffer, int size);
 
 /* Includes for system console */
 void CON_Shutdown( void );
