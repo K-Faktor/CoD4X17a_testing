@@ -32,6 +32,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #ifdef _WIN32
 #	include <winsock2.h>
@@ -56,10 +57,11 @@ typedef int socklen_t;
 typedef unsigned short sa_family_t;
 #	endif
 
-#	define EAGAIN					WSAEWOULDBLOCK
+#	define EAGAIN			WSAEWOULDBLOCK
 #	define EADDRNOTAVAIL	WSAEADDRNOTAVAIL
 #	define EAFNOSUPPORT		WSAEAFNOSUPPORT
-#	define ECONNRESET			WSAECONNRESET
+#	define ECONNRESET		WSAECONNRESET
+#	define EINPROGRESS		WSAEINPROGRESS
 typedef u_long	ioctlarg_t;
 #	define socketError		WSAGetLastError( )
 
@@ -2636,7 +2638,7 @@ int NET_TcpClientConnect( const char *remoteAdr ) {
 
 				socklen_t so_len = sizeof(err);
 
-				if(getsockopt(newsocket, SOL_SOCKET, SO_ERROR, &err, &so_len) == 0);
+				if(getsockopt(newsocket, SOL_SOCKET, SO_ERROR, (char*) &err, &so_len) == 0);
 				{
 					return newsocket;
 				}
