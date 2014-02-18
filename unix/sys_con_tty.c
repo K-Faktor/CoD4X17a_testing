@@ -21,10 +21,10 @@
 
 
 #include "sys_con_tty.h"
-#include "q_shared.h"
-#include "cmd_completion.h"
-#include "qcommon_io.h"
-#include "cvar.h"
+#include "../q_shared.h"
+#include "../cmd_completion.h"
+#include "../qcommon_io.h"
+#include "../cvar.h"
 
 
 #include <unistd.h>
