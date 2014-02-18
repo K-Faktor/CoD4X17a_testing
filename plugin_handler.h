@@ -121,9 +121,10 @@ typedef struct{
     qboolean enabled;
 
     void *lib_handle;
+    /*
     void *lib_start;
     long lib_size;
-
+    */
 }plugin_t;
 
 typedef struct{
@@ -131,6 +132,7 @@ typedef struct{
     int loadedPlugins;
     qboolean enabled;
     qboolean initializing_plugin;
+    int hasControl;
 }pluginWrapper_t;
 
 extern pluginWrapper_t pluginFunctions; // defined in plugin_handler.c

@@ -376,8 +376,11 @@ void PHandler_PluginList_f()
 ======
 */
 
-P_P_F int PHandler_CallerID() // P_P_F for no-inline :P
+int PHandler_CallerID() // Can now be inlined, why not ^^
 {
+    return pluginFunctions.hasControl;
+    //Legacy code
+    /* 
     void *funcptrs[3];
     int i,j;
     j = Sys_Backtrace(funcptrs,3);
@@ -388,7 +391,7 @@ P_P_F int PHandler_CallerID() // P_P_F for no-inline :P
         if(pluginFunctions.plugins[i].lib_start < funcptrs[2] && pluginFunctions.plugins[i].lib_start + pluginFunctions.plugins[i].lib_size > funcptrs[2])
             return i;
     }
-    return -1;
+    return -1;*/
 }
 
 
