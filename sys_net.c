@@ -198,8 +198,6 @@ static SOCKET	tcp6_socket = INVALID_SOCKET;
 static SOCKET	socks_socket = INVALID_SOCKET;
 //static SOCKET	multicast6_socket = INVALID_SOCKET;
 
-pthread_t net_thread;
-
 // Keep track of currently joined multicast group.
 static struct ipv6_mreq curgroup;
 // And the currently bound address.
@@ -1081,7 +1079,7 @@ int NET_IPSocket( char *net_interface, int port, int *err, qboolean tcp) {
 		if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *) &i, sizeof(i) ) == SOCKET_ERROR ) {
 			Com_PrintWarning( "NET_IPSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
 		}
-		if( setsockopt( newsocket, IPPROTO_IP, IP_TOS, &tos, sizeof(tos) ) == SOCKET_ERROR ) {
+		if( setsockopt( newsocket, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(tos) ) == SOCKET_ERROR ) {
 			Com_PrintWarning( "NET_IPSocket: setsockopt IP_TOS: %s\n", NET_ErrorString() );
 		}
 	}
@@ -2722,8 +2720,6 @@ void NET_Init( void ) {
 	NET_Config( qtrue );
 	
 	Cmd_AddCommand ("net_restart", NET_Restart_f);
-
-//	pthread_create( &net_thread, NULL, &NET_Frame, NULL );
 
 }
 

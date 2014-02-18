@@ -78,6 +78,8 @@ const char *Sys_Basename( char *path );
 qboolean Sys_Mkdir( const char *path );
 qboolean Sys_SetPermissionsExec(const char* ospath);
 
+void Sys_SleepSec(int seconds);
+
 /* Includes for system console */
 void CON_Shutdown( void );
 void CON_Init(void);

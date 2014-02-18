@@ -35,7 +35,6 @@
 #include "punkbuster.h"
 #include "server.h"
 #include "sec_main.h"
-#include <sys/resource.h>
 #include <libgen.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -170,9 +169,9 @@ static __attribute__ ((noreturn)) void Sys_Exit( int exitCode ) {
 		// possible race conditions?
 		// buggy kernels / buggy GL driver, I don't know for sure
 		// but it's safer to wait an eternity before and after the fork
-		sleep( 1 );
+		Sys_SleepSec( 1 );
 		Sys_ReplaceProcess( exit_cmdline );
-		sleep( 1 );
+		Sys_SleepSec( 1 );
 	}
 
 	// We can't do this

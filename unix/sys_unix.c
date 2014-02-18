@@ -502,3 +502,15 @@ qboolean Sys_SetPermissionsExec(const char* ospath)
         }
 	return qtrue;
 }
+
+
+/*
+==================
+Sys_SleepSec
+==================
+*/
+
+void Sys_SleepSec(int seconds)
+{
+    sleep(seconds);
+}
