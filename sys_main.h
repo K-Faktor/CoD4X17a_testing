@@ -77,6 +77,13 @@ const char *Sys_StripAppBundle( const char *dir );
 const char *Sys_Basename( char *path );
 qboolean Sys_Mkdir( const char *path );
 qboolean Sys_SetPermissionsExec(const char* ospath);
+
+/* Includes for system console */
+void CON_Shutdown( void );
+void CON_Init(void);
+char *CON_Input( void );
+void CON_Print( const char *msg );
+
 #endif
 
 

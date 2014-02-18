@@ -20,7 +20,7 @@
 */
 
 
-#include "sys_con_tty.h"
+#include "../sys_main.h"
 #include "../q_shared.h"
 #include "../cmd_completion.h"
 #include "../qcommon_io.h"
@@ -487,27 +487,6 @@ char *CON_Input( void )
 	return NULL;
 }
 
-/*
-==================
-CON_Print
-==================
-*/
-void CON_Print( const char *msg )
-{
-	CON_Hide( );
-
-	if( com_ansiColor && com_ansiColor->integer )
-		Sys_AnsiColorPrint( msg );
-	else
-		fputs( msg, stderr );
-
-	CON_Show( );
-}
-
-//============================================================================
-//============================================================================
-
-
 
 /*
 =================
@@ -578,3 +557,24 @@ void Sys_AnsiColorPrint( const char *msg )
 	}
 }
 
+
+
+/*
+==================
+CON_Print
+==================
+*/
+void CON_Print( const char *msg )
+{
+	CON_Hide( );
+
+	if( com_ansiColor && com_ansiColor->integer )
+		Sys_AnsiColorPrint( msg );
+	else
+		fputs( msg, stderr );
+
+	CON_Show( );
+}
+
+//============================================================================
+//============================================================================

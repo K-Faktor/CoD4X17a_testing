@@ -29,7 +29,6 @@
 #include "qcommon_logprint.h"
 #include "qcommon.h"
 #include "sys_cod4defs.h"
-#include "sys_con_tty.h"
 #include "filesystem.h"
 #include "sys_cod4loader.h"
 #include "sys_thread.h"
