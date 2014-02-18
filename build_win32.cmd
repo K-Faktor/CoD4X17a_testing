@@ -23,6 +23,6 @@ nasm -f coff msg_hooks.asm --prefix _
 echo Linking...
 gcc -m32 -no_pie -stdlib=libc++ -rdynamic -Wl,-ldl,-lpthread,-lm -o cod4x17a_dedrun *.o -L./ -ltomcrypt_mach -ltommath_mach
 
-REM rm *.o
+del *.o
 pause
 REM ./version_make_progress.sh
