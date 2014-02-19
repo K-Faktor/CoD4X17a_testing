@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <inttypes.h>
 
 void Sys_ShowErrorDialog(const char* functionName);
 
@@ -474,6 +475,10 @@ void Sys_TermProcess( )
 	Sys_SetFloatEnv();
 }
 
+uint32_t Sys_MillisecondsRaw()
+{
+	return timeGetTime();
+}
 /*
 ================
 Sys_GetCurrentUser
