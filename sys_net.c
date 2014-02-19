@@ -2621,7 +2621,11 @@ int NET_TcpClientConnect( const char *remoteAdr ) {
 	if( connect( newsocket, (void *)&address, sizeof(address) ) == SOCKET_ERROR ) {
 
 		err = socketError;
-		if(err == EINPROGRESS){
+		if(err == EINPROGRESS
+#ifdef _WIN32
+			|| err == WSAEWOULDBLOCK
+#endif		
+		){
 
 			FD_ZERO(&fdr);
 			FD_SET(newsocket, &fdr);

@@ -22,7 +22,7 @@ nasm -f coff msg_hooks.asm --prefix _
 
 echo Linking...
 gcc -o cod4x17a_dedrun *.o win32/win_cod4.res -L./ -ltomcrypt_win32 -ltommath_win32 -lpthread -lm -lws2_32 -lwsock32 -lgdi32 -mwindows
-
+ 
 del *.o
 pause
 REM ./version_make_progress.sh

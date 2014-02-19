@@ -17,6 +17,7 @@ void Sys_ShowErrorDialog(const char* functionName);
 
 WinVars_t g_wv;
 
+byte cod4_plt[8192];
 /*
 ================
 Sys_SetFPUCW
@@ -154,7 +155,7 @@ qboolean Sys_MemoryProtectWrite(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READWRITE, &oldProtect) != 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READWRITE, &oldProtect) == 0)
 	{
 	        Sys_ShowErrorDialog("Sys_MemoryProtectWrite");
             return qfalse;
@@ -168,7 +169,7 @@ qboolean Sys_MemoryProtectExec(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len, PAGE_EXECUTE_READ, &oldProtect) != 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_EXECUTE_READ, &oldProtect) == 0)
 	{
             Sys_ShowErrorDialog("Sys_MemoryProtectExec");
             return qfalse;
@@ -182,7 +183,7 @@ qboolean Sys_MemoryProtectReadonly(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READONLY, &oldProtect) != 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READONLY, &oldProtect) == 0)
 	{
 	        Sys_ShowErrorDialog("Sys_MemoryProtectReadonly");
             return qfalse;
@@ -207,7 +208,7 @@ void Sys_ShowErrorDialog(const char* functionName)
 	
 	Com_sprintf(displayMessageBuf, sizeof(displayMessageBuf), "Error in function: %s\nThe error is: %s", functionName, errMessageBuf);
 	
-	MessageBoxA(HWND, "Errorstring", "System Error in ?", MB_OK | MB_ICONERROR);
+	MessageBoxA(HWND, displayMessageBuf, "System Error", MB_OK | MB_ICONERROR);
 }
 
 const char *Sys_DefaultHomePath( void ) {
@@ -515,6 +516,30 @@ Win32 specific initialisation
 */
 void Sys_PlatformInit( void )
 {
+	void *allocptr = (void*)0x8040000;  /* Image base of cod4_lnxded-bin */ 
+	void *received_mem;
+	int commitsize;
+	char errormsg[256];
+	
+	commitsize = 0;
+	commitsize += 0xa1bc; /* Offset of .plt */
+	commitsize += 0xa60; /* Size of .plt */
+	commitsize += 0x4; /* Offset of .text */	
+	commitsize += 0x1bf1a4; /* Size of .text */
+	commitsize += 0x3c; /* Offset of .rodata */	
+	commitsize += 0x36898; /* Size of .rodata */
+	commitsize += 0x2aee8; /* Offset of .data */
+	commitsize += 0x9454; /* Size of .data */
+	commitsize += 0x2c; /* Offset of .bss */
+	commitsize += 0xc182240; /* Size of .bss */
+	
+	received_mem = VirtualAlloc(allocptr, commitsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if(received_mem != allocptr)
+	{
+		Com_sprintf(errormsg, sizeof(errormsg), "Sys_PlatformInit: Allocate memory @ %p failed Received: %p", allocptr, received_mem);
+		Sys_ShowErrorDialog(errormsg);
+		exit(1);
+	}
 
 	Sys_SetFloatEnv( );
 }
