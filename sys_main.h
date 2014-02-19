@@ -80,6 +80,7 @@ qboolean Sys_SetPermissionsExec(const char* ospath);
 
 void Sys_SleepSec(int seconds);
 int Sys_Backtrace(void** buffer, int size);
+void Sys_EventLoop(void);
 
 /* Includes for system console */
 void CON_Shutdown( void );

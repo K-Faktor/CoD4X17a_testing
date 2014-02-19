@@ -1205,11 +1205,7 @@ changes from empty to non-empty, and full to non-full,
 but not on every player enter or exit.
 ================
 */
-#define PORT_MASTER 20810
-#define MASTER_SERVER_NAME "cod4master.activision.com"
-#define MASTER_SERVER_NAME2 "cod4master.iceops.in"
-#define HEARTBEAT_GAME "COD-4"
-#define HEARTBEAT_DEAD "flatline"
+
 #define	HEARTBEAT_USEC	180*1000*1000
 void SV_MasterHeartbeat(const char *message)
 {

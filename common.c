@@ -94,14 +94,6 @@ typedef union{
     void* p;
 }universalArg_t;
 
-
-typedef enum {
-	// bk001129 - make sure SE_NONE is zero
-	SE_NONE = 0,    // evTime is still valid
-	SE_CONSOLE, // evPtr is a char*
-	SE_PACKET   // evPtr is a netadr_t followed by data bytes to evPtrLength
-} sysEventType_t;
-
 typedef struct {
 	int evTime;
 	sysEventType_t evType;
@@ -328,6 +320,8 @@ sysEvent_t* Com_GetSystemEvent( void )
 		eventTail++;
 		return &eventQueue[ ( eventTail - 1 ) & MASK_QUEUED_EVENTS ];
 	}
+
+	Sys_EventLoop();
 
 	// check for console commands
 	s = Sys_ConsoleInput();

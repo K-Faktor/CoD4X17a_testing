@@ -2,6 +2,9 @@
 #include "../cmd.h"
 #include "../qcommon.h"
 #include "../qcommon_mem.h"
+#include "../elf32_parser.h"
+#include "../sys_main.h"
+#include "sys_win32.h"
 
 #include <windows.h>
 #include <wincrypt.h>
@@ -11,6 +14,8 @@
 #include <errno.h>
 
 void Sys_ShowErrorDialog(const char* functionName);
+
+WinVars_t g_wv;
 
 /*
 ================
@@ -205,7 +210,7 @@ void Sys_ShowErrorDialog(const char* functionName)
 	MessageBoxA(HWND, "Errorstring", "System Error in ?", MB_OK | MB_ICONERROR);
 }
 
-char *Sys_DefaultHomePath( void ) {
+const char *Sys_DefaultHomePath( void ) {
 	return NULL;
 }
 
@@ -526,3 +531,65 @@ int Sys_Backtrace(void** buffer, int size)
     return 0;
 }
 
+int GetStrTable(char* fname, char **output, elf_data_t *text)
+{
+	return qfalse;
+}
+
+
+void Sys_EventLoop(){
+	MSG msg;
+
+	// pump the message loop
+	while ( PeekMessage( &msg, NULL, 0, 0, PM_NOREMOVE ) ) {
+		if ( !GetMessage( &msg, NULL, 0, 0 ) ) {
+			Com_Quit_f();
+		}
+		// save the msg time, because wndprocs don't have access to the timestamp
+		g_wv.sysMsgTime = msg.time;
+
+		TranslateMessage( &msg );
+		DispatchMessage( &msg );
+	}
+}
+
+/*
+==================
+Dummy functions just to get it compiled
+==================
+*/
+void* dlopen(const char* dl, int mode){
+	return NULL;
+}
+
+const char* dlerror(){
+	return NULL;
+}
+
+void dlclose(void* handle){
+
+
+}
+
+void* dlsym(void* handle, const char* proc){
+	return NULL;
+}
+
+
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+{
+
+    char sys_cmdline[MAX_STRING_CHARS];
+	if(lpCmdLine != NULL)
+		Q_strncpyz( sys_cmdline, lpCmdLine, sizeof( sys_cmdline ) );
+	else
+		sys_cmdline[0] = '\0';
+		
+	g_wv.hInstance = hInstance;
+/*
+    Sys_SetExeFile( sys_cmdline );
+ */   /* This function modifies argv[ 0 ] :S */
+/*    Sys_SetBinaryPath( Sys_Dirname( sys_cmdline ) );
+*/
+    return Sys_Main(sys_cmdline);
+}

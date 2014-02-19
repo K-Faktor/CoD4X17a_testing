@@ -29,6 +29,16 @@
 #include "cvar.h"
 #include "qcommon_io.h"
 
+
+typedef enum {
+	// bk001129 - make sure SE_NONE is zero
+	SE_NONE = 0,    // evTime is still valid
+	SE_CONSOLE, // evPtr is a char*
+	SE_PACKET   // evPtr is a netadr_t followed by data bytes to evPtrLength
+} sysEventType_t;
+
+void Com_QueueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
+
 void __cdecl Com_InitParse( void );
 void __cdecl Com_Restart(void);
 void __cdecl Com_WriteConfig_f(void);

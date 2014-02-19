@@ -3,8 +3,8 @@
 
 echo Compiling C-code...
 gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -c ./win32/sys_win32.c
-REM gcc -m32  -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_mach.c
-REM gcc -m32  -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_cod4linker_mach.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -c ./win32/win_syscon.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -c ./win32/sys_cod4linker_win32.c
 gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c
 
 
@@ -21,7 +21,7 @@ nasm -f coff server_hooks.asm --prefix _
 nasm -f coff msg_hooks.asm --prefix _
 
 echo Linking...
-gcc -o cod4x17a_dedrun *.o -L./ -ltomcrypt_win32 -ltommath_win32 -lpthread -lm -lws2_32 -lwsock32 
+gcc -o cod4x17a_dedrun *.o win32/win_cod4.res -L./ -ltomcrypt_win32 -ltommath_win32 -lpthread -lm -lws2_32 -lwsock32 -lgdi32 -mwindows
 
 del *.o
 pause

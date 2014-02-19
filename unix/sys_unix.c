@@ -46,7 +46,6 @@
 #include <pwd.h>
 #include <execinfo.h>
 
-
 /*
 ==================
 Sys_RandomBytes
@@ -525,4 +524,9 @@ Sys_Backtrace
 int Sys_Backtrace(void** buffer, int size)
 {
     return backtrace(buffer, size);
+}
+
+void Sys_EventLoop()
+{
+
 }

@@ -218,17 +218,6 @@ const char* Sys_GetCommandline( void )
 
 /*
 =================
-Sys_Print
-=================
-*/
-void Sys_Print( const char *msg )
-{
-//	CON_LogWrite( msg );
-	CON_Print( msg );
-}
-
-/*
-=================
 Sys_DoSignalAction
 =================
 */
@@ -261,19 +250,6 @@ void Sys_DoSignalAction( int signal, const char* sigstring )
 		Sys_Exit( 1 );
 	else
 		Sys_Exit( 2 );
-}
-
-
-/*
-=================
-Sys_ConsoleInput
-
-Handle new console input
-=================
-*/
-char *Sys_ConsoleInput(void)
-{
-	return CON_Input( );
 }
 
 
@@ -334,6 +310,29 @@ void Sys_Init()
 	Cvar_RegisterString("arch", OS_STRING "-" ARCH_STRING, CVAR_ROM, "System platform");
 	Cvar_RegisterString("username", Sys_GetUsername(), CVAR_ROM, "Current username");
 
+}
+
+/*
+=================
+Sys_Print
+=================
+*/
+void Sys_Print( const char *msg )
+{
+//	CON_LogWrite( msg );
+	CON_Print( msg );
+}
+
+/*
+=================
+Sys_ConsoleInput
+
+Handle new console input
+=================
+*/
+char *Sys_ConsoleInput(void)
+{
+	return CON_Input( );
 }
 
 
@@ -448,8 +447,6 @@ int Sys_Main(char* commandLine){
     CON_Init();
 
 /*    Sys_ImageFindConstant();   */
-
-    Sys_InitCrashDumps();
     
     Com_Init( commandLine );
 

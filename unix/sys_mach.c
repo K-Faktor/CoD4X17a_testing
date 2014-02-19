@@ -116,6 +116,7 @@ void Sys_PlatformInit( void )
 	allocptr += 0x2c; /* Offset of .bss */
 	allocptr += 0xc182240;
 	
+	Sys_InitCrashDumps();
 }
 /*
 =================
