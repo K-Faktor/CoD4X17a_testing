@@ -2263,6 +2263,12 @@ void NET_TcpServerPacketEventLoop(){
 
 	byte bufData[MAX_MSGLEN];
 
+	if(tcpServer.highestfd < 0)
+	{
+		// windows ain't happy when select is called without valid FDs
+		return qfalse;
+	}
+
 	while(qtrue){
 
 		fdr = tcpServer.fdr;
