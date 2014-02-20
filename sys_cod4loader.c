@@ -154,6 +154,7 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	Sys_PatchImageWithBlock(patchblock_Scr_AddSourceBuffer_Ignore_fs_game2, sizeof(patchblock_Scr_AddSourceBuffer_Ignore_fs_game2));  //Script unlock
 	Sys_PatchImageWithBlock(patchblock_SV_SpawnServer, sizeof(patchblock_SV_SpawnServer));  //Skip useless check for cvar: sv_dedicated
 	Com_Memset((void*)0x8174da9, 0x90, 5); //In SV_SpawnServer()  Don't overwrite sv.frameusec  (was before unknown write only variable)
+	Com_Memset((void*)0x81753ea, 0x90, 5); //In SV_SpawnServer()  Removing the call of NET_Sleep() I don't know for what this can be usefull to have here O_o
 	Com_Memset((void*)0x8174db5, 0x90, 42); //In SV_SpawnServer()  Don't set cvar cl_paused as well as nextmap
 	Com_Memset((void*)0x8174b9b, 0x90, 116); //In SV_SpawnServer()  Removal of sv_maxclients amd ui_maxclients Cvar_Register()
 //	Sys_PatchImageWithBlock(patchblock_SV_SendServerCommand, sizeof(patchblock_SV_SendServerCommand));  //Skip useless check for cvar: sv_dedicated
@@ -207,6 +208,7 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetJump(0x80a8068, ClientUserinfoChanged);
 	SetJump(0x81aa0be, BigInfo_SetValueForKey);
 	SetJump(0x81d6fca, Sys_Milliseconds);
+	SetJump(0x81d6f7c, Sys_MillisecondsRaw);
 	SetJump(0x81a9f8a, va);
 	SetJump(0x8131200, MSG_Init);
 	SetJump(0x8131320, MSG_InitReadOnly);
@@ -216,6 +218,7 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	SetJump(0x8140f42, Sys_IsDatabaseThread);
 	SetJump(0x81d6be4, Sys_EnterCriticalSection);
 	SetJump(0x81d6bc8, Sys_LeaveCriticalSection);
+	SetJump(0x81d7282, Sys_ListFiles);
 	SetJump(0x8177402, SV_SendServerCommand_IW);
 	SetJump(0x818e73c, FS_Restart);
 	SetJump(0x818726c, FS_FCloseFile);

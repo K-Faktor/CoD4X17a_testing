@@ -22,6 +22,7 @@
 #include <semaphore.h>
 #include <inttypes.h>
 #include <direct.h>
+#include <windows.h>
 
 struct lnx_stat
 {
@@ -249,37 +250,52 @@ void test(double base)
 
 int ___xstat(int __ver, const char *__filename, struct lnx_stat *__stat_buf)
 {
-	struct _stat stat_buf;
-	struct _stat *tran_stat = &stat_buf;
-	int ret = _stat(__filename, tran_stat);
+	__stat_buf->st_dev = 0;
+	__stat_buf->st_ino = 0;	
+	__stat_buf->st_mode = 0;	
+	__stat_buf->st_nlink = 0;	
+	__stat_buf->st_uid = 0;	
+	__stat_buf->st_gid = 0;	
+	__stat_buf->st_rdev = 0;
+	__stat_buf->st_size = 0;
 	
-	__stat_buf->st_dev = tran_stat->st_dev;
-	__stat_buf->st_ino = tran_stat->st_ino;	
-	__stat_buf->st_mode = tran_stat->st_mode;	
-	__stat_buf->st_nlink = tran_stat->st_nlink;	
-	__stat_buf->st_uid = tran_stat->st_uid;	
-	__stat_buf->st_gid = tran_stat->st_gid;	
-	__stat_buf->st_rdev = tran_stat->st_rdev;	
-	__stat_buf->st_size = tran_stat->st_size;
-	return ret;
+	HANDLE hFile = CreateFile((LPCTSTR)__filename, 
+						GENERIC_READ,
+						FILE_SHARE_READ,
+						NULL,
+						OPEN_EXISTING,
+						FILE_FLAG_OVERLAPPED | FILE_FLAG_NO_BUFFERING,
+						NULL );
+	
+	if( hFile == INVALID_HANDLE_VALUE )
+	{
+		return -1;
+	}
+	__stat_buf->st_size = GetFileSize(hFile, NULL);
+
+	CloseHandle(hFile);
+	return 0;
 }
+
+/*
+	Windows _stat() function seems not to work. As this was only used to retrive the filesize we only pass this
+*/
 
 int ___fxstat(int __ver, int __filedesc, struct lnx_stat *__stat_buf)
 {
-	struct _stat stat_buf;
-	struct _stat *tran_stat = &stat_buf;
-    int ret = _fstat(__filedesc, tran_stat);
-	
-	
-	__stat_buf->st_dev = tran_stat->st_dev;
-	__stat_buf->st_ino = tran_stat->st_ino;	
-	__stat_buf->st_mode = tran_stat->st_mode;	
-	__stat_buf->st_nlink = tran_stat->st_nlink;	
-	__stat_buf->st_uid = tran_stat->st_uid;	
-	__stat_buf->st_gid = tran_stat->st_gid;	
-	__stat_buf->st_rdev = tran_stat->st_rdev;	
-	__stat_buf->st_size = tran_stat->st_size;	
-	return ret;
+	__stat_buf->st_dev = 0;
+	__stat_buf->st_ino = 0;	
+	__stat_buf->st_mode = 0;	
+	__stat_buf->st_nlink = 0;	
+	__stat_buf->st_uid = 0;	
+	__stat_buf->st_gid = 0;	
+	__stat_buf->st_rdev = 0;	
+	__stat_buf->st_size = _filelength( __filedesc );	
+
+	if(__stat_buf->st_size == -1)
+		return -1;
+	else
+		return 0;
 }
 
 #define __strtol_internal strtol
@@ -340,18 +356,8 @@ qboolean Sys_CoD4Linker()
     Sys_CoD4LinkObject(LD_asinf , asinf );
     Sys_CoD4LinkObject(LD___cxa_pure_virtual , _isdead_dbg );
     Sys_CoD4LinkObject(LD_usleep , usleep );
-	
     Sys_CoD4LinkObject(LD_readdir , _isdead_dbg );
-	/*
-		Sys_ListFiles() 0x81d7282 !!!	
-	*/
-	
     Sys_CoD4LinkObject(LD_gettimeofday , _isdead_dbg );
-	/*
-		Sys_MillisecondsRaw() 0x81d6f7c !!!	
-		(return timeGetTime())
-	*/	
-		
     Sys_CoD4LinkObject(LD_free , free );
 //    Sys_CoD4LinkObject(LD__ZNSs7reserveEj , _ZNSs7reserveEm );
     Sys_CoD4LinkObject(LD_atan , atan );
@@ -419,8 +425,6 @@ qboolean Sys_CoD4Linker()
     Sys_CoD4LinkObject(LD_rintf , rintf );
     Sys_CoD4LinkObject(LD_rmdir , _rmdir );
     Sys_CoD4LinkObject(LD_dlerror , dlerror );
-	
-	
 	Sys_CoD4LinkObject(LD_pthread_create , _isdead_dbg );
 //    Sys_CoD4LinkObject(LD__ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base , _ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base );
     Sys_CoD4LinkObject(LD_sleep , _isdead_dbg );

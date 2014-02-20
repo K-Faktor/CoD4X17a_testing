@@ -27,6 +27,7 @@
 
 #include "q_shared.h"
 #include <setjmp.h>
+#include <inttypes.h>
 
 unsigned int Sys_Milliseconds( void );
 unsigned long long Sys_MillisecondsLong( void );
@@ -82,6 +83,7 @@ void Sys_WaitForErrorConfirmation(void);
 void Sys_SleepSec(int seconds);
 int Sys_Backtrace(void** buffer, int size);
 void Sys_EventLoop(void);
+uint32_t Sys_MillisecondsRaw();
 
 /* Includes for system console */
 void CON_Shutdown( void );

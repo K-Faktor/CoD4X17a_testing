@@ -69,6 +69,15 @@ qboolean Sys_RandomBytes( byte *string, int len )
 	return qtrue;
 }
 
+unsigned int Sys_MillisecondsRaw( void )
+{
+	struct timeval tp;
+
+	gettimeofday( &tp, NULL );
+
+	return tp.tv_sec * 1000 + tp.tv_usec / 1000;
+}
+
 void Sys_ReplaceProcess( char *cmdline )
 {
 
