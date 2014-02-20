@@ -68,7 +68,7 @@ typedef struct {
 	byte	type;
 	byte	scope_id;
 	unsigned short	port;
-	int sock;		//Socket FD. 0 = any socket
+	signed short sock;		//Socket FD. 0 = any socket
     union{
 	    byte	ip[4];
 	    byte	ipx[10];
@@ -114,6 +114,8 @@ void		Sys_ShowIP(void);
 
 int NET_TcpSendData( int sock, const void *data, int length );
 void NET_TcpServerPacketEventLoop();
+void NET_TcpServerRebuildFDList(void);
+void NET_TcpServerInit(void);
 int NET_TcpClientConnect( const char *remoteAdr );
 int NET_TcpClientGetData(int sock, void* buf, int *buflen);
 void NET_TcpCloseSocket(int socket);

@@ -247,7 +247,7 @@ typedef struct{
 
 
 typedef struct{
-	fd_set			fdr;
+	fd_set		fdr;
 	int			highestfd;
 	int			activeConnectionCount; //Connections that have been successfully authentificated
 	unsigned long long	lastAttackWarnTime;
@@ -1881,6 +1881,11 @@ void NET_OpenIP( void ) {
 
 	if(!validsock && !validsock6)
 		Com_Error(ERR_FATAL,"Could not bind to a IPv4 or IPv6 network socket");
+		
+	if(tcp_socket != INVALID_SOCKET || tcp6_socket != INVALID_SOCKET)
+	{
+		NET_TcpServerInit();
+	}
 }
 
 
@@ -2098,6 +2103,8 @@ netadr_t* NET_GetDefaultCommunicationSocket(){
 Functions for TCP networking which can be used by client and server
 */
 
+
+
 /*
 ===============
 NET_TcpCloseSocket
@@ -2131,8 +2138,8 @@ void NET_TcpCloseSocket(int socket)
 				tcpServer.activeConnectionCount--;
 				NET_TCPConnectionClosed(&conn->remote, conn->sock, conn->connectionId, conn->serviceId);
 			}
-
 			conn->sock = INVALID_SOCKET;
+			NET_TcpServerRebuildFDList();
 			return;
 		}
 	}
@@ -2242,6 +2249,42 @@ int NET_TcpServerGetPacket(tcpConnections_t *conn, void *netmsg, int maxsize, qb
 }
 
 
+void NET_TcpServerRebuildFDList()
+{
+	int 				i;
+	tcpConnections_t	*conn;
+
+	FD_ZERO(&tcpServer.fdr);
+	tcpServer.highestfd = -1;
+	
+	for(i = 0, conn = tcpServer.connections; i < MAX_TCPCONNECTIONS; i++, conn++)
+	{
+		if(conn->sock != INVALID_SOCKET)
+		{
+			FD_SET(conn->sock, &tcpServer.fdr);
+			if(conn->sock > tcpServer.highestfd)
+			{
+				tcpServer.highestfd = conn->sock;
+			}
+		}
+	}
+}
+
+void NET_TcpServerInit()
+{
+	int 				i;
+	tcpConnections_t	*conn;
+
+	Com_Memset(&tcpServer, 0, sizeof(tcpServer));
+	FD_ZERO(&tcpServer.fdr);
+	tcpServer.highestfd = -1;
+		
+	for(i = 0, conn = tcpServer.connections; i < MAX_TCPCONNECTIONS; i++, conn++)
+	{
+		conn->sock = INVALID_SOCKET;
+	}
+}
+
 /*
 ==================
 NET_TcpServerPacketEventLoop
@@ -2266,7 +2309,7 @@ void NET_TcpServerPacketEventLoop(){
 	if(tcpServer.highestfd < 0)
 	{
 		// windows ain't happy when select is called without valid FDs
-		return qfalse;
+		return;
 	}
 
 	while(qtrue){
@@ -2353,6 +2396,7 @@ void NET_TcpServerPacketEventLoop(){
 	}
 }
 
+
 /*
 ==================
 NET_TcpServerOpenConnection
@@ -2361,7 +2405,6 @@ A TCP connection request has been received #2
 Find a new slot in the client array for state handling
 ==================
 */
-
 
 void NET_TcpServerOpenConnection(netadr_t *from, int newfd){
 
