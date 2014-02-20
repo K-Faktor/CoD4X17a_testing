@@ -68,7 +68,7 @@ typedef struct {
 	byte	type;
 	byte	scope_id;
 	unsigned short	port;
-	short sock;		//Socket FD. 0 = any socket
+	int sock;		//Socket FD. 0 = any socket
     union{
 	    byte	ip[4];
 	    byte	ipx[10];

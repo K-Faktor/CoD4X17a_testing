@@ -288,7 +288,7 @@ int ___fxstat(int __ver, int __filedesc, struct lnx_stat *__stat_buf)
 qboolean Sys_CoD4Linker()
 {
 	Sys_CoD4LinkObject(LD_fileno , _fileno );
-	Sys_CoD4LinkObject(LD_fileno , fputs );
+	Sys_CoD4LinkObject(LD_fputs , fputs );
 	Sys_CoD4LinkObject(LD___errno_location , ___errno_location );
 	Sys_CoD4LinkObject(LD_sprintf , sprintf );
     Sys_CoD4LinkObject(LD_srand , srand );

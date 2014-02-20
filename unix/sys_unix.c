@@ -530,3 +530,8 @@ void Sys_EventLoop()
 {
 
 }
+
+void Sys_WaitForErrorConfirmation()
+{
+
+}

@@ -583,6 +583,26 @@ void Sys_EventLoop(){
 	}
 }
 
+void Sys_WaitForErrorConfirmation()
+{
+	MSG msg;
+
+	CON_Show( 1, qtrue );
+
+	// wait for the user to quit
+	while ( 1 ) {
+		if ( !GetMessage( &msg, NULL, 0, 0 ) ) {
+			break;
+		}
+		TranslateMessage( &msg );
+		DispatchMessage( &msg );
+	}
+
+
+	//MessageBoxA(NULL, message, CLIENT_WINDOW_TITLE " !System Error!", MB_OK | MB_ICONERROR);
+
+}
+
 /*
 ==================
 Dummy functions just to get it compiled

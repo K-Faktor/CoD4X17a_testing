@@ -284,7 +284,7 @@ __cdecl void QDECL Sys_Error( const char *fmt, ... ) {
 	Q_vsnprintf (msg, sizeof(msg), fmt, argptr);
 	va_end (argptr);
 
-	sprintf(buffer, "Sys_Error: %s\n", msg);
+	Com_sprintf(buffer, sizeof(buffer), "\nSys_Error: %s\n", msg);
 
 	//Print the error to our console
 	Sys_Print( buffer );
@@ -296,6 +296,8 @@ __cdecl void QDECL Sys_Error( const char *fmt, ... ) {
 		fclose(fdout);
 	}
 
+	Sys_WaitForErrorConfirmation();
+	
 	Sys_Exit( 1 ); // bk010104 - use single exit point.
 }
 

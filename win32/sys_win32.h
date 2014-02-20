@@ -18,6 +18,8 @@ OSVERSIONINFO osversion;
 unsigned sysMsgTime;
 } WinVars_t;
 
+void CON_Show( int visLevel, qboolean quitOnClose );
+
 extern WinVars_t g_wv;
 extern byte cod4_plt[8192];
 #define IDI_ICON1                       1

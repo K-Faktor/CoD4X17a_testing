@@ -466,7 +466,7 @@ void CON_Shutdown( void ) {
 /*
 ** Sys_ShowConsole
 */
-void Sys_ShowConsole( int visLevel, qboolean quitOnClose ) {
+void CON_Show( int visLevel, qboolean quitOnClose ) {
 	s_wcd.quitOnClose = quitOnClose;
 	
 	if ( visLevel == s_wcd.visLevel ) {

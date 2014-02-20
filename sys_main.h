@@ -77,6 +77,7 @@ const char *Sys_StripAppBundle( const char *dir );
 const char *Sys_Basename( char *path );
 qboolean Sys_Mkdir( const char *path );
 qboolean Sys_SetPermissionsExec(const char* ospath);
+void Sys_WaitForErrorConfirmation(void);
 
 void Sys_SleepSec(int seconds);
 int Sys_Backtrace(void** buffer, int size);
