@@ -45,6 +45,7 @@
 #include <sys/stat.h>
 #include <pwd.h>
 #include <execinfo.h>
+#include <sys/time.h>
 
 /*
 ==================
