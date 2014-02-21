@@ -1047,7 +1047,10 @@ static void Cmd_List_f( void ) {
 
 	i = 0;
 	for ( cmd = cmd_functions ; cmd ; cmd = cmd->next ) {
-		if ( (match && !Com_Filter( match, cmd->name, qfalse )) || SV_RemoteCmdGetInvokerPower() < cmd->minPower) {
+		if ( (match && !Com_Filter( match, cmd->name, qfalse )) 
+			|| SV_RemoteCmdGetInvokerPower() < cmd->minPower
+			|| (cmd->minPower == 0) && SV_RemoteCmdGetInvokerPower() != 100)
+		{
 			continue;
 		}
 		Com_Printf( "%s\n", cmd->name );

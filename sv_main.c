@@ -1812,7 +1812,6 @@ void SV_Init(){
         SVC_RateLimitInit( );
         SV_InitBanlist();
         Init_CallVote();
-        SV_RemoteCmdInit();
         SV_InitServerId();
         Com_RandomBytes((byte*)&psvs.randint, sizeof(psvs.randint));
 

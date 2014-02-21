@@ -1583,7 +1583,11 @@ static void NET_GetLocalAddress(void)
 static void NET_GetLocalAddress( void ) {
 	char				hostname[256];
 	struct addrinfo	hint;
+	struct sockaddr_storage localhostadr;
 	struct addrinfo	*res = NULL;
+
+	qboolean has_ip4 = qfalse;
+	qboolean has_ip6 = qfalse;
 
 	numIP = 0;
 
@@ -1617,11 +1621,26 @@ static void NET_GetLocalAddress( void ) {
 		for(search = res; search; search = search->ai_next)
 		{
 			if(search->ai_family == AF_INET)
+			{
 				NET_AddLocalAddress("", search->ai_addr, (struct sockaddr *) &mask4);
-			else if(search->ai_family == AF_INET6)
+				has_ip4 = qtrue;
+				
+			}else if(search->ai_family == AF_INET6){
 				NET_AddLocalAddress("", search->ai_addr, (struct sockaddr *) &mask6);
+				has_ip6 = qtrue;
+				
+			}
 		}
-	
+		/* Windows doesn't seem to add the loopback interface to its list of available interfaces. We have to assume they are there. */
+		if( has_ip4 && Sys_StringToSockaddr("localhost", (struct sockaddr *) &localhostadr, sizeof(localhostadr), AF_INET ))
+		{
+			NET_AddLocalAddress("localhost", (struct sockaddr *) &localhostadr, (struct sockaddr *) &mask4);
+		}
+		
+		if( has_ip6 && Sys_StringToSockaddr("localhost", (struct sockaddr *) &localhostadr, sizeof(localhostadr), AF_INET6 ))
+		{
+			NET_AddLocalAddress("localhost", (struct sockaddr *) &localhostadr, (struct sockaddr *) &mask6);
+		}
 		Sys_ShowIP();
 	}
 	

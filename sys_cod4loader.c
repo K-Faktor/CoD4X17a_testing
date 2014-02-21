@@ -168,6 +168,12 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 	Com_Memset((void*)0x81747b5, 0x90, 116); //In SV_???()  Removal of sv_maxclients amd ui_maxclients Cvar_Register()
 	Com_Memset((void*)0x817498c, 0x90, 116); //In SV_???()  Removal of sv_maxclients amd ui_maxclients Cvar_Register()
 
+	#ifndef PUNKBUSTER
+		Com_Memset((void*)0x8175255, 0x90, 5);
+		Com_Memset((void*)0x81751fe, 0x90, 5);
+		
+	#endif
+	
 	SetCall(0x8050ab1, Jump_CalcHeight);
 	SetJump(0x8050786, Jump_IsPlayerAboveMax);
 	SetJump(0x80507c6, Jump_ClampVelocity);

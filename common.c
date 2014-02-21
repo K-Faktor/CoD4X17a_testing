@@ -684,7 +684,8 @@ void Com_InitGamefunctions()
 
     SV_Cmd_Init();
     SV_AddOperatorCommands();
-
+	SV_RemoteCmdInit();
+	
     cvar_t **msg_dumpEnts = (cvar_t**)(0x8930c1c);
     cvar_t **msg_printEntityNums = (cvar_t**)(0x8930c18);
     *msg_dumpEnts = Cvar_RegisterBool( "msg_dumpEnts", qfalse, CVAR_TEMP, "Print snapshot entity info");
