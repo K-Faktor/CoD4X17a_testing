@@ -4,6 +4,7 @@
 #include "../qcommon_mem.h"
 #include "../objfile_parser.h"
 #include "../sys_main.h"
+#include "../sys_cod4defs.h"
 #include "sys_win32.h"
 
 #include <windows.h>
@@ -644,17 +645,37 @@ void Sys_WaitForErrorConfirmation()
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
 
+	char lpFilename[MAX_OSPATH];
     char sys_cmdline[MAX_STRING_CHARS];
+	char *lastSep;
+	DWORD copylen;
+	
 	if(lpCmdLine != NULL)
 		Q_strncpyz( sys_cmdline, lpCmdLine, sizeof( sys_cmdline ) );
 	else
 		sys_cmdline[0] = '\0';
 		
 	g_wv.hInstance = hInstance;
-/*
-    Sys_SetExeFile( sys_cmdline );
- */   /* This function modifies argv[ 0 ] :S */
-/*    Sys_SetBinaryPath( Sys_Dirname( sys_cmdline ) );
-*/
+
+	copylen = GetModuleFileName(NULL, lpFilename, sizeof(lpFilename));
+	if(copylen >= (sizeof(lpFilename) -1))
+	{
+		Sys_SetExeFile( "" );
+		Sys_SetBinaryPath( "" );
+		MessageBoxA(NULL, "Path is too long. The whole path to location of this .exe file must not exceed 254 characters", CLIENT_WINDOW_TITLE " Error", MB_OK | MB_ICONERROR);
+		return 1;
+	}else{
+		Sys_SetExeFile( lpFilename );
+		lastSep = strrchr(lpFilename, '\\');
+		
+		if(lastSep != NULL)
+		{
+			*lastSep = '\0';
+			Sys_SetBinaryPath( lpFilename );
+		}else{
+			Sys_SetBinaryPath( "" );		
+		}
+	}
+	
     return Sys_Main(sys_cmdline);
 }
