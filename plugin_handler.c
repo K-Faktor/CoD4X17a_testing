@@ -93,9 +93,9 @@ qboolean PHandler_VerifyPlugin(void* buf, int len)
         return qfalse;
     }
     Com_DPrintf("Parsing plugin function names...\n");
-    
-	for(i = 0, curstring = strings[i] ; curstring != NULL; i++, curstring = strings[i]){
-		Com_Printf("Num: %d Symbol: %s\n", i, curstring);
+
+    for(i = 0, curstring = strings[i] ; curstring != NULL; i++, curstring = strings[i])
+    {
         if(strcmp(curstring,"malloc")==0 || strcmp(curstring,"calloc")==0 || strcmp(curstring,"realloc")==0 || 
                strcmp(curstring,"free")==0 || strcmp(curstring,"printf")==0 || strcmp(curstring,"scanf")==0 ||  
                strcmp(curstring,"asprintf")==0 || strcmp(curstring,"free")==0){ // malloc, calloc, realloc, free, printf, , asprintf, scanf

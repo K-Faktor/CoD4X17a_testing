@@ -545,3 +545,41 @@ void Sys_WaitForErrorConfirmation()
 {
 
 }
+
+void* currentLibHandle = NULL;
+
+void* Sys_LoadLibrary(const char* dlfile)
+{
+	void* handle = dlopen(dlfile, RTLD_LAZY);
+	currentLibHandle = handle;
+	if(handle == NULL)
+	{
+		Com_PrintError("Sys_LoadLibrary error: %s\n", dlerror());
+	}
+	return handle;
+}
+
+void* Sys_GetProcedure(const char* lpProcName)
+{
+	if(currentLibHandle == NULL)
+	{
+		Com_Error(ERR_FATAL, "Attempt to get ProcAddress from invalid or not loaded library");
+		return NULL;
+	}
+	void* procedure = dlsym( currentLibHandle, lpProcName );
+	return procedure;
+}
+
+void Sys_CloseLibrary(void* hModule)
+{
+	if(hModule == NULL)
+	{
+		Com_Error(ERR_FATAL, "Attempt to close not loaded library");
+		return;
+	}
+	if(hModule == currentLibHandle)
+	{
+		currentLibHandle = NULL;
+	}
+	dlclose(hModule);
+}

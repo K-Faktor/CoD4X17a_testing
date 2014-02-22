@@ -38,8 +38,9 @@ char** ELF32_GetStrTable(void *buff, int imagelen, sharedlib_data_t *text)
     char **strings;
     qboolean textfound = qfalse;
     qboolean dynstrfound = qfalse;
-    int j,nstrings = 0;
-    
+    int i, j;//, nstrings = 0;
+    char *strptr, *endstrptr;
+
     hdr = buff;
     if(hdr->e_ident[0] != ELFMAG0 || hdr->e_ident[1] != ELFMAG1 || hdr->e_ident[2] != ELFMAG2 || hdr->e_ident[3] != ELFMAG3){
         return NULL;
@@ -85,7 +86,7 @@ char** ELF32_GetStrTable(void *buff, int imagelen, sharedlib_data_t *text)
         }
         else if(strcmp(&strtable[shdr[j].sh_name],".dynstr")==0){
             dynstrfound = qtrue;
-            nstrings = shdr[j].sh_size;
+            //nstrings = shdr[j].sh_size;
 			strptr = shdr[j].sh_offset + buff;
 			endstrptr = shdr[j].sh_offset + shdr[j].sh_size + buff;
 

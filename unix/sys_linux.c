@@ -31,7 +31,7 @@
 #include "../sys_cod4defs.h"
 #include "../sec_crypto.h"
 #include "../sec_update.h"
-#include "../elf32_parser.h"
+#include "../objfile_parser.h"
 
 #include <sys/resource.h>
 #include <libgen.h>
@@ -47,6 +47,8 @@
 #include <pwd.h>
 #include <execinfo.h>
 #include <wait.h>
+
+char** ELF32_GetStrTable(void* buff, int len, sharedlib_data_t *text);
 
 static char homePath[MAX_OSPATH];
 
@@ -172,7 +174,7 @@ void Sys_TermProcess( )
     wait(&status);
 }
 
-char** GetStrTable(char* fname, int len, elf_data_t *text)
+char** GetStrTable(void* buff, int len, sharedlib_data_t *text)
 {
-		return ELF32_GetStrTable(fname, len, text);
+		return ELF32_GetStrTable(buff, len, text);
 }
