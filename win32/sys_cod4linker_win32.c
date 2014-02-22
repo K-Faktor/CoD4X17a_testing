@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <dlfcn.h>
 #include <setjmp.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -13,7 +12,6 @@
 #include <assert.h>
 #include <time.h>
 #include <math.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <ctype.h>
 #include <sys/stat.h>
@@ -38,9 +36,10 @@ struct lnx_stat
 	uint32_t      st_size;     /* Größe in Bytes*/
 	uint32_t      st_blksize;  /* Blockgröße */
 	uint32_t      st_blocks;   /* Allozierte Blocks */
-	struct timespec st_atim;    /* Letzter Zugriff */
-	struct timespec st_mtim;    /* Letzte Modifikation */
-	struct timespec st_ctim;    /* Letzte Aenderung */
+	/* Who cares ? */
+//	struct timespec st_atim;    /* Letzter Zugriff */
+//	struct timespec st_mtim;    /* Letzte Modifikation */
+//	struct timespec st_ctim;    /* Letzte Aenderung */
 };
 
 typedef enum{
@@ -240,13 +239,28 @@ int* __cdecl ___errno_location()
     return &_errorno;
 }
 
-void test(double base)
-{
-	double t = pow(base, 4.0);
-	printf("%f", t);
-	
-	__asm__("int $3");
+/*
+==================
+Dummy functions just to get it compiled
+==================
+*/
+void* dlopen(const char* dl, int mode){
+	return NULL;
 }
+
+const char* dlerror(){
+	return NULL;
+}
+
+void dlclose(void* handle){
+
+
+}
+
+void* dlsym(void* handle, const char* proc){
+	return NULL;
+}
+
 
 int ___xstat(int __ver, const char *__filename, struct lnx_stat *__stat_buf)
 {

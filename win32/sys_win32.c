@@ -2,7 +2,7 @@
 #include "../cmd.h"
 #include "../qcommon.h"
 #include "../qcommon_mem.h"
-#include "../elf32_parser.h"
+#include "../objfile_parser.h"
 #include "../sys_main.h"
 #include "sys_win32.h"
 
@@ -549,6 +549,44 @@ void Sys_PlatformInit( void )
 	Sys_SetFloatEnv( );
 }
 
+HMODULE currentLibHandle = NULL;
+
+void* Sys_LoadLibrary(const char* dlfile)
+{
+	HMODULE handle = LoadLibraryA(dlfile);
+	currentLibHandle = handle;
+	if(handle == NULL)
+	{
+		Sys_ShowErrorDialog("Sys_LoadLibrary");
+	}
+	return handle;
+}
+
+void* Sys_GetProcedure(const char* lpProcName)
+{
+	if(currentLibHandle == NULL)
+	{
+		Com_Error(ERR_FATAL, "Attempt to get ProcAddress from invalid or not loaded library");
+		return NULL;
+	}
+	FARPROC procedure = GetProcAddress( currentLibHandle, lpProcName );
+	return procedure;
+}
+
+void Sys_CloseLibrary(void* hModule)
+{
+	if(hModule == NULL)
+	{
+		Com_Error(ERR_FATAL, "Attempt to close not loaded library");
+		return;
+	}
+	if(hModule == currentLibHandle)
+	{
+		currentLibHandle = NULL;
+	}
+	FreeLibrary(hModule);
+}
+
 
 /*
 ==================
@@ -561,9 +599,9 @@ int Sys_Backtrace(void** buffer, int size)
     return 0;
 }
 
-int GetStrTable(char* fname, char **output, elf_data_t *text)
+char** GetStrTable(void* filebuf, int len, sharedlib_data_t *text)
 {
-	return qfalse;
+	return PE32_GetStrTable(filebuf, len, text);
 }
 
 
@@ -602,29 +640,6 @@ void Sys_WaitForErrorConfirmation()
 	//MessageBoxA(NULL, message, CLIENT_WINDOW_TITLE " !System Error!", MB_OK | MB_ICONERROR);
 
 }
-
-/*
-==================
-Dummy functions just to get it compiled
-==================
-*/
-void* dlopen(const char* dl, int mode){
-	return NULL;
-}
-
-const char* dlerror(){
-	return NULL;
-}
-
-void dlclose(void* handle){
-
-
-}
-
-void* dlsym(void* handle, const char* proc){
-	return NULL;
-}
-
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {

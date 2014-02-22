@@ -43,8 +43,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <dlfcn.h>
-
 
 
 #define ELF_TYPEOFFSET 16

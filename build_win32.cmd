@@ -2,10 +2,11 @@
 @echo off
 
 echo Compiling C-code...
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -c ./win32/sys_win32.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -c ./win32/win_syscon.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -c ./win32/sys_cod4linker_win32.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -c ./win32/sys_win32.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -c ./win32/win_syscon.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -c ./win32/sys_cod4linker_win32.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -c ./win32/pe32_parser.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c
 
 
 echo Compiling NASM...

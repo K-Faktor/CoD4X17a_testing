@@ -113,12 +113,12 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		// NERVE - SMF
 		cx = LOWORD( lParam );
 		cy = HIWORD( lParam );
-
-//		if ( cx < SYSCON_DEFAULT_WIDTH )
-//			cx = SYSCON_DEFAULT_WIDTH;
-//		if ( cy < SYSCON_DEFAULT_HEIGHT )
-//			cy = SYSCON_DEFAULT_HEIGHT;
-
+/*
+		if ( cx < SYSCON_DEFAULT_WIDTH )
+			cx = SYSCON_DEFAULT_WIDTH;
+		if ( cy < SYSCON_DEFAULT_HEIGHT )
+			cy = SYSCON_DEFAULT_HEIGHT;
+*/
 		sx = (float)cx / SYSCON_DEFAULT_WIDTH;
 		sy = (float)cy / SYSCON_DEFAULT_HEIGHT;
 
@@ -151,19 +151,6 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		if ( LOWORD( wParam ) != WA_INACTIVE ) {
 			SetFocus( s_wcd.hwndInputLine );
 		}
-
-/*		if ( com_viewlog && ( com_dedicated && !com_dedicated->integer ) ) {
-			// if the viewlog is open, check to see if it's being minimized
-			if ( com_viewlog->integer == 1 ) {
-				if ( HIWORD( wParam ) ) {   // minimized flag
-					Cvar_Set( "viewlog", "2" );
-				}
-			} else if ( com_viewlog->integer == 2 )   {
-				if ( !HIWORD( wParam ) ) {      // minimized flag
-					Cvar_Set( "viewlog", "1" );
-				}
-			}
-		}*/
 		break;
 
 	case WM_CLOSE:
@@ -173,8 +160,8 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		return 0;
 	case WM_CTLCOLORSTATIC:
 		if ( ( HWND ) lParam == s_wcd.hwndBuffer ) {
-			SetBkColor( ( HDC ) wParam, RGB( 0x00, 0x00, 0xB0 ) );
-			SetTextColor( ( HDC ) wParam, RGB( 0xff, 0xff, 0x00 ) );
+			SetBkColor( ( HDC ) wParam, RGB( 0x33, 0x33, 0x33 ) );
+			SetTextColor( ( HDC ) wParam, RGB( 0xff, 0xff, 0xff ) );
 
 #if 0   // this draws a background in the edit box, but there are issues with this
 			if ( ( hdcScaled = CreateCompatibleDC( ( HDC ) wParam ) ) != 0 ) {
@@ -221,7 +208,7 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_CREATE:
 //		s_wcd.hbmLogo = LoadBitmap( g_wv.hInstance, MAKEINTRESOURCE( IDB_BITMAP1 ) );
 //		s_wcd.hbmClearBitmap = LoadBitmap( g_wv.hInstance, MAKEINTRESOURCE( IDB_BITMAP2 ) );
-		s_wcd.hbrEditBackground = CreateSolidBrush( RGB( 0x00, 0x00, 0xB0 ) );
+		s_wcd.hbrEditBackground = CreateSolidBrush( RGB( 0x33, 0x33, 0x33 ) );
 		s_wcd.hbrErrorBackground = CreateSolidBrush( RGB( 0x80, 0x80, 0x80 ) );
 		SetTimer( hWnd, 1, 1000, NULL );
 		break;
@@ -516,7 +503,7 @@ char *CON_Input( void ) {
 ** Conbuf_AppendText
 */
 void CON_Print( const char *pMsg ) {
-#define CONSOLE_BUFFER_SIZE     16384
+#define CONSOLE_BUFFER_SIZE     32768
 
 	char buffer[CONSOLE_BUFFER_SIZE * 2];
 	char *b = buffer;

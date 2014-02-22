@@ -42,7 +42,6 @@ typedef void convariable_t; //For plugins
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
 
 #include "cmd.h"        // xcommand_t
 #include "sys_net.h"    // netadr
