@@ -172,7 +172,7 @@ void Sys_TermProcess( )
     wait(&status);
 }
 
-int GetStrTable(char* fname, char **output, elf_data_t *text)
+char** GetStrTable(char* fname, int len, elf_data_t *text)
 {
-		return ELF32_GetStrTable(fname, output, text);
+		return ELF32_GetStrTable(fname, len, text);
 }
