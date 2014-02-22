@@ -1,9 +1,10 @@
 
 echo Compiling C-code...
-gcc -m32  -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_unix.c
-gcc -m32  -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_mach.c
-gcc -m32  -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_cod4linker_mach.c
-gcc -m32  -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_unix.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_mach.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_cod4linker_mach.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c ./unix/sys_con_tty.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -Ilib_tomcrypt/headers -Ilib_tomcrypt/math/tommath -c *.c
 
 
 echo Compiling NASM...
@@ -19,8 +20,8 @@ nasm -f macho server_hooks.asm --prefix _
 nasm -f macho msg_hooks.asm --prefix _
 
 echo Linking...
-g++ -m32 -no_pie -stdlib=libc++ -rdynamic -Wl,-ldl,-lpthread,-lm -o cod4x17a_dedrun *.o -L./ -ltomcrypt_mach -ltommath_mach
+gcc -m32 -stdlib=libc++ -rdynamic -o cod4x17a_dedrun *.o -L./ -ltomcrypt_mach -ltommath_mach -Wl -ldl -lpthread -lm -lstdc++
 
-#rm *.o
+rm *.o
 
 ./version_make_progress.sh
