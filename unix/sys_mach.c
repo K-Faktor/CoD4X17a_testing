@@ -31,7 +31,7 @@
 #include "../sys_cod4defs.h"
 #include "../sec_crypto.h"
 #include "../sec_update.h"
-#include "../elf32_parser.h"
+#include "../objfile_parser.h"
 
 #include <sys/resource.h>
 #include <libgen.h>
@@ -149,7 +149,10 @@ void Sys_TermProcess( )
 
 }
 
-int GetStrTable(char* fname, char **output, elf_data_t *text)
+char** GetStrTable(void* buff, int len, sharedlib_data_t *text)
 {
-	return qfalse;
+	char** dummy;
+	dummy = malloc(sizeof(char**));
+	dummy[0] = NULL;
+	return dummy;
 }
