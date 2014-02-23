@@ -29,8 +29,6 @@
 #include "../sys_main.h"
 #include "../cmd.h"
 #include "../sys_cod4defs.h"
-#include "../sec_crypto.h"
-#include "../sec_update.h"
 
 #include <sys/resource.h>
 #include <libgen.h>
