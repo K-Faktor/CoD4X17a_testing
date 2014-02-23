@@ -19,7 +19,6 @@ void Sys_ShowErrorDialog(const char* functionName);
 
 WinVars_t g_wv;
 
-byte cod4_plt[8192];
 /*
 ================
 Sys_SetFPUCW
