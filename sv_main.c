@@ -1911,7 +1911,7 @@ typedef struct{
 void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 
 	char* cs;
-	int i, ebx, edi, esi, var_03, clnum;
+	int i, edi, ebx, numConfigstrings, esi, var_03, clnum;
 	entityState_t nullstate, *base;
 	snapshotInfo_t snapInfo;
 	unkGameState_t *gsbase = unkGameStateStr;
@@ -1922,7 +1922,7 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 	MSG_WriteLong( msg, cl->reliableSequence );
 	MSG_WriteByte( msg, svc_configstring );
 
-	for ( esi = 0, edi = 0, var_03 = 0 ; esi < MAX_CONFIGSTRINGS ; esi++) {
+	for ( esi = 0, numConfigstrings = 0, var_03 = 0 ; esi < MAX_CONFIGSTRINGS ; esi++) {
 
 		strindex = sv.configstringIndex[esi];
 		gsindex = &gsbase[var_03];
@@ -1930,7 +1930,7 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 		if(gsindex->index != esi){
 
 			if(strindex != sv.unkConfigIndex)
-				edi++;
+				numConfigstrings++;
 
 			continue;
 		}
@@ -1940,17 +1940,17 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 		if(gsindex->index > 820){
 			if(Q_stricmp(gsindex->string, cs))
 			{
-				edi++;
+				numConfigstrings++;
 			}
 		}else{
 			if(strcmp(gsindex->string, cs))
 			{
-				edi++;
+				numConfigstrings++;
 			}
 		}
 		var_03++;
 	}
-	MSG_WriteShort(msg, edi);
+	MSG_WriteShort(msg, numConfigstrings);
 
 	for ( ebx = 0, edi = -1, var_03 = 0 ; ebx < MAX_CONFIGSTRINGS ; ebx++) {
 
@@ -2019,6 +2019,65 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 
 }
 
+/*
+
+void SV_WriteGameState( msg_t* msg, client_t* cl ) {
+
+	int i, numConfigstrings, clnum;
+	entityState_t nullstate, *base;
+	snapshotInfo_t snapInfo;
+	unsigned short strindex;
+
+	MSG_WriteByte( msg, svc_gamestate );
+	MSG_WriteLong( msg, cl->reliableSequence );
+	MSG_WriteByte( msg, svc_configstring );
+
+	for ( i = 0, numConfigstrings = 0; i < MAX_CONFIGSTRINGS ; i++) {
+
+		strindex = sv.configstringIndex[i];
+		if(strindex != 0)
+		{
+			numConfigstrings++;
+		}
+	}
+	MSG_WriteShort(msg, numConfigstrings);
+
+	for ( i = 0 ; i < MAX_CONFIGSTRINGS ; i++)
+	{
+
+		strindex = sv.configstringIndex[i];
+
+		if(strindex == 0)
+		{
+			continue;
+		}
+		MSG_WriteBit0(msg);
+		MSG_WriteBits(msg, i, 12);
+		MSG_WriteBigString(msg, SL_ConvertToString(strindex));
+		Com_Printf("CS %d: %s\n", i, SL_ConvertToString(strindex));
+	}
+	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
+	clnum = cl - svs.clients;
+	// baselines
+	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
+		base = &sv.svEntities[i].baseline;
+		if ( !base->number ) {
+			continue;
+		}
+		MSG_WriteByte( msg, svc_baseline );
+
+		snapInfo.clnum = clnum;
+		snapInfo.cl = NULL;
+		snapInfo.var_01 = 0xFFFFFFFF;
+		snapInfo.var_02 = qtrue;
+
+		MSG_WriteDeltaEntity( &snapInfo, msg, 0, &nullstate, base, qtrue );
+	}
+	MSG_WriteByte( msg, svc_EOF );
+
+}
+
+*/
 /*
 ================
 SV_RconStatusWrite

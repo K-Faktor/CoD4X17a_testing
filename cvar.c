@@ -2372,6 +2372,6 @@ void Cvar_PatchModifiedFlags()
 	*(int**)0x81A0A28 = &cvar_modifiedFlags;
 	*(int**)0x8208F2B = &cvar_modifiedFlags;
 	*(int**)0x820956C = &cvar_modifiedFlags;
-
+	*(int**)0x81775CA = (int*)(((char*)&cvar_modifiedFlags) +1);
 
 }
