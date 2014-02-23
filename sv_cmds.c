@@ -1538,16 +1538,17 @@ static void SV_MapRotate_f( void ) {
 			}
 			Q_strncpyz(map, maplist, len+1);
 
-			if(!SV_Map(map)){ //Load the level
-				Com_PrintError("Invalid mapname at %s\nRestarting current map\n", maplist);
-				SV_MapRestart( qfalse );
-			}
 			maplist = Com_ParseGetToken(maplist); //Pop off the last map-name
 
 			if(maplist == NULL)
 				maplist = "";
 
 			Cvar_SetString(sv_mapRotationCurrent, maplist); //Set the cvar with one map less
+
+			if(!SV_Map(map)){ //Load the level
+				Com_PrintError("Invalid mapname at %s %s\nRestarting current map\n", map, maplist);
+				SV_MapRestart( qfalse );
+			}
 			return;
 		}else{
 			Com_PrintError("Broken maprotation at: %s\n", maplist);
