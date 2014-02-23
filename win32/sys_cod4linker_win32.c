@@ -17,7 +17,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <semaphore.h>
 #include <inttypes.h>
 #include <direct.h>
 #include <windows.h>
