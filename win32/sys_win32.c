@@ -670,9 +670,15 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		if(lastSep != NULL)
 		{
 			*lastSep = '\0';
+			if(strlen(lastSep +1) > MAX_QPATH)
+			{
+				MessageBoxA(NULL, ".EXE filename exceeds " "64" " characters.", CLIENT_WINDOW_TITLE " Error", MB_OK | MB_ICONERROR);
+				return 1;
+			}
 			Sys_SetBinaryPath( lpFilename );
 		}else{
-			Sys_SetBinaryPath( "" );		
+			MessageBoxA(NULL, "GetModuleFileName() returned an unexpected filepath.", CLIENT_WINDOW_TITLE " Error", MB_OK | MB_ICONERROR);
+			return 1;	
 		}
 	}
 	

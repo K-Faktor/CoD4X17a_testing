@@ -19,7 +19,7 @@
 ===========================================================================
 */
 
-
+#include "q_platform.h"
 
 #ifndef PLUGIN_HANDLER_H
 #define PLUGIN_HANDLER_H
@@ -37,7 +37,7 @@
 
 typedef void convariable_t; //For plugins
 
-#define P_P_F __attribute__((__noinline__)) __attribute__((__cdecl__))
+#define P_P_F __attribute__((__noinline__)) __attribute__((__cdecl__)) DLLEXPORT
 
 #include <stdarg.h>
 #include <stdlib.h>

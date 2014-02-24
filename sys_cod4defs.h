@@ -25,6 +25,8 @@
 #define __SYS_COD4DEFS_H__
 
 
+#define EXECUTABLE_NAME "cod4x17a_dedrun"
+
 #define PRODUCT_NAME				"Call of Duty 4 - Modern Warfare Dedicated Server"
 #define BASEGAME					"main"
 #define CLIENT_WINDOW_TITLE     	"Call of Duty 4 - Modern Warfare Dedicated Server"

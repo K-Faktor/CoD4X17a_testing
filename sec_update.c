@@ -29,11 +29,11 @@
 #include "filesystem.h"
 #include "cmd.h"
 #include "cvar.h"
+#include "sys_cod4defs.h"
+
 #include <unistd.h>
 #include <errno.h>
 
-
-#define EXECUTABLE_NAME "cod4x17a_dedrun"
 #define BUFSIZE 10240
 
 cvar_t *canupdate;

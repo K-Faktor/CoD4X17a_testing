@@ -27,6 +27,8 @@
 #include "../qcommon_io.h" // Com_Printf
 #include "../g_shared.h"   // qboolean
 #include "../objfile_parser.h"
+#include "../sys_cod4defs.h"
+#include "../sys_main.h"
 
 void* PE32_FindFileOffset(void *buff, int len, DWORD RVA)
 {
@@ -83,6 +85,8 @@ char** PE32_GetStrTable(void *buff, int len, sharedlib_data_t *text)
 	int i;
 	WORD dosMagic;
 	DWORD peMagic;
+	char exefilename[MAX_OSPATH];
+	char* exefilenameptr;
 	
 	char** strings;
 	int nstrings;
@@ -161,13 +165,28 @@ char** PE32_GetStrTable(void *buff, int len, sharedlib_data_t *text)
 		return NULL;
 	}
 	
+	/* Hack to import from our running exe file with any name */
+	Q_strncpyz(exefilename, Sys_ExeFile(), sizeof(exefilename));
+	exefilenameptr = strrchr(exefilename, '\\');
+	if(exefilenameptr == NULL)
+	{
+		Com_Printf("An unexpected error in .exe filepath occurred while analysing the PE file\n");		
+		return NULL;
+	}
+	exefilenameptr++;
+	if(strlen(exefilenameptr) > MAX_QPATH || strlen(exefilenameptr) < 4)
+	{
+		Com_Printf("An unexpected error in .exe filepath occurred while analysing the PE file\n");		
+		return NULL;
+	}
+
 	DWORD FuncNameRVA;
 	char* FuncName;
 	
 	/* Assume we have a lot imports but we can not know the number of imports. Just malloc a big block of memory */
 	strings = (char **)malloc(MAX_IMPORT_STRINGS * sizeof(char**));
 	nstrings = 0;
-	
+
 	do
 	{
 		char* modulname = PE32_FindFileOffset(buff, len ,imports->Name);
@@ -175,6 +194,10 @@ char** PE32_GetStrTable(void *buff, int len, sharedlib_data_t *text)
 		{
 			Com_Printf("PE file has an invalid importtable\n");
 			return NULL;
+		}
+		if(!Q_stricmp(modulname, "_____________________________________________" EXECUTABLE_NAME ".exe"))
+		{
+			Q_strncpyz(modulname, exefilenameptr, strlen(modulname) +1);
 		}
 //		Com_Printf("Module: %s\n", modulname);
 		if(imports->OriginalFirstThunk > 0)

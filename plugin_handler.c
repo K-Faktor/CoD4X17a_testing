@@ -99,7 +99,7 @@ qboolean PHandler_VerifyPlugin(void* buf, int len)
         if(strcmp(curstring,"malloc")==0 || strcmp(curstring,"calloc")==0 || strcmp(curstring,"realloc")==0 || 
                strcmp(curstring,"free")==0 || strcmp(curstring,"printf")==0 || strcmp(curstring,"scanf")==0 ||  
                strcmp(curstring,"asprintf")==0 || strcmp(curstring,"free")==0){ // malloc, calloc, realloc, free, printf, , asprintf, scanf
-                Com_Printf("The plugin file contains one of the disallowed functions! Disallowed function name: \"%s\".\nPlease refer to the documentation for details.\nPlugin load failed.\n",strings+i+1);
+                Com_Printf("The plugin file contains one of the disallowed functions! Disallowed function name: \"%s\".\nPlease refer to the documentation for details.\nPlugin load failed.\n", curstring);
                 free(strings);
                 return qfalse;
         }
