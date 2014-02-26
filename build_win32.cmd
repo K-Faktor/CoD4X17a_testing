@@ -20,9 +20,10 @@ nasm -f coff scr_vm_hooks.asm --prefix _
 nasm -f coff g_sv_hooks.asm --prefix _
 nasm -f coff server_hooks.asm --prefix _
 nasm -f coff msg_hooks.asm --prefix _
+nasm -f coff pluginexports.asm --prefix _
 
 echo Linking...
-gcc -Wl,--dynamic-list=pluginExports.ld -g -o cod4x17a_dedrun *.o win32/win_cod4.res -L./ -ltomcrypt_win32 -ltommath_win32 -lm -lws2_32 -lwsock32 -lgdi32 -mwindows -lwinmm 
+gcc -g -o cod4x17a_dedrun *.o win32/win_cod4.res -L./ -ltomcrypt_win32 -ltommath_win32 -lm -lws2_32 -lwsock32 -lgdi32 -mwindows -lwinmm
 echo Cleaning up...
 del *.o
 
