@@ -348,8 +348,11 @@ void DB_UnloadFastFile(byte loadmask)
 	}
 }
 
-void _InterlockedExchangeAdd(int *var, int num);
-
+/* No multithreading here :P */
+void _InterlockedExchangeAdd(int* lockedvar, int num)
+{
+    *lockedvar += num;
+}
 
 void DB_LoadXAssets_Hook(XZoneInfo *zoneinfo, unsigned int assetscount)
 {

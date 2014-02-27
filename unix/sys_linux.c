@@ -178,12 +178,3 @@ char** GetStrTable(void* buff, int len, sharedlib_data_t *text)
 {
 		return ELF32_GetStrTable(buff, len, text);
 }
-
-/* No multithreading here :P */
-
-void _InterlockedExchangeAdd(int* lockedvar, int num)
-{
-
-    *lockedvar += num;
-
-}

@@ -20,7 +20,7 @@
 %macro pexport 1
 
 	SECTION .text	
-		%ifdef Windows32
+		%ifdef Win32
 			EXPORT Plugin_%1
 		%endif
 		global Plugin_%1
@@ -35,7 +35,7 @@
 %macro ralias 2
 
 	SECTION .text		
-		%ifdef Windows32
+		%ifdef Win32
 			EXPORT %1
 		%endif
 		global %1
