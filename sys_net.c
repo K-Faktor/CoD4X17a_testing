@@ -2072,11 +2072,27 @@ void NET_Config( qboolean enableNetworking ) {
 			closesocket( socks_socket );
 			socks_socket = INVALID_SOCKET;
 		}
-		
+#ifdef _WIN32
+		WSACleanup( );
+#endif		
 	}
 
 	if( start )
 	{
+	
+#ifdef _WIN32
+		int		r;
+
+		r = WSAStartup( MAKEWORD( 1, 1 ), &winsockdata );
+		if( r ) {
+			Com_PrintWarning( "Winsock initialization failed, returned %d\n", r );
+			return;
+		}
+
+		winsockInitialized = qtrue;
+		Com_Printf( "Winsock Initialized\n" );
+#endif
+
 		if (net_enabled->integer)
 		{
 			NET_OpenIP();
@@ -2778,18 +2794,6 @@ NET_Init
 ====================
 */
 void NET_Init( void ) {
-#ifdef _WIN32
-	int		r;
-
-	r = WSAStartup( MAKEWORD( 1, 1 ), &winsockdata );
-	if( r ) {
-		Com_PrintWarning( "Winsock initialization failed, returned %d\n", r );
-		return;
-	}
-
-	winsockInitialized = qtrue;
-	Com_Printf( "Winsock Initialized\n" );
-#endif
 
 	NET_Config( qtrue );
 	

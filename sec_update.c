@@ -256,14 +256,14 @@ void Sec_Update( qboolean getbasefiles ){
 	return;
     }
     /* Need to catch errors */
-    FS_WriteFile("tmp.txt", va("%d", status), 1);
+ //   FS_WriteFile("tmp.txt", va("%d", status), 1);
 
     // TODO: Do something with the status?
 
     status = Sec_GetHTTPPacket(sock, &packet);
 
-    FS_WriteFile("tmp2.txt", packet.header, packet.headerLength);
-    FS_WriteFile("tmp3.txt", packet.content, packet.contentLength);
+//    FS_WriteFile("tmp2.txt", packet.header, packet.headerLength);
+//    FS_WriteFile("tmp3.txt", packet.content, packet.contentLength);
 
     if(status <= 0){
 	Com_PrintError("Receiving data. Error code: %d.\n", status);

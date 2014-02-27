@@ -98,20 +98,18 @@ Sys_StartProcess
 NERVE - SMF
 ==================
 */
-void Sys_StartProcess( char *exeName, qboolean doexit ) {
-		TCHAR szPathOrig[_MAX_PATH];
+void Sys_StartProcess( char *cmdline, qboolean doexit ) {
+
 		STARTUPINFO si;
 		PROCESS_INFORMATION pi;
 
 		ZeroMemory( &si, sizeof( si ) );
 		si.cb = sizeof( si );
 
-		GetCurrentDirectory( _MAX_PATH, szPathOrig );
-
 		// JPW NERVE swiped from Sherman's SP code
-		if ( !CreateProcess( NULL, va( "%s\\%s", szPathOrig, exeName ), NULL, NULL,FALSE, 0, NULL, NULL, &si, &pi ) ) {
+		if ( !CreateProcess( NULL, cmdline, NULL, NULL,FALSE, 0, NULL, NULL, &si, &pi ) ) {
 			// couldn't start it, popup error box
-			Com_Error( ERR_DROP, "Could not start process: '%s\\%s' ", szPathOrig, exeName );
+			Com_Error( ERR_DROP, "Could not start process: '%s' ", cmdline );
 			return;
 		}
 		// jpw
