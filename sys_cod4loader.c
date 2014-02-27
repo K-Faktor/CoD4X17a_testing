@@ -38,6 +38,7 @@
 #include "sys_cod4loader.h"
 #include "sec_update.h"
 #include "cmd.h"
+#include "xassets.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -141,6 +142,8 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 };
 
 
+
+
 	Sys_PatchImageWithBlock(patchblock_01, sizeof(patchblock_01));
 	Sys_PatchImageWithBlock(patchblock_Pmove_GetSpeed, sizeof(patchblock_Pmove_GetSpeed));
 	Sys_PatchImageWithBlock(patchblock_Pmove_GetGravity, sizeof(patchblock_Pmove_GetGravity));
@@ -164,7 +167,16 @@ static byte patchblock_NET_OOB_CALL4[] = { 0x9B, 0x53, 0x17, 0x8,
 
 	Com_Memset((void*)0x81747b5, 0x90, 116); //In SV_???()  Removal of sv_maxclients amd ui_maxclients Cvar_Register()
 	Com_Memset((void*)0x817498c, 0x90, 116); //In SV_???()  Removal of sv_maxclients amd ui_maxclients Cvar_Register()
+/*
 
+static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
+	0x8b, 0x45, 0x0c, 0x50, 0x8b, 0x45, 0x08, 0x50, 0xe8, 0x00, 0x00, 0x00, 0x00, 0x83, 0xc4, 0x08,
+	0xe9, 0x67, 0xfb, 0xff, 0xff
+};
+
+	Sys_PatchImageWithBlock(patchblock_DB_LOADXASSETS, sizeof(patchblock_DB_LOADXASSETS));
+	SetCall(0x8206492, DB_LoadXAssets_Hook);
+*/
 	#ifndef PUNKBUSTER
 		Com_Memset((void*)0x8175255, 0x90, 5);
 		Com_Memset((void*)0x81751fe, 0x90, 5);

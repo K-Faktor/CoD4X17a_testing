@@ -232,3 +232,140 @@ void XAssetUsage_f()
     Com_Printf("\n");
 }
 
+
+
+
+typedef struct
+{
+  char field_0[54];
+}IDirect3DVertexBuffer9;
+
+typedef struct
+{
+  char field_0[54];
+}IDirect3DIndexBuffer9;
+
+
+typedef struct
+{
+  char field_0[72];
+  int field_48;
+  int field_4C;
+  IDirect3DVertexBuffer9 *vertexbuffer;
+  IDirect3DIndexBuffer9 *indexbuffer;
+}XZoneMemory;
+
+
+typedef struct
+{
+  char fastfilename[64];
+  int index;
+  int mem_index;
+  XZoneMemory zonememory;
+  int field_A0;
+  int field_A4;
+}g_zones_struct;
+
+
+typedef struct
+{
+  char fastfilename[64];
+  int index;
+}g_zoneinfo_struct;
+
+typedef struct
+{
+  struct unk_xasset_struct1 *field_0;
+  int field_4;
+  short field_8;
+  short field_A;
+  int field_C;
+}unk_xasset_struct1;
+
+void R_UnlockVertexBuffer(IDirect3DVertexBuffer9* vertexbuf){}
+void R_FreeStaticVertexBuffer(IDirect3DVertexBuffer9* vertexbuf){}
+void R_UnlockIndexBuffer(IDirect3DIndexBuffer9* indexbuf){}
+void R_FreeStaticIndexBuffer(IDirect3DIndexBuffer9* indexbuf){}
+void Material_DirtyTechniqueSetOverrides(){};
+
+#define g_zoneCount (*(int*)(0x14121654))
+#define g_archiveBuf (*(byte*)(0x141b1694))
+#define g_unknownVar_1 (*(int*)(0x14121650))
+
+g_zones_struct *g_zones = (g_zones_struct*)0x141200a0;
+byte *g_zoneHandles = (byte*)0x14121660;
+
+void DB_FreeXZoneMemory(XZoneMemory* zonemem)
+{
+	if(zonemem->vertexbuffer)
+	{
+		R_UnlockVertexBuffer(zonemem->vertexbuffer);
+		R_FreeStaticVertexBuffer(zonemem->vertexbuffer);
+	}
+
+	if(zonemem->indexbuffer)
+	{
+		R_UnlockIndexBuffer(zonemem->indexbuffer);
+		R_FreeStaticIndexBuffer(zonemem->indexbuffer);
+	}
+	Com_Memset(zonemem->field_0, 0, sizeof(zonemem->field_0));
+}
+
+void DB_UnloadFastFile2(g_zones_struct* zone)
+{
+        DB_FreeXZoneMemory(&zone->zonememory);
+        Com_Printf("Unloaded fastfile %s\n", zone->fastfilename);
+        PMem_Free(zone->fastfilename, zone->mem_index);
+        zone->fastfilename[0] = 0;
+}
+
+
+void DB_UnloadFastFile(byte loadmask)
+{
+	byte bitmask;
+	int i;
+	
+	for(bitmask = 64; bitmask > 0 ; bitmask >>= 1)
+	{
+		if(bitmask == 2)
+			bitmask >>= 1;
+		
+		if(!(loadmask & bitmask))
+			continue;
+
+		for ( i = g_zoneCount - 1; i >= 0; --i )
+		{
+			if ( g_zones[g_zoneHandles[i]].index & bitmask )
+			{
+				DB_UnloadFastFile2(&g_zones[g_zoneHandles[i]]);
+				g_zoneCount--;
+				if (i < g_zoneCount)
+				{
+					memcpy(&g_zoneHandles[i], &g_zoneHandles[i + 1], g_zoneCount - i);
+				}
+			}
+		}
+	}
+}
+
+void _InterlockedExchangeAdd(int *var, int num);
+
+
+void DB_LoadXAssets_Hook(XZoneInfo *zoneinfo, unsigned int assetscount)
+{
+
+	int i;
+
+	DB_FreeUnusedResources();
+	for(i = 0; i < assetscount; i++)
+	{
+		DB_UnloadFastFile( zoneinfo[i].notknown );
+	}
+	_InterlockedExchangeAdd(&g_unknownVar_1, -1);
+	g_archiveBuf = 0;
+	DB_LoadSounds();
+	DB_LoadDObjs();
+	Material_DirtyTechniqueSetOverrides();
+	BG_FillInAllWeaponItems();
+
+}

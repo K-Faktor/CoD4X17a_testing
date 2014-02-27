@@ -40,7 +40,7 @@ void __cdecl Mem_BeginAlloc(const char*, qboolean);
 void __cdecl Mem_EndAlloc(const char*, int);
 void* __cdecl TempMalloc( int );
 char *CopyString( const char *in );
-
+void __cdecl PMem_Free(const char*, unsigned int);
 #define Z_Free free
 #define S_Malloc Z_Malloc
 

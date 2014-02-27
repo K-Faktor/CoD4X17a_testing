@@ -46,6 +46,23 @@ global XAnimInit
 XAnimInit:
 	jmp dword [oXAnimInit]
 
+global DB_FreeUnusedResources
+DB_FreeUnusedResources:
+	jmp dword [oDB_FreeUnusedResources]
+
+global DB_LoadSounds
+DB_LoadSounds:
+	jmp dword [oDB_LoadSounds]
+
+global DB_LoadDObjs
+DB_LoadDObjs:
+	jmp dword [oDB_LoadDObjs]
+
+global BG_FillInAllWeaponItems
+BG_FillInAllWeaponItems:
+	jmp dword [oBG_FillInAllWeaponItems]
+
+
 SECTION .rodata
 
 oDB_SetInitializing dd 0x820337c
@@ -54,3 +71,7 @@ oDB_ModFileExists dd 0x8204470
 oDB_LoadXAssets dd 0x8205e86
 oDB_GetXAssetTypeSize dd 0x81da6ce
 oXAnimInit dd 0x81b649c
+oDB_FreeUnusedResources dd 0x82046f2
+oDB_LoadSounds dd 0x8209c00
+oDB_LoadDObjs dd 0x812616c
+oBG_FillInAllWeaponItems dd 0x80622ba

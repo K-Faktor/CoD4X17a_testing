@@ -40,5 +40,10 @@ void __cdecl DB_LoadXAssets(XZoneInfo*, unsigned int assetscount, int);
 int __cdecl DB_GetXAssetTypeSize(int type);
 void __cdecl XAnimInit(void);
 void XAssets_PatchLimits(void);
-
+void DB_LoadSounds();
+void DB_LoadDObjs();
+void Material_DirtyTechniqueSetOverrides();
+void BG_FillInAllWeaponItems();
+void DB_FreeUnusedResources();
+void DB_LoadXAssets_Hook(XZoneInfo*, unsigned int assetscount);
 #endif

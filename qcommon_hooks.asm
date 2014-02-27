@@ -79,6 +79,12 @@ global TempMalloc
 TempMalloc:
 	jmp dword [oTempMalloc]
 
+global PMem_Free
+PMem_Free:
+	jmp dword [oPMem_Free]
+
+
+
 SECTION .rodata
 
 oCom_InitParse dd 0x81a7a78
@@ -93,3 +99,4 @@ oHunk_FreeTempMemory dd 0x81969d4
 oMem_BeginAlloc dd 0x81a74d0
 oMem_EndAlloc dd 0x81a750a
 oTempMalloc dd 0x8151dce
+oPMem_Free dd 0x81a7528

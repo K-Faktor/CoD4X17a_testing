@@ -20,7 +20,9 @@
 %macro pexport 1
 
 	SECTION .text	
-		EXPORT Plugin_%1
+		%ifdef Windows32
+			EXPORT Plugin_%1
+		%endif
 		global Plugin_%1
 		Plugin_%1: jmp dword [p%1]
 
@@ -33,7 +35,9 @@
 %macro ralias 2
 
 	SECTION .text		
-		EXPORT %1
+		%ifdef Windows32
+			EXPORT %1
+		%endif
 		global %1
 		%1: jmp dword [p%2]
 		
@@ -42,9 +46,6 @@
 		p%2 dd %2
 	
 %endmacro
-
-
-SECTION .text
 
 
 ralias Plugin_Printf, Com_Printf
