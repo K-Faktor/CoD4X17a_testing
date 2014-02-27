@@ -31,10 +31,10 @@ PCL int OnInit(){	// Funciton called on server initiation
 
 	//G_SayCensor_Init();
 	data.maxPlayers = Plugin_GetSlotCount();
-	data.maxMPM = Cvar_RegisterFloat("antispam_maxMessagesPerMinute",8,0,30,0,"Count of maximum messages a player can send in a minute. 0 disables the chat completely.");
-	data.minAP = Cvar_RegisterInt("antispam_minAdminPower",50,0,100,0,"Minimum power points which disable the player. 0 means enabled for everyone.");
-	data.minMD = Cvar_RegisterInt("antispam_minMessageDelay",4,0,60,0,"Ammount of time after sending a message after which the player can chat again. 0 disables the limit.");
-	data.renMD = Cvar_RegisterBool("antispam_renewedMessageDelay",qfalse,0,"Do messages sent before minMessageDelay passes make the delay prolonged?");
+	data.maxMPM = Plugin_Cvar_RegisterFloat("antispam_maxMessagesPerMinute",8,0,30,0,"Count of maximum messages a player can send in a minute. 0 disables the chat completely.");
+	data.minAP = Plugin_Cvar_RegisterInt("antispam_minAdminPower",50,0,100,0,"Minimum power points which disable the player. 0 means enabled for everyone.");
+	data.minMD = Plugin_Cvar_RegisterInt("antispam_minMessageDelay",4,0,60,0,"Ammount of time after sending a message after which the player can chat again. 0 disables the limit.");
+	data.renMD = Plugin_Cvar_RegisterBool("antispam_renewedMessageDelay",qfalse,0,"Do messages sent before minMessageDelay passes make the delay prolonged?");
 	Antispam_Initialize();
 	return 0;
 }

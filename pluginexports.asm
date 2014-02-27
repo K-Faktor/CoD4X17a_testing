@@ -17,21 +17,29 @@
 ;    along with this program.  If not, see <http://www.gnu.org/licenses/>
 ;===========================================================================
 
-%macro alias 2
-	
-	EXPORT %2
-	global %2
-	extern %1
-	%2: jmp %1
-	
+%macro pexport 1
+
+	SECTION .text	
+		EXPORT Plugin_%1
+		global Plugin_%1
+		Plugin_%1: jmp dword [p%1]
+
+	SECTION .rodata	
+		extern %1
+		p%1 dd %1
+
 %endmacro
 
 %macro ralias 2
-	
-	EXPORT %1
-	global %1
-	extern %2
-	%1: jmp %2
+
+	SECTION .text		
+		EXPORT %1
+		global %1
+		%1: jmp dword [p%2]
+		
+	SECTION .rodata	
+		extern %2
+		p%2 dd %2
 	
 %endmacro
 
@@ -46,30 +54,61 @@ ralias Plugin_DPrintf, Com_DPrintf
 
 ralias Plugin_ParseGetToken, Com_ParseGetToken
 ralias Plugin_ParseTokenLength, Com_ParseTokenLength
+ralias Plugin_ParseReset, Com_ParseReset
 
-ralias Plugin_Argv, Cmd_Argv
-ralias Plugin_Argc, Cmd_Argc
+pexport Cmd_Argv
+pexport Cmd_Argc
 
-ralias Plugin_CvarVariableStringBuffer, Cvar_VariableStringBuffer
-ralias Plugin_CvarVariableValue, Cvar_VariableValue
-ralias Plugin_CvarVariableIntegerValue, Cvar_VariableIntegerValue
-ralias Plugin_CvarVariableString, Cvar_VariableString
-ralias Plugin_CvarRegisterString, Cvar_RegisterString
-ralias Plugin_CvarRegisterBool, Cvar_RegisterBool
-ralias Plugin_CvarRegisterInt, Cvar_RegisterInt
-ralias Plugin_CvarRegisterEnum, Cvar_RegisterEnum
-ralias Plugin_CvarRegisterFloat, Cvar_RegisterFloat
-ralias Plugin_CvarSetInt, Cvar_SetInt
-ralias Plugin_CvarSetBool, Cvar_SetBool
-ralias Plugin_CvarSetString, Cvar_SetString
-ralias Plugin_CvarSetFloat, Cvar_SetFloat
+pexport Cvar_VariableStringBuffer
+pexport Cvar_VariableValue
+pexport Cvar_VariableIntegerValue
+pexport Cvar_VariableString
+pexport Cvar_RegisterString
+pexport Cvar_RegisterBool
+pexport Cvar_RegisterInt
+;pexport Cvar_RegisterEnum
+pexport Cvar_RegisterFloat
+pexport Cvar_SetInt
+pexport Cvar_SetBool
+pexport Cvar_SetString
+pexport Cvar_SetFloat
 
-ralias Plugin_FOpenFileRead, FS_SV_FOpenFileRead
-ralias Plugin_FOpenFileWrite, FS_SV_FOpenFileWrite
-ralias Plugin_FRead, FS_Read
-ralias Plugin_FReadLine, FS_ReadLine
-ralias Plugin_FWrite, FS_Write
-ralias Plugin_FCloseFile, FS_FCloseFile
+pexport FS_SV_FOpenFileRead
+pexport FS_SV_FOpenFileWrite
+pexport FS_Read
+pexport FS_ReadLine
+pexport FS_Write
+pexport FS_FCloseFile
 
-ralias Plugin_StringToAdr, NET_StringToAdr
+pexport NET_StringToAdr
 ralias Plugin_Milliseconds, Sys_Milliseconds
+
+
+pexport Scr_AddEntity
+pexport Scr_AllocArray
+pexport Scr_GetNumParam
+pexport Scr_GetInt
+pexport Scr_GetFloat
+pexport Scr_GetString
+pexport Scr_GetEntity
+pexport Scr_GetConstString
+pexport Scr_GetType
+pexport Scr_GetVector
+pexport Scr_Error
+pexport Scr_ParamError
+pexport Scr_ObjectError
+pexport Scr_AddInt
+pexport Scr_AddFloat
+pexport Scr_AddBool
+pexport Scr_AddString
+pexport Scr_AddUndefined
+pexport Scr_AddVector
+pexport Scr_AddArray
+pexport Scr_MakeArray
+pexport Scr_Notify
+pexport Scr_NotifyNum
+pexport Scr_ExecEntThread
+pexport Scr_ExecThread
+pexport Scr_FreeThread
+
+pexport G_LogPrintf

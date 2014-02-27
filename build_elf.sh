@@ -21,9 +21,11 @@ nasm -f elf g_sv_hooks.asm
 nasm -f elf server_hooks.asm
 nasm -f elf msg_hooks.asm
 nasm -f elf punkbuster_hooks.asm
+nasm -f elf pluginexports.asm
+
 
 echo Linking...
-gcc -m32 -Wl,--dynamic-list=pluginExports.ld -rdynamic -Tlinkerscript.ld -o cod4x17a_dedrun *.o -L./ -ltomcrypt_linux -ltommath_linux -ldl -lpthread -lm -lstdc++
+gcc -m32 -rdynamic -Tlinkerscript.ld -o cod4x17a_dedrun *.o -L./ -ltomcrypt_linux -ltommath_linux -ldl -lpthread -lm -lstdc++
 
 rm *.o
 

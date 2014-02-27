@@ -1,9 +1,6 @@
 #!/bin/bash
 NAME='antispam'
 
-#Compiling: debugging
-#echo `gcc -g -m32 -Wall -O1 -s -fvisibility=hidden -mtune=core2 -c *.c`
-
 #Compiling: release
 echo `gcc -m32 -Wall -O1 -s -fvisibility=hidden -mtune=core2 -c *.c`
 

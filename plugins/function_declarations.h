@@ -10,51 +10,52 @@
 
     //      == Commands ==
     
-    __cdecl char* Cmd_Argv(int arg);                // Get a command argument with index arg.
-    __cdecl int Cmd_Argc();                         // Get number of command arguments
+    __cdecl char* Plugin_Cmd_Argv(int arg);                // Get a command argument with index arg.
+    __cdecl int Plugin_Cmd_Argc();                         // Get number of command arguments
 
 
     //      == Common ==
-    __cdecl void G_LogPrintf( const char *fmt, ... );
-    __cdecl void Com_Printf( const char *fmt, ...);                // Print to a correct place (rcon, player console, logs)
-    __cdecl void Com_PrintWarning( const char *fmt, ...);          // Print to a correct place (rcon, player console, logs)
-    __cdecl void Com_PrintError( const char *fmt, ...);            // Print to a correct place (rcon, player console, logs)
-    __cdecl void Com_DPrintf( const char *fmt, ...);               // Same as Com_Printf, only shows up when developer is set to 1
-    __cdecl char* Com_ParseGetToken(char* line);                 // Tokenize a string - get next token
-    __cdecl int Com_ParseTokenLength(char* token);               // Tokenize a string - get the token's length
+    __cdecl void Plugin_G_LogPrintf( const char *fmt, ... );
+    __cdecl void Plugin_Printf( const char *fmt, ...);                // Print to a correct place (rcon, player console, logs)
+    __cdecl void Plugin_PrintWarning( const char *fmt, ...);          // Print to a correct place (rcon, player console, logs)
+    __cdecl void Plugin_PrintError( const char *fmt, ...);            // Print to a correct place (rcon, player console, logs)
+    __cdecl void Plugin_DPrintf( const char *fmt, ...);               // Same as Com_Printf, only shows up when developer is set to 1
+    __cdecl char* Plugin_ParseGetToken(char* line);                 // Tokenize a string - get next token
+    __cdecl int Plugin_ParseTokenLength(char* token);               // Tokenize a string - get the token's length
+    __cdecl void Plugin_ParseReset(void);               			// Tokenize a string - Reset the parsers position
     
     
     //      == Cvars ==
     
     // All of the Cvars module functions are self explanatory
-    __cdecl CONVAR_T* Cvar_RegisterString(const char *var_name, const char *var_value, int flags, const char *var_description);
-    __cdecl CONVAR_T* Cvar_RegisterBool(const char *var_name, qboolean var_value, int flags, const char *var_description);
-    __cdecl CONVAR_T* Cvar_RegisterInt(const char *var_name, int var_value, int min_value, int max_value, int flags, const char *var_description);
-    __cdecl CONVAR_T* Cvar_RegisterEnum(const char *var_name, char** valnames, int defaultval, int flags, const char *var_description);
-    __cdecl CONVAR_T* Cvar_RegisterFloat(const char *var_name, float var_value, float min_value, float max_value, int flags, const char *var_description);
-    __cdecl void Cvar_SetInt(CONVAR_T const* var, int val);
-    __cdecl void Cvar_SetBool(CONVAR_T const* var, qboolean val);
-    __cdecl void Cvar_SetString(CONVAR_T const* var, char const* string);
-    __cdecl void Cvar_SetFloat(CONVAR_T const* var, float val);
-    __cdecl void Cvar_VariableStringBuffer(const char* cvarname, char* buff, size_t size);
-    __cdecl float Cvar_VariableValue( const char *var_name );
-    __cdecl int Cvar_VariableIntegerValue( const char *var_name );
-    __cdecl const char* Cvar_VariableString( const char *var_name );
+    __cdecl CONVAR_T* Plugin_Cvar_RegisterString(const char *var_name, const char *var_value, int flags, const char *var_description);
+    __cdecl CONVAR_T* Plugin_Cvar_RegisterBool(const char *var_name, qboolean var_value, int flags, const char *var_description);
+    __cdecl CONVAR_T* Plugin_Cvar_RegisterInt(const char *var_name, int var_value, int min_value, int max_value, int flags, const char *var_description);
+//    __cdecl CONVAR_T* Plugin_Cvar_RegisterEnum(const char *var_name, char** valnames, int defaultval, int flags, const char *var_description);
+    __cdecl CONVAR_T* Plugin_Cvar_RegisterFloat(const char *var_name, float var_value, float min_value, float max_value, int flags, const char *var_description);
+    __cdecl void Plugin_Cvar_SetInt(CONVAR_T const* var, int val);
+    __cdecl void Plugin_Cvar_SetBool(CONVAR_T const* var, qboolean val);
+    __cdecl void Plugin_Cvar_SetString(CONVAR_T const* var, char const* string);
+    __cdecl void Plugin_Cvar_SetFloat(CONVAR_T const* var, float val);
+    __cdecl void Plugin_Cvar_VariableStringBuffer(const char* cvarname, char* buff, size_t size);
+    __cdecl float Plugin_Cvar_VariableValue( const char *var_name );
+    __cdecl int Plugin_Cvar_VariableIntegerValue( const char *var_name );
+    __cdecl const char* Plugin_Cvar_VariableString( const char *var_name );
 
 
     //      == File handling functions == - Do we really need those?
 
-    __cdecl int FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp); // Open a file for reading
-    __cdecl fileHandle_t FS_SV_FOpenFileWrite(const char *filename);         // Open a file for writing
-    __cdecl int FS_Read(void *buffer, int len, fileHandle_t f);              // Read data from file
-    __cdecl int FS_ReadLine(void *buffer, int len, fileHandle_t f);          // Read a line from file
-    __cdecl int FS_Write(const void *buffer, int len, fileHandle_t h);       // Write to file
-    __cdecl qboolean FS_FCloseFile(fileHandle_t f);                          // Cloase an open file
+    __cdecl int Plugin_FS_SV_FOpenFileRead(const char *filename, fileHandle_t *fp); // Open a file for reading
+    __cdecl fileHandle_t Plugin_FS_SV_FOpenFileWrite(const char *filename);         // Open a file for writing
+    __cdecl int Plugin_FS_Read(void *buffer, int len, fileHandle_t f);              // Read data from file
+    __cdecl int Plugin_FS_ReadLine(void *buffer, int len, fileHandle_t f);          // Read a line from file
+    __cdecl int Plugin_FS_Write(const void *buffer, int len, fileHandle_t h);       // Write to file
+    __cdecl qboolean Plugin_FS_FCloseFile(fileHandle_t f);                          // Cloase an open file
 
 
     //      == Networking ==
 
-    __cdecl int NET_StringToAdr(const char* string, netadr_t* , netadrtype_t);
+    __cdecl int Plugin_NET_StringToAdr(const char* string, netadr_t* , netadrtype_t);
 
 
     //      == Plugin Handler's functions ==
@@ -98,7 +99,7 @@
 
     //      == System functions ==
 
-    __cdecl int Sys_Milliseconds();  // Milliseconds since server start
+    __cdecl int Plugin_Milliseconds();  // Milliseconds since server start
 
     //      == Scriptfunctions ==
     __cdecl void Plugin_ScrAddFunction(char *name, xfunction_t function);
@@ -106,28 +107,28 @@
     __cdecl void Plugin_ScrReplaceFunction(char *name, xfunction_t function);
     __cdecl void Plugin_ScrReplaceMethod(char *name, xfunction_t function);
 
-    __cdecl void Scr_AddEntity(gentity_t* ent);
-    __cdecl int Scr_GetNumParam( void );
-    __cdecl int Scr_GetInt( unsigned int );
-    __cdecl float Scr_GetFloat( unsigned int );
-    __cdecl char* Scr_GetString( unsigned int );
-    __cdecl gentity_t* Scr_GetEntity( unsigned int );
-    __cdecl short Scr_GetConstString( unsigned int );
-    __cdecl unsigned int Scr_GetType( unsigned int );
-    __cdecl void Scr_GetVector( unsigned int, vec3_t* );
-    __cdecl void Scr_Error( const char *string);
-    __cdecl void Scr_ParamError( int, const char *string);
-    __cdecl void Scr_ObjectError( const char *string);
-    __cdecl void Scr_AddInt(int value);
-    __cdecl void Scr_AddFloat(float);
-    __cdecl void Scr_AddBool(qboolean);
-    __cdecl void Scr_AddString(const char *string);
-    __cdecl void Scr_AddUndefined(void);
-    __cdecl void Scr_AddVector( vec3_t vec );
-    __cdecl void Scr_AddArray( void );
-    __cdecl void Scr_MakeArray( void );
-    __cdecl void Scr_Notify( gentity_t*, unsigned short, unsigned int);
-    __cdecl void Scr_NotifyNum( int, unsigned int, unsigned int, unsigned int);
-    __cdecl short Scr_ExecEntThread( gentity_t* ent, int callbackHook, unsigned int numArgs);
-    __cdecl short Scr_ExecThread( int callbackHook, unsigned int numArgs);
-    __cdecl void  Scr_FreeThread( short threadId);
+    __cdecl void Plugin_Scr_AddEntity(gentity_t* ent);
+    __cdecl int Plugin_Scr_GetNumParam( void );
+    __cdecl int Plugin_Scr_GetInt( unsigned int );
+    __cdecl float Plugin_Scr_GetFloat( unsigned int );
+    __cdecl char* Plugin_Scr_GetString( unsigned int );
+    __cdecl gentity_t* Plugin_Scr_GetEntity( unsigned int );
+    __cdecl short Plugin_Scr_GetConstString( unsigned int );
+    __cdecl unsigned int Plugin_Scr_GetType( unsigned int );
+    __cdecl void Plugin_Scr_GetVector( unsigned int, vec3_t* );
+    __cdecl void Plugin_Scr_Error( const char *string);
+    __cdecl void Plugin_Scr_ParamError( int, const char *string);
+    __cdecl void Plugin_Scr_ObjectError( const char *string);
+    __cdecl void Plugin_Scr_AddInt(int value);
+    __cdecl void Plugin_Scr_AddFloat(float);
+    __cdecl void Plugin_Scr_AddBool(qboolean);
+    __cdecl void Plugin_Scr_AddString(const char *string);
+    __cdecl void Plugin_Scr_AddUndefined(void);
+    __cdecl void Plugin_Scr_AddVector( vec3_t vec );
+    __cdecl void Plugin_Scr_AddArray( void );
+    __cdecl void Plugin_Scr_MakeArray( void );
+    __cdecl void Plugin_Scr_Notify( gentity_t*, unsigned short, unsigned int);
+    __cdecl void Plugin_Scr_NotifyNum( int, unsigned int, unsigned int, unsigned int);
+    __cdecl short Plugin_Scr_ExecEntThread( gentity_t* ent, int callbackHook, unsigned int numArgs);
+    __cdecl short Plugin_Scr_ExecThread( int callbackHook, unsigned int numArgs);
+    __cdecl void  Plugin_Scr_FreeThread( short threadId);

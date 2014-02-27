@@ -238,22 +238,22 @@ void G_SayCensor_Init()
 	char* linept;
 	register int i=0;
 
-        FS_SV_FOpenFileRead("badwords.txt",&file);
+        Plugin_FS_SV_FOpenFileRead("badwords.txt",&file);
         if(!file){
-            Com_Printf("Censor_Plugin: Can not open badwords.txt for reading\n");
+            Plugin_Printf("Censor_Plugin: Can not open badwords.txt for reading\n");
             return;
         }
         for(i = 0; ;i++){
-            read = FS_ReadLine(buff,sizeof(buff),file);
+            read = Plugin_FS_ReadLine(buff,sizeof(buff),file);
 
             if(read == 0){
-                Com_Printf("%i lines parsed from badwords.txt\n",i);
-                FS_FCloseFile(file);
+                Plugin_Printf("%i lines parsed from badwords.txt\n",i);
+                Plugin_FS_FCloseFile(file);
                 return;
             }
             if(read == -1){
-                Com_Printf("Can not read from badwords.txt\n");
-                FS_FCloseFile(file);
+                Plugin_Printf("Can not read from badwords.txt\n");
+                Plugin_FS_FCloseFile(file);
                 return;
             }
 
@@ -275,7 +275,7 @@ void G_SayCensor_Init()
             	badwords = this;
 	    }
         }
-	Com_Printf("Censor: init complete.\n");
+		Plugin_Printf("Censor: init complete.\n");
 }
 
 char* censor_ignoreMultiple(char *output, char *string, size_t size)
@@ -306,11 +306,11 @@ char* G_SayCensor(char *msg)
 	badwordsList_t *this;
 	char* ret = msg;
 	while(1){
-		msg = Com_ParseGetToken(msg);
+		msg = Plugin_ParseGetToken(msg);
 		if(msg==NULL)
 			break;
 
-		int size = Com_ParseTokenLength(msg);
+		int size = Plugin_ParseTokenLength(msg);
 		Q_strncpyz(token,msg,size+1);
 
 		removeColors(token2,token,sizeof(token2));

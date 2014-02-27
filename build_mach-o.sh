@@ -18,6 +18,8 @@ nasm -f macho scr_vm_hooks.asm --prefix _
 nasm -f macho g_sv_hooks.asm --prefix _
 nasm -f macho server_hooks.asm --prefix _
 nasm -f macho msg_hooks.asm --prefix _
+nasm -f macho pluginexports.asm --prefix _
+
 
 echo Linking...
 gcc -m32 -stdlib=libc++ -rdynamic -o cod4x17a_dedrun *.o -L./ -ltomcrypt_mach -ltommath_mach -Wl -ldl -lpthread -lm -lstdc++
