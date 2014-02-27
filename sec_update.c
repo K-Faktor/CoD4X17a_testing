@@ -392,101 +392,101 @@ void Sec_Update( qboolean getbasefiles ){
 
     currFile = files.next;
     do{
-	Com_Printf("Updating file %s...\n", currFile->name);
-	Q_strncpyz(name1, currFile->name, sizeof(name1));
+		Com_Printf("Updating file %s...\n", currFile->name);
+		Q_strncpyz(name1, currFile->name, sizeof(name1));
 
-	Q_strcat(name1, sizeof(name1), ".old");
+		Q_strcat(name1, sizeof(name1), ".old");
 
-	Q_strncpyz(name2, currFile->name, sizeof(name2));
+		Q_strncpyz(name2, currFile->name, sizeof(name2));
 
-	Q_strcat(name2, sizeof(name2), ".new");
+		Q_strcat(name2, sizeof(name2), ".new");
 
-	testfile = FS_SV_GetFilepath(name1);
-	if(testfile != NULL)
-	{ // Old file exists, back it up
-		FS_SV_BaseRemove( name1 );
-		FS_SV_HomeRemove( name1 );
 		testfile = FS_SV_GetFilepath(name1);
 		if(testfile != NULL)
-		{
-			Com_PrintWarning("Couldn't remove backup file: %s\n", testfile);
+		{ // Old file exists, back it up
+			FS_SV_BaseRemove( name1 );
+			FS_SV_HomeRemove( name1 );
+			testfile = FS_SV_GetFilepath(name1);
+			if(testfile != NULL)
+			{
+				Com_PrintWarning("Couldn't remove backup file: %s\n", testfile);
+			}
+			if(FS_SV_HomeFileExists(name1) == qtrue)
+			{
+				Com_PrintError("Couldn't remove backup file from fs_homepath: %s\n", name1);
+			}
 		}
-		if(FS_SV_HomeFileExists(name1) == qtrue)
-		{
-			Com_PrintError("Couldn't remove backup file from fs_homepath: %s\n", name1);
+		// Check if an old file exists with this name
+		testfile = FS_SV_GetFilepath(currFile->name);
+		if(testfile != NULL)
+		{ // Old file exists, back it up
+			FS_SV_Rename(currFile->name, name1);
 		}
-	}
-	// Check if an old file exists with this name
-	testfile = FS_SV_GetFilepath(currFile->name);
-	if(testfile != NULL)
-	{ // Old file exists, back it up
-		FS_SV_Rename(currFile->name, name1);
-	}
-	testfile = FS_SV_GetFilepath(currFile->name);
-	// We couldn't back it up. Now we try to just delete it.
-	if(testfile != NULL)
-	{
-		FS_SV_BaseRemove( currFile->name );
-		FS_SV_HomeRemove( currFile->name );
-		testfile = FS_SV_GetFilepath( currFile->name );
+		testfile = FS_SV_GetFilepath(currFile->name);
+		// We couldn't back it up. Now we try to just delete it.
 		if(testfile != NULL)
 		{
-			Com_PrintWarning("Couldn't remove file: %s\n", testfile);
+			FS_SV_BaseRemove( currFile->name );
+			FS_SV_HomeRemove( currFile->name );
+			testfile = FS_SV_GetFilepath( currFile->name );
+			if(testfile != NULL)
+			{
+				Com_PrintWarning("Couldn't remove file: %s\n", testfile);
+			}
+			if(FS_SV_HomeFileExists(currFile->name) == qtrue)
+			{
+				Com_PrintError("Couldn't remove file from fs_homepath: %s\n", currFile->name);
+				Com_PrintError("Update has failed!\n");
+				return;
+			}
 		}
-		if(FS_SV_HomeFileExists(currFile->name) == qtrue)
-		{
-			Com_PrintError("Couldn't remove file from fs_homepath: %s\n", currFile->name);
-			Com_PrintError("Update has failed!\n");
-			return;
-		}
-	}
 
-	if(Q_strncmp(currFile->name, EXECUTABLE_NAME, 15)){
-		/* This is not the executable file */
-		FS_SV_Rename(name2, currFile->name);
-		testfile = FS_SV_GetFilepath(currFile->name);
-		if(testfile == NULL)
-		{
-			Com_PrintError("Failed to rename file %s to %s\n", name2,currFile->name);
-			Com_PrintError("Update has failed!\n");
-			return;
-		}
-		Com_Printf("Update on file %s successfully applied.\n",currFile->name);
+		if(Q_strncmp(currFile->name, EXECUTABLE_NAME, 15)){
+			/* This is not the executable file */
+			FS_SV_Rename(name2, currFile->name);
+			testfile = FS_SV_GetFilepath(currFile->name);
+			if(testfile == NULL)
+			{
+				Com_PrintError("Failed to rename file %s to %s\n", name2,currFile->name);
+				Com_PrintError("Update has failed!\n");
+				return;
+			}
+			Com_Printf("Update on file %s successfully applied.\n",currFile->name);
 
-	}else{
-		/* This is the executable file */
-		testfile = FS_SV_GetFilepath(name2);
-		if(testfile == NULL)
-		{
-			Com_PrintError("Can not find file %s\n", name2);
-			Com_PrintError("Update has failed!\n");
-			return;
+		}else{
+			/* This is the executable file */
+			testfile = FS_SV_GetFilepath(name2);
+			if(testfile == NULL)
+			{
+				Com_PrintError("Can not find file %s\n", name2);
+				Com_PrintError("Update has failed!\n");
+				return;
+			}
+			if(FS_SetPermissionsExec(name2) == qfalse)
+			{
+				Com_PrintError("CRITICAL ERROR: failed to change mode of the file \"%s\"! Aborting, manual installation might be required.\n", name2);
+				return;
+			}
+			FS_RenameOSPath(Sys_ExeFile(), va("%s.dead", Sys_ExeFile()));
+			FS_RemoveOSPath(va("%s.dead", Sys_ExeFile()));
+			FS_RemoveOSPath(Sys_ExeFile());
+			if(FS_FileExistsOSPath(Sys_ExeFile()))
+			{
+				Com_PrintError("Failed to delete file %s\n", Sys_ExeFile());
+				Com_PrintError("Update has failed!\n");
+				return;
+			}
+			FS_RenameOSPath(testfile, Sys_ExeFile());
+			if(!FS_FileExistsOSPath(Sys_ExeFile()))
+			{
+				Com_PrintError("Failed to rename file %s\n", testfile);
+				Com_PrintError("Update has failed! Manual reinstallation of file %s is required. This server is now broken!\n", Sys_ExeFile());
+				return;
+			}
+			Com_Printf("Update on file %s successfully applied.\n", Sys_ExeFile());
+			dlExec = qtrue;
 		}
-		if(FS_SetPermissionsExec(name2) == qfalse)
-		{
-			Com_PrintError("CRITICAL ERROR: failed to change mode of the file \"%s\"! Aborting, manual installation might be required.\n", name2);
-			return;
-		}
-		FS_RenameOSPath(Sys_ExeFile(), va("%s.dead", Sys_ExeFile()));
-		FS_RemoveOSPath(va("%s.dead", Sys_ExeFile()));
-		FS_RemoveOSPath(Sys_ExeFile());
-		if(FS_FileExistsOSPath(Sys_ExeFile()))
-		{
-			Com_PrintError("Failed to delete file %s\n", Sys_ExeFile());
-			Com_PrintError("Update has failed!\n");
-			return;
-		}
-		FS_RenameOSPath(testfile, Sys_ExeFile());
-		if(!FS_FileExistsOSPath(Sys_ExeFile()))
-		{
-			Com_PrintError("Failed to rename file %s\n", testfile);
-			Com_PrintError("Update has failed! Manual reinstallation of file %s is required. This server is now broken!\n", Sys_ExeFile());
-			return;
-		}
-		Com_Printf("Update on file %s successfully applied.\n", Sys_ExeFile());
-		dlExec = qtrue;
-	}
-	currFile = currFile->next;
+		currFile = currFile->next;
 
     }while(currFile != NULL);
 

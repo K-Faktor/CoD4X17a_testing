@@ -147,6 +147,11 @@ void Com_PrintLogfile( const char *msg )
 			time( &aclock );
 			newtime = localtime( &aclock );
 
+			/* 1st try to delete any existing old backup logfile */
+			FS_HomeRemove( "qconsole.log.old" );
+			/* Now try to rename it */
+			FS_Rename( "qconsole.log", "qconsole.log.old" );
+			
 			logfile = FS_FOpenFileWrite( "qconsole.log" );
 
 			if ( com_logfile->integer > 1 && logfile ) {
