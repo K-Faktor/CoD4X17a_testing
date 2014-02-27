@@ -37,9 +37,10 @@
 #define BANLIST_DEFAULT_SIZE sizeof(banList_t)*128
 #define MAX_IPBANS 32
 //Don't ban IPs for more than MAX_IPBAN_MINUTES minutes as they can be shared (Carrier-grade NAT)
-#define MAX_IPBAN_MINUTES 75
+#define MAX_DEFAULT_IPBAN_MINUTES 240
 
 cvar_t *banlistfile;
+cvar_t *ipbantime;
 
 static int current_banlist_size;
 static int current_banindex;
@@ -290,6 +291,9 @@ void SV_PlayerAddBanByip(netadr_t *remote, char *reason, int uid, char* guid, in
 
     }
 
+    if(!ipbantime || ipbantime->integer == 0)
+        return;
+
     for(list = &ipBans[0], i = 0; i < 1024; list++, i++){	//At first check whether we have already an entry for this player
         if(NET_CompareBaseAdr(remote, &list->remote)){
             break;
@@ -322,8 +326,8 @@ void SV_PlayerAddBanByip(netadr_t *remote, char *reason, int uid, char* guid, in
     list->adminuid = adminuid;
 
     duration = expire - Com_GetRealtime();
-    if(duration > MAX_IPBAN_MINUTES*60 || expire == -1)
-        duration = MAX_IPBAN_MINUTES*60;	//Don't ban IPs for more than MAX_IPBAN_MINUTES minutes as they can be shared (Carrier-grade NAT)
+    if(duration > ipbantime->integer*60 || expire == -1)
+        duration = ipbantime->integer*60;	//Don't ban IPs for more than MAX_IPBAN_MINUTES minutes as they can be shared (Carrier-grade NAT)
 
     list->systime = Sys_Milliseconds();
 
@@ -458,7 +462,8 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr){
 void SV_InitBanlist(){
 
     Com_Memset(ipBans,0,sizeof(ipBans));
-    banlistfile = Cvar_RegisterString("banlistfile", "banlist.dat", CVAR_INIT, "Name of the file which holds the banlist");
+    banlistfile = Cvar_RegisterString("banlist_filename", "banlist.dat", CVAR_INIT, "Name of the file which holds the banlist");
+    ipbantime = Cvar_RegisterInt("banlist_maxipbantime", MAX_DEFAULT_IPBAN_MINUTES, 0, 20160, 0, "Limit of minutes to keep a ban against an ip-address up");
     current_banlist_size = BANLIST_DEFAULT_SIZE;
     current_banindex = 0;
     banlist = realloc(NULL, current_banlist_size);//Test for NULL ?
