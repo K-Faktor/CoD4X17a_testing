@@ -28,6 +28,8 @@
 #include "cvar.h"
 #include "misc.h"
 
+#include <stdarg.h>
+
 typedef struct{
     char* name;
     xfunction_t offset;
@@ -860,6 +862,21 @@ __cdecl unsigned int Scr_LoadScript(const char* scriptname, PrecacheEntry *preca
 }
 
 
+void Scr_Sys_Error_Wrapper(const char* fmt, ... )
+{
+	va_list		argptr;
+	char com_errorMessage[4096];
+
+
+	va_start (argptr,fmt);
+	Q_vsnprintf (com_errorMessage, sizeof(com_errorMessage),fmt,argptr);
+	va_end (argptr);
+
+	Com_Error(ERR_SCRIPT, "%s", com_errorMessage);
+
+}
+
+
 //Was only needed to extract the arrays
 /*
 void GetVirtualFunctionArray(){
@@ -1121,3 +1138,4 @@ void GetHuffmanArray(){
     Com_Quit_f();
 }
 */
+

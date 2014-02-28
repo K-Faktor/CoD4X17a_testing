@@ -60,6 +60,7 @@
 void Sys_CoD4Linker();
 void Com_PatchError(void);
 void Cvar_PatchModifiedFlags();
+void Scr_Sys_Error_Wrapper(const char* fmt, ...);
 
 static void __cdecl Cbuf_AddText_Wrapper_IW(int dummy, const char *text )
 {
@@ -271,7 +272,9 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x8110ff8, Cbuf_AddText_Wrapper_IW);
 	SetJump(0x8110f3e, Cbuf_InsertText_Wrapper_IW);
 	SetJump(0x8111bea, Cmd_ExecuteSingleCommand);
-	
+	SetJump(0x812257c, Com_Error);
+	SetCall(0x815ea33, Scr_Sys_Error_Wrapper);
+
 	*(char*)0x8215ccc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebd = '\0'; //adds a missing linebreak

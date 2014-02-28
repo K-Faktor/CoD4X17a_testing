@@ -3344,7 +3344,9 @@ void FS_CopyFile( char *fromOSPath, char *toOSPath ) {
 	int len;
 	byte    *buf;
 
-	Com_Printf( "copy %s to %s\n", fromOSPath, toOSPath );
+	if ( fs_debug->integer ) {
+		Sys_Print( va("^4copy %s to %s\n", fromOSPath, toOSPath ) );
+	}
 
 	f = fopen( fromOSPath, "rb" );
 	if ( !f ) {
