@@ -262,9 +262,7 @@ P_P_F void Plugin_SetPlayerUID(unsigned int clientslot, unsigned int uid)
 {
     client_t *cl;
     int PID = PHandler_CallerID();
-    if(!psvs.useuids){
-        PHandler_Error(PID,P_ERROR_DISABLE, "Plugin tried to set UID while server doesn't work with UIDs\n");
-    }
+
     if(clientslot > sv_maxclients->integer)
     {
         PHandler_Error(PID,P_ERROR_DISABLE, va("Plugin tried to set UID for bad client: %d\n", clientslot));
@@ -277,9 +275,7 @@ P_P_F unsigned int Plugin_GetPlayerUID(unsigned int clientslot)
 {
     client_t *cl;
     int PID = PHandler_CallerID();
-    if(!psvs.useuids){
-        PHandler_Error(PID,P_ERROR_TERMINATE, "Plugin tried to get UID while server don't work with UIDs\n");
-    }
+
     if(clientslot > sv_maxclients->integer)
     {
         PHandler_Error(PID,P_ERROR_DISABLE, va("Plugin tried to get UID for bad client: %d\n", clientslot));
@@ -412,4 +408,84 @@ P_P_F void Plugin_BoldPrintf(int slot, const char *fmt, ... )
     Q_vsnprintf(str, sizeof(str), fmt, vl);
     va_end(vl);
     SV_SendServerCommand(cl, "c \"%s\"", str);
+}
+
+
+P_P_F int Plugin_Cvar_GetInteger(void *cvar)
+{
+    cvar_t* var = cvar;
+    int PID = PHandler_CallerID();
+
+    if(var == NULL)
+    {
+        PHandler_Error(PID, P_ERROR_DISABLE, "Plugin to get Cvar of NULL-Pointer\n");
+        return 0;
+    }
+
+    if(var->type != CVAR_INT)
+    {
+        PHandler_Error(PID, P_ERROR_DISABLE, "Plugin tried to get Cvar of different type\n");
+        return 0;
+    }
+
+    return var->integer;
+}
+
+P_P_F qboolean Plugin_Cvar_GetBoolean(void *cvar)
+{
+    cvar_t* var = cvar;
+    int PID = PHandler_CallerID();
+
+    if(var == NULL)
+    {
+        PHandler_Error(PID, P_ERROR_DISABLE, "Plugin to get Cvar of NULL-Pointer\n");
+        return 0;
+    }
+
+    if(var->type != CVAR_BOOL)
+    {
+        PHandler_Error(PID, P_ERROR_DISABLE, "Plugin tried to get Cvar of different type\n");
+        return 0;
+    }
+    return var->boolean;
+}
+
+P_P_F float Plugin_Cvar_GetValue(void *cvar)
+{
+    cvar_t* var = cvar;
+    int PID = PHandler_CallerID();
+
+    if(var == NULL)
+    {
+        PHandler_Error(PID, P_ERROR_DISABLE, "Plugin to get Cvar of NULL-Pointer\n");
+        return 0;
+    }
+
+    if(var->type != CVAR_FLOAT)
+    {
+        PHandler_Error(PID, P_ERROR_DISABLE, "Plugin tried to get Cvar of different type\n");
+        return 0;
+    }
+
+    return var->value;
+}
+
+P_P_F const char* Plugin_Cvar_GetString(void *cvar)
+{
+    cvar_t* var = cvar;
+    int PID = PHandler_CallerID();
+
+    if(var == NULL)
+    {
+        PHandler_Error(PID, P_ERROR_DISABLE, "Plugin to get Cvar of NULL-Pointer\n");
+        return 0;
+    }
+
+    if(var->type != CVAR_STRING)
+    {
+        PHandler_Error(PID, P_ERROR_DISABLE, "Plugin tried to get Cvar of different type\n");
+        return 0;
+    }
+
+    return var->string;
 }

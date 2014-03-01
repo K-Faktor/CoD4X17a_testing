@@ -12,7 +12,7 @@
     
     __cdecl char* Plugin_Cmd_Argv(int arg);                // Get a command argument with index arg.
     __cdecl int Plugin_Cmd_Argc();                         // Get number of command arguments
-
+    __cdecl char *Plugin_Cmd_Args( char* buff, int bufsize );
 
     //      == Common ==
     __cdecl void Plugin_G_LogPrintf( const char *fmt, ... );
@@ -37,9 +37,15 @@
     __cdecl void Plugin_Cvar_SetBool(CONVAR_T const* var, qboolean val);
     __cdecl void Plugin_Cvar_SetString(CONVAR_T const* var, char const* string);
     __cdecl void Plugin_Cvar_SetFloat(CONVAR_T const* var, float val);
+    __cdecl int Plugin_Cvar_GetInteger(CONVAR_T const *var);
+    __cdecl qboolean Plugin_Cvar_GetBoolean(CONVAR_T const *var);
+    __cdecl float Plugin_Cvar_GetValue(CONVAR_T const *var);
+    __cdecl const char* Plugin_Cvar_GetString(CONVAR_T const *var);
+
     __cdecl void Plugin_Cvar_VariableStringBuffer(const char* cvarname, char* buff, size_t size);
     __cdecl float Plugin_Cvar_VariableValue( const char *var_name );
     __cdecl int Plugin_Cvar_VariableIntegerValue( const char *var_name );
+    __cdecl int Plugin_Cvar_VariableBooleanValue( const char *var_name );
     __cdecl const char* Plugin_Cvar_VariableString( const char *var_name );
 
 
@@ -56,6 +62,12 @@
     //      == Networking ==
 
     __cdecl int Plugin_NET_StringToAdr(const char* string, netadr_t* , netadrtype_t);
+    __cdecl qboolean Plugin_NET_CompareAdr (netadr_t *a, netadr_t *b);
+    __cdecl qboolean Plugin_NET_CompareBaseAdrMask(netadr_t *a, netadr_t *b, int netmask);
+    __cdecl qboolean Plugin_NET_CompareBaseAdr (netadr_t *a, netadr_t *b);
+    __cdecl const char *Plugin_NET_AdrToString (netadr_t *a);
+    __cdecl const char *Plugin_NET_AdrToStringShort (netadr_t *a);
+
 
 
     //      == Plugin Handler's functions ==
@@ -100,6 +112,7 @@
     //      == System functions ==
 
     __cdecl int Plugin_Milliseconds();  // Milliseconds since server start
+    __cdecl void Plugin_RandomBytes( byte *string, int len );
 
     //      == Scriptfunctions ==
     __cdecl void Plugin_ScrAddFunction(char *name, xfunction_t function);
@@ -132,3 +145,4 @@
     __cdecl short Plugin_Scr_ExecEntThread( gentity_t* ent, int callbackHook, unsigned int numArgs);
     __cdecl short Plugin_Scr_ExecThread( int callbackHook, unsigned int numArgs);
     __cdecl void  Plugin_Scr_FreeThread( short threadId);
+

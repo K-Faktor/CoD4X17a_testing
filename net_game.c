@@ -29,11 +29,20 @@
 #include "server.h"
 #include "net_game.h"
 #include "net_game_conf.h"
+#include "plugin_handler.h"
 
 void NET_UDPPacketEvent(netadr_t* from, void* data, int len)
 {
 
         msg_t msg;
+
+        qboolean returnNow = qfalse;
+        PHandler_Event(PLUGINS_ONUDPNETEVENT, from, data, len, &returnNow);
+        if(returnNow)
+        {
+            return;
+        }
+
         msg.data = data;
         msg.cursize = len;
         msg.maxsize = len;
@@ -190,3 +199,4 @@ void NET_TCPAddEventType(
     Com_Error(ERR_FATAL, "NET_TCPAddEventType: Out of redirect handles. Increase MAX_TCPEVENTS to add more redirect destinations");
 
 }
+

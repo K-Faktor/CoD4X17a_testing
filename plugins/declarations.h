@@ -92,6 +92,28 @@ typedef struct{
 		byte latchedboolean;
 	};
 } cvar_t;
+
+//defines Cvarflags
+#define	CVAR_ARCHIVE		1	// set to cause it to be saved to vars.rc
+								// used for system variables, not for player
+								// specific configurations
+#define	CVAR_USERINFO		2	// sent to server on connect or change
+#define	CVAR_SERVERINFO		4	// sent in response to front end requests
+#define	CVAR_SYSTEMINFO		8	// these cvars will be duplicated on all clients
+#define	CVAR_INIT		16	// don't allow change from console at all,
+								// but can be set from the command line
+#define	CVAR_LATCH		32	// will only change when C code next does
+								// a Cvar_Get(), so it can't be changed
+								// without proper initialization.  modified
+								// will be set, even though the value hasn't
+								// changed yet
+#define	CVAR_ROM		64	// display only, cannot be set by user at all
+#define CVAR_CHEAT		128	// can not be changed if cheats are disabled
+#define	CVAR_TEMP		256	// can be set even when cheats are disabled, but is not archived
+#define CVAR_NORESTART		1024	// do not clear when a cvar_restart is issued
+#define	CVAR_USER_CREATED	16384	// created by a set command
+
+
 #define cvardeclarations
 
 typedef int clipHandle_t;
@@ -492,3 +514,4 @@ struct gentity_s {
 
 #include "plugin_declarations.h"
 #include "function_declarations.h" // Function descriptions are available in this file
+

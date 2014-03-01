@@ -57,12 +57,16 @@ ralias Plugin_ParseGetToken, Com_ParseGetToken
 ralias Plugin_ParseTokenLength, Com_ParseTokenLength
 ralias Plugin_ParseReset, Com_ParseReset
 
+ralias Plugin_RandomBytes, Com_RandomBytes
+
 pexport Cmd_Argv
 pexport Cmd_Argc
+pexport Cmd_Args
 
 pexport Cvar_VariableStringBuffer
 pexport Cvar_VariableValue
 pexport Cvar_VariableIntegerValue
+pexport Cvar_VariableBooleanValue
 pexport Cvar_VariableString
 pexport Cvar_RegisterString
 pexport Cvar_RegisterBool
@@ -82,6 +86,12 @@ pexport FS_Write
 pexport FS_FCloseFile
 
 pexport NET_StringToAdr
+pexport NET_AdrToString
+pexport NET_AdrToStringShort
+pexport NET_CompareBaseAdr
+pexport NET_CompareBaseAdrMask
+pexport NET_CompareAdr
+
 ralias Plugin_Milliseconds, Sys_Milliseconds
 
 

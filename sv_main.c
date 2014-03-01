@@ -1102,20 +1102,10 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 		return;
 	}
 
-	SV_ResetSekeletonCache();
+	// SV_ResetSekeletonCache();
 
 	// read the qport out of the message so we can fix up
 	// stupid address translating routers
-
-	//InsertPluginEvent
-/*
-	seqclient_t* clq = CL_AddrToServer(from);
-	if(clq)
-	{
-		CL_ReadPacket( clq ,msg );
-		return;
-	}
-*/
 	MSG_BeginReading( msg );
 	MSG_ReadLong( msg );           // sequence number
 	qport = MSG_ReadShort( msg );  // & 0xffff;

@@ -59,7 +59,9 @@ char PHandler_Events[PLUGINS_ITEMCOUNT][32]={
     "OnUdpNetSend",
     "OnSpawnServer",
     "OnPreFastRestart",
-    "OnPostFastRestart"
+    "OnPostFastRestart",
+    "OnPlayerConnectAuthFail"
+
 };
 
 void PHandler_Init() // Initialize the Plugin Handler's data structures and add commands
@@ -172,7 +174,8 @@ const char* PHandler_OpenTempFile(char* name){ // Load a plugin, safe for use
 
 void PHandler_CloseTempFile(char* filepath)
 {
-    FS_RemoveOSPath(filepath);
+    if(!com_developer || com_developer->integer == 0)
+        FS_RemoveOSPath(filepath);
 }
 
 
@@ -222,7 +225,7 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
         PHandler_CloseTempFile( realpath );
         return;
     }
-    PHandler_CloseTempFile( realpath);
+    PHandler_CloseTempFile( realpath );
     Com_DPrintf("Plugin OK! Loading...\n");
     // find first free plugin slot
     for(i=0;i<MAX_PLUGINS;i++){

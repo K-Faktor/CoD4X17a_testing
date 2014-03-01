@@ -172,9 +172,12 @@ __optimize3 __regparm1 void SV_GetChallenge(netadr_t *from)
 		// haven't heard anything from the authorize server, go ahead and
 		// let them in, assuming the id server is down
 		else if(svs.time - challenge->firstTime > AUTHORIZE_TIMEOUT)
-			Com_PrintWarning( "Activisions authorize server timed out - Accept client without validating him\n" );
-		else
 		{
+			if(challenge->ipAuthorize == 0)
+			{
+				Com_PrintWarning( "Activisions authorize server timed out - Accept client without validating him\n" );
+			}
+		}else{
 
 			if(!challenge->pbguid[31]){
 				return;
@@ -279,49 +282,31 @@ __optimize3 __regparm1 void SV_AuthorizeIpPacket( netadr_t *from ) {
 
 			NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "print\nUnkown how to auth client\n");
 
-			if(sv_authorizemode->integer < 1){
+			if(svs.time - svse.challenges[i].firstTime > AUTHORIZE_TIMEOUT)
+			{
 
-				if(svs.time - svse.challenges[i].firstTime > AUTHORIZE_TIMEOUT){
-
-					NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "challengeResponse %i", svse.challenges[i].challenge);
-				}
-				return;
+				NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "challengeResponse %i", svse.challenges[i].challenge);
 			}
-
-
-		} else if(sv_authorizemode->integer < 1) {
-
-		    NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "print\n^1Failed. ^5Trying something else...");
-		    NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "challengeResponse %i", svse.challenges[i].challenge);
-		    svse.challenges[i].pingTime = com_frameTime;
-		    svse.challenges[i].ipAuthorize = -1; //CD-KEY was invalid
-		    return;
-
-		} else if(!Q_stricmp(r, "INVALID_CDKEY")){
-
-			NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "error\n^1Someone is using this CD Key");
-		} else if(r){
-
-			NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "error\n^1Authorization Failed:\n%s\n", r );
-		}else{
-
-			NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "error\n^1Someone is using this CD Key\n" );
+			return;
 		}
+
+
+
+		NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "print\n^1Auth Failed.");
+		NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "challengeResponse %i", svse.challenges[i].challenge);
+		svse.challenges[i].pingTime = com_frameTime;
+		svse.challenges[i].ipAuthorize = -1; //CD-KEY was invalid
+		return;
+
+
 		Com_Memset( &svse.challenges[i], 0, sizeof( svse.challenges[i] ) );
 		return;
 	}
 
-	NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "print\n^1Someone is using this CD Key\n" );
-
-	if(sv_authorizemode->integer < 1) {
-	    NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "print\n^1Failed. ^5Trying something else...");
-	    NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "challengeResponse %i", svse.challenges[i].challenge);
-	    svse.challenges[i].pingTime = com_frameTime;
-	    svse.challenges[i].ipAuthorize = -1; //CD-KEY was invalid
-	}else{
-	    Com_Memset( &svse.challenges[i], 0, sizeof( svse.challenges[i] ) );
-	}
-
+	NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "print\n^1Auth Failed");
+	NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "challengeResponse %i", svse.challenges[i].challenge);
+	svse.challenges[i].pingTime = com_frameTime;
+	svse.challenges[i].ipAuthorize = -1; //CD-KEY was invalid
 }
 
 
@@ -349,6 +334,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	int			challenge;
 	char			*password;
 	const char		*denied;
+	qboolean		pluginreject;
 
 	
 	Q_strncpyz( userinfo, SV_Cmd_Argv(1), sizeof(userinfo) );
@@ -450,6 +436,22 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 		Com_Printf("rejected connect from version %i\n", version);
 		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
 		return;
+	}
+
+	if(sv_authorizemode->integer == 1 && svse.challenges[c].ipAuthorize == -1)
+	{
+		pluginreject = qtrue;
+
+		PHandler_Event(PLUGINS_ONPLAYERCONNECTAUTHFAIL, from, &svse.challenges[c].pbguid, userinfo, &svse.challenges[c].ipAuthorize, &pluginreject);
+		if(pluginreject)
+		{
+			NET_OutOfBandPrint( NS_SERVER, from, "error\n^1Someone is using this CD Key");
+			if(svse.challenges[c].firstTime + 1000*30 < svs.time)
+			{
+				Com_Memset(&svse.challenges[c], 0, sizeof(challenge_t));
+			}
+			return;
+		}
 	}
 
 	// find a client slot:
@@ -579,8 +581,8 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 
         denied = NULL;
 
-	// save the userinfo
-	Q_strncpyz(newcl->userinfo, userinfo, 1024 );
+        // save the userinfo
+        Q_strncpyz(newcl->userinfo, userinfo, 1024 );
 
         PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, &denied);
 
