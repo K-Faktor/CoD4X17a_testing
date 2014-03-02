@@ -311,7 +311,7 @@ static cmd_function_t *cmd_functions;
 Cmd_AddCommand
 ============
 */
-qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
+qboolean Cmd_AddCommandGeneric( const char *cmd_name, xcommand_t function, qboolean warn ) {
 
 	cmd_function_t  *cmd;
 
@@ -319,7 +319,7 @@ qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	for ( cmd = cmd_functions ; cmd ; cmd = cmd->next ) {
 		if ( !strcmp( cmd_name, cmd->name )) {
 			// allow completion-only commands to be silently doubled
-			if ( function != NULL ) {
+			if ( function != NULL && warn) {
 				Com_PrintWarning( "Cmd_AddCommand: %s already defined\n", cmd_name );
 			}
 			return qfalse;
@@ -335,6 +335,12 @@ qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	cmd_functions = cmd;
 	return qtrue;
 }
+
+qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function )
+{
+    return Cmd_AddCommandGeneric( cmd_name, function, qtrue );
+}
+
 
 /*
 ============

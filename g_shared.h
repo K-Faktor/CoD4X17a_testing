@@ -445,6 +445,14 @@ extern cvar_t *g_allowConsoleSay;
 extern cvar_t *g_disabledefcmdprefix;
 extern cvar_t *g_votedMapName;
 extern cvar_t *g_votedGametype;
+extern cvar_t *g_allowVote;
+extern cvar_t *g_TeamName_Axis;
+extern cvar_t *g_TeamName_Allies;
+extern cvar_t *g_gravity;
+extern cvar_t *jump_height;
+extern cvar_t *jump_stepSize;
+extern cvar_t *jump_slowdownEnable;
+
 
 int BG_GetPerkIndexForName(const char* name);
 int G_GetSavePersist(void);
@@ -453,9 +461,6 @@ void G_SetSavePersist(int val);
 //This defines Cvars directly related to executable file
 #define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
 
-#define g_gravity getcvaradr(0x84bcff4)
-#define g_TeamName_Allies getcvaradr(0x84bd090)
-#define g_TeamName_Axis getcvaradr(0x84bd094)
 #define g_maxclients getcvaradr(0x84bcfe8)
 
 #endif /*G_SHARED_H*/

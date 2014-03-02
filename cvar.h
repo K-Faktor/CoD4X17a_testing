@@ -136,6 +136,7 @@ void Cvar_SetFromCvar_f(void);
 void Cvar_SetFromLocalizedStr_f(void);
 void Cvar_SetToTime_f(void);
 void Cvar_Reset_f(void);
+void Cvar_ResetVar(cvar_t* var);
 void Cvar_List_f(void);
 void Cvar_Dump_f(void);
 void Cvar_RegisterBool_f(void);
@@ -159,6 +160,7 @@ qboolean Cvar_VariableBooleanValue( const char *var_name );
 void Cvar_Set( const char *var_name, const char *value);
 void Cvar_SetAllowCheatOnly( const char *var_name, const char *value);
 void Cvar_Reset( const char *var_name );
+void Cvar_SetCheatState( void );
 
 void Cvar_SetFloatByName( const char* var_name, float value);
 void Cvar_SetIntByName( const char* var_name, int value);
@@ -168,6 +170,7 @@ cvar_t *Cvar_FindVar( const char *var_name );
 qboolean Cvar_ValidateString( const char *s );
 void Cvar_AddFlags(cvar_t* var, unsigned short flags);
 void Cvar_AddFlagsByName(const char* var_name, unsigned short flags);
+void Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 
 #define Cvar_GetInt Cvar_VariableIntegerValue
 #define Cvar_GetFloat Cvar_VariableValue
@@ -223,21 +226,6 @@ void Cvar_Init(void);
 #define	CVAR_TEMP		256	// can be set even when cheats are disabled, but is not archived
 #define CVAR_NORESTART		1024	// do not clear when a cvar_restart is issued
 #define	CVAR_USER_CREATED	16384	// created by a set command
-
-
-//This defines Cvars directly related to executable file
-#define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
-
-#define g_gravity getcvaradr(0x84bcff4)
-#define jump_height getcvaradr(0x8278060)
-#define jump_stepSize getcvaradr(0x8278070)
-#define jump_slowdownEnable getcvaradr(0x8278068)
-
-#define g_TeamName_Allies getcvaradr(0x84bd090)
-#define g_TeamName_Axis getcvaradr(0x84bd094)
-//#define com_playerProfile getcvaradr(0x88e7394)
-
-#define g_allowVote getcvaradr(0x84bd05c)
 
 #endif
 

@@ -39,7 +39,7 @@ qboolean Cmd_FollowClient_f(gentity_t *ent, int clientnum);
 __cdecl void StopFollowingOnDeath( gentity_t *ent );
 __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText );
 __cdecl void ExitLevel( void );
-void G_RegisterCvarsCallback( );
+void G_RegisterCvars( );
 void QDECL G_LogPrintf( const char *fmt, ... );
 void __cdecl StopFollowing( gentity_t* ent );
 void __regparm3 G_SayTo(gentity_t *ent, gentity_t *other, int mode, int color, const char* teamname, const char* name, const char *message);
@@ -49,9 +49,6 @@ __cdecl void GScr_LoadScripts(void);
 //This defines Cvars directly related to executable file
 #define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
 
-#define g_gravity getcvaradr(0x84bcff4)
-#define g_TeamName_Allies getcvaradr(0x84bd090)
-#define g_TeamName_Axis getcvaradr(0x84bd094)
 #define g_maxclients getcvaradr(0x84bcfe8)
 
 extern cvar_t* g_speed;

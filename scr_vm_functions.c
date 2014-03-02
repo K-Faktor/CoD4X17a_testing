@@ -1903,21 +1903,119 @@ void  GScr_GetCvarInt()
 void  GScr_GetCvar()
 {
   const char *stringval;
+  const char *querystr;
+  char promod_fool_names[1024];
+  char promod_fool_sums[1024];
 
   if(Scr_GetNumParam() != 1)
   {
 	Scr_Error("Usage: getcvar <cvarname>");
   }
-  stringval = Cvar_GetVariantString(Scr_GetString(0));
+
+  querystr = Scr_GetString(0);
+
+  stringval = Cvar_GetVariantString(querystr);
+
+  if( !Q_stricmpn( querystr, "sv_iwd" , 6) )
+  {
+    Cvar_VariableStringBuffer("sv_iwdNames", promod_fool_names, sizeof( promod_fool_names ));
+    Cvar_VariableStringBuffer("sv_iwds", promod_fool_sums, sizeof( promod_fool_sums ));
+
+    char* ptr_names = promod_fool_names;
+    char* ptr_sums = promod_fool_sums;
+    int len;
+    /* 1st get the number of IWDs */
+    while(*ptr_names && *ptr_sums)
+    {
+        if(*ptr_names == ' ' && *ptr_sums == ' ')
+        {
+            ptr_names++;
+            ptr_sums++;
+
+            if(!Q_stricmpn(ptr_names, "xiceops_", 8))
+            {
+                len = Q_strichr(ptr_names, ' ');
+                if(len == -1)
+                {
+                    Scr_AddString(stringval);
+                    return;
+                }
+                Q_bstrcpy(ptr_names, &ptr_names[len +1]);
+
+                len = Q_strichr(ptr_sums, ' ');
+                if(len == -1)
+                {
+                    Scr_AddString(stringval);
+                    return;
+                }
+                Q_bstrcpy(ptr_sums, &ptr_sums[len +1]);
+            }
+        }
+        if(*ptr_names != ' ')
+            ptr_names++;
+
+        if(*ptr_sums != ' ')
+            ptr_sums++;
+    }
+
+    if(!Q_stricmp( querystr, "sv_iwdNames") )
+    {
+        Scr_AddString(promod_fool_names);
+        return;
+    }
+    if(!Q_stricmp( querystr, "sv_iwds") )
+    {
+        Scr_AddString(promod_fool_sums);
+        return;
+    }
+  }
+
   Scr_AddString(stringval);
 }
 
 
+void GScr_ScriptCommandCB()
+{
+    char buffer[1024];
+
+    if(!com_sv_running || !com_sv_running->boolean )
+        return;
+
+    if(Cmd_Argc() == 1)
+    {
+        Scr_ScriptCommand(SV_RemoteCmdGetInvokerClnum(), Cmd_Argv(0), "");
+
+    }else{
+
+        Cmd_Argsv(1, buffer, sizeof(buffer));
+
+        Scr_ScriptCommand(SV_RemoteCmdGetInvokerClnum(), Cmd_Argv(0), buffer);
+    }
+}
 
 
 
+void GScr_AddScriptCommand()
+{
 
+    if(Scr_GetNumParam() != 2)
+    {
+        Scr_Error("Usage: addScriptCommand <commandname> <default powerpoints is number between 1 and 100>");
+        return;
+    }
+    const char* command = Scr_GetString(0);
+    int defaultpower = Scr_GetInt(1);
 
+    if(command[0] == '\0')
+    {
+        Scr_Error("addScriptCommand: empty command");
+        return;
+    }
+
+    Cmd_AddCommandGeneric(command, GScr_ScriptCommandCB, qfalse);
+    Cmd_SetPower(command, defaultpower);
+
+}
 
 /*
 void ScrCmd_SetStance(scr_entref_t arg){

@@ -457,12 +457,12 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 
 	if(textptr[0] == 0x15) textptr++;
 
-        if(textptr[0] == '$' || (textptr[0] == '!' && !g_disabledefcmdprefix->boolean)){	//Check for Command-Prefix
+        if(textptr[0] == '/' ||textptr[0] == '$' || (textptr[0] == '!' && !g_disabledefcmdprefix->boolean)){	//Check for Command-Prefix
 	    textptr++;
 	    SV_ExecuteRemoteCmd(ent->s.number, textptr);
+	    Scr_PlayerSay(ent, mode, textptr -1);
 	    return;
         }
-
 
 	G_ChatRedirect(text, ent->s.number, mode);
 

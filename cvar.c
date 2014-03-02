@@ -1292,18 +1292,14 @@ void Cvar_SetColor( cvar_t* cvar, float r, float g, float b, float alpha){
 }
 
 
-
-
 /*
 ============
-Cvar_Reset
+Cvar_ResetVar
 ============
 */
-void Cvar_Reset( const char *var_name ) {
-	cvar_t *var;
-	CvarValue cval;
+void Cvar_ResetVar( cvar_t* var ) {
 
-	var = Cvar_FindVar(var_name);
+	CvarValue cval;
 
 	if(!var)
 		return;
@@ -1339,6 +1335,23 @@ void Cvar_Reset( const char *var_name ) {
 	}
 	Cvar_SetVariant( var, cval , qtrue);
 }
+
+
+/*
+============
+Cvar_Reset
+============
+*/
+void Cvar_Reset( const char *var_name )
+{
+
+	cvar_t *var;
+	var = Cvar_FindVar(var_name);
+
+	Cvar_ResetVar( var );
+
+}
+
 
 
 /*

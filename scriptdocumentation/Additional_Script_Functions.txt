@@ -16,14 +16,21 @@ New Script_Callbacks
 
 
 ============================
-"CodeCallback_PlayerSayCmd(string <text>, bool <teamchat>)" Getting called after a player types into chat with one of these characters as 1st character: % . / &
-			    Chat will not be displayed on screen. Instead this callback function getting called.
+"CodeCallback_PlayerSayCmd(string <text>, bool <teamchat>)" --> This functionality has been dropped! Another solution to catch commands is now CodeCallback_ScriptCommand().
 
-"CodeCallback_PlayerSayAll(string <text>, bool <teamchat>)" Getting called after a player types into chat anything
+"CodeCallback_PlayerSayAll(string <text>, bool <teamchat>)" --> "CodeCallback_PlayerSay(string <text>, bool <teamchat>)"
+Gets called after a player types into chat anything
 Both functions will put at 1st argument the text from player. The player entity will be available too with the "self" prefix
 The 2nd argument will be either true = teamchat or false = chat to all
-This two functions can not be used together. You can only use one of them.
+============================
 
+
+============================
+"CodeCallback_ScriptCommand(string <command>, integer <default power>)"
+
+Gets called after a script registered command has been called. See: addScriptCommand
+In 1st argument is the called function name. In 2nd argument are all remaining arguments.
+The player entity will be available (self) if a player has called this command. If this command gets called from rcon/console "self" is undefined.
 ============================
 
 
@@ -137,7 +144,15 @@ exec
 Executes the given command on server as console command
 Usage: void = exec(string <string>);
 
+addScriptCommand
+==========================
+Adds a script command. An script command will be available like a normal command
+but invokes a callback to the script callback: "maps/mp/gametypes/_callbacksetup::CodeCallback_ScriptCommand". (See also callbacks)
+The power parameter is the amount of needed power points for using this command from game with the "$" prefix from gamechat.
+Using power of 1 means everyone can use it. Using power of 100 or 0 means only rcon or admins with 100 power can use it.
+This function needs to be called only once.
 
+Usage: void = addScriptCommand(string <command>, int <power>);
 ==========================================
 
 Functions on strings
@@ -327,15 +342,6 @@ Usage: entity = removeTestClient()
 
 
 For reference: all known script functions:
-
-
-
-typedef struct{
-    char* name;
-    xfunction_t offset;
-    qboolean developer;
-}v_function_t;
-
 
 	Scr_AddFunction("createprintchannel", (void*)0x80bf832, 0);
 	Scr_AddFunction("setprintchannel", (void*)0x80bf75c, 0);

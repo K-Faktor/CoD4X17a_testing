@@ -248,13 +248,11 @@ typedef int scr_entref_t;
 /**************** Additional *************************/
 
 typedef enum{
-    SCR_CB_NEW_SAY,
-    SCR_CB_NEW_SEQMSG,
-    SCR_CB_NEW_SEQPLAYERMSG
+    SCR_CB_SAY,
+    SCR_CB_SCRIPTCOMMAND
 }script_CallBacks_new_t;
 
-int script_CallBacks_new[8];
-qboolean say_forwardAll;
+extern int script_CallBacks_new[8];
 
 typedef int fieldtype_t;
 
@@ -333,6 +331,8 @@ void __cdecl Scr_EndLoadScripts( void );
 void __cdecl Scr_ConstructMessageString( int, int, const char*, char*, unsigned int );
 
 qboolean Scr_PlayerSay(gentity_t*, int mode, const char* text);
+qboolean Scr_ScriptCommand(int clientnum, const char* cmd, const char* args);
+
 void GScr_LoadGameTypeScript(void);
 unsigned int Scr_LoadScript(const char* scriptname, PrecacheEntry *precache, int iarg_02);
 qboolean Scr_ExecuteMasterResponse(char* s);
@@ -380,7 +380,9 @@ int Scr_FS_Seek( fileHandle_t f, long offset, int origin );
 void GScr_MakeCvarServerInfo(void);
 void GScr_SetCvar();
 void GScr_GetCvarFloat();
-void  GScr_GetCvarInt();
-void  GScr_GetCvar();
+void GScr_GetCvarInt();
+void GScr_GetCvar();
+void GScr_AddScriptCommand();
 
 #endif
+

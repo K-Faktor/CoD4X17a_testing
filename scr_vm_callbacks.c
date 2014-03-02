@@ -33,29 +33,51 @@ qboolean Scr_PlayerSay(gentity_t* from, int mode, const char* text){
     int callback;
     int threadId;
 
-    callback = script_CallBacks_new[SCR_CB_NEW_SAY];
+    callback = script_CallBacks_new[SCR_CB_SAY];
     if(!callback){
         return qfalse;
     }
-    if(!say_forwardAll)
-    {
-        if(*text != '/' && *text != '.' && *text != '&')
-            return qfalse;
 
-        Scr_AddString(&text[1]);
-
-    }else{
-        Scr_AddString(text);
-    }
     if(mode == 0)
         Scr_AddBool( qfalse );
     else
         Scr_AddBool( qtrue );
 
-    threadId = Scr_ExecEntThread(from, callback, 1);
+    Scr_AddString(text);
+
+    threadId = Scr_ExecEntThread(from, callback, 2);
 
     Scr_FreeThread(threadId);
 
     return qtrue;
 
+}
+
+
+
+qboolean Scr_ScriptCommand(int clientnum, const char* cmd, const char* args){
+
+    int callback;
+    int threadId;
+
+    callback = script_CallBacks_new[SCR_CB_SCRIPTCOMMAND];
+    if(!callback){
+        Scr_Error("Attempt to call a script added function with a registered callback: maps/mp/gametypes/_callbacksetup::CodeCallback_ScriptCommand\nMaybe you have not used addscriptcommand() like it is supposed to use?");
+        return qfalse;
+    }
+
+    Scr_AddString(args);
+
+    Scr_AddString(cmd);
+
+    if(clientnum < 0 || clientnum > 63)
+    {
+        threadId = Scr_ExecThread(callback, 2);
+    }else{
+        threadId = Scr_ExecEntThread(&g_entities[clientnum], callback, 2);
+    }
+
+    Scr_FreeThread(threadId);
+
+    return qtrue;
 }

@@ -24,6 +24,7 @@
 #include "q_math.h"
 #include "cvar.h"
 #include "q_shared.h"
+#include "g_shared.h"
 #include "qcommon_io.h"
 #include "entity.h"
 #include "player.h"

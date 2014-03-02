@@ -195,7 +195,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x80a7b60, ClientSpawn);
 	SetJump(0x80ae962, G_Say);
 	SetJump(0x80adbf2, Cmd_CallVote_f);
-	SetCall(0x80b4957, G_RegisterCvarsCallback);
+	SetCall(0x80b5a68, G_RegisterCvars);
 	SetJump(0x80c0b5a, GScr_LoadScripts);
 	SetJump(0x80bc03e, ExitLevel); //ToDo Maybe build GScr_ExitLevel directly
 #ifdef PUNKBUSTER

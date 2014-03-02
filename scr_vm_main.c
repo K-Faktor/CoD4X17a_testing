@@ -266,6 +266,7 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("strtokbylen", GScr_StrTokByLen, 0);
 	Scr_AddFunction("exec", GScr_CbufAddText, 0);
 	Scr_AddFunction("sha256", GScr_SHA256, 0);
+	Scr_AddFunction("addscriptcommand", GScr_AddScriptCommand, 0);
 
 }
 
@@ -594,6 +595,8 @@ typedef struct{
 }g_scr_data_t;
 
 
+int script_CallBacks_new[8];
+
 
 void GScr_LoadGameTypeScript(void){
 
@@ -612,13 +615,8 @@ void GScr_LoadGameTypeScript(void){
 
 
 /**************** Additional *************************/
-    script_CallBacks_new[SCR_CB_NEW_SAY] = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerSayCmd", 0);
-    if(!script_CallBacks_new[SCR_CB_NEW_SAY]){
-        script_CallBacks_new[SCR_CB_NEW_SAY] = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerSayAll", 0);
-        say_forwardAll = qtrue;
-    }else{
-        say_forwardAll = qfalse;
-    }
+    script_CallBacks_new[SCR_CB_SAY] = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerSay", 0);
+    script_CallBacks_new[SCR_CB_SCRIPTCOMMAND] = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_ScriptCommand", 0);
 }
 
 typedef struct

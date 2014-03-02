@@ -253,7 +253,7 @@ void SV_ReliableSendRedirect(char *sendbuf, qboolean lastcommand){
 }
 
 
-void SV_ExecuteRemoteCmd(int clientnum, const char *msg){
+qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
 	char cmd[30];
 	char buffer[256];
@@ -265,13 +265,13 @@ void SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	client_t *cl;
 
         if(!cmdSystemInitialized){
-	    SV_SendServerCommand(redirectClient, "e \"Error: Remote control system is not initialized\n\"");
-	    Com_Printf("Error: Remote control system is not initialized\n");
-            return;
+            SV_SendServerCommand(redirectClient, "e \"Error: Remote control system is not initialized\n\"");
+            Com_Printf("Error: Remote control system is not initialized\n");
+            return qfalse;
         }
 
 
-	if(clientnum < 0 || clientnum > 63) return;
+	if(clientnum < 0 || clientnum > 63) return qfalse;
 	cl = &svs.clients[clientnum];
 	redirectClient = cl;
 
@@ -279,7 +279,7 @@ void SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 		i++;
 	}
 	
-	if(i > 29 || i < 3) return;
+	if(i > 29 || i < 3) return qfalse;
 	Q_strncpyz(cmd,msg,i+1);
 
 
@@ -295,12 +295,12 @@ void SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 
 	if(powercmd == -1){
             SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\n^3Command execution failed - Invalid command invoked - Type ^2$cmdlist ^3to get a list of all available commands\"", buffer);
-            return;
+            return qfalse;
 	}
 	if(powercmd > power){
             SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\n^3Command execution failed - Insufficient power to execute this command.\n^3You need at least ^6%i ^3powerpoints to invoke this command.\n^3Type ^2$cmdlist ^3to get a list of all available commands\"",
             buffer, powercmd);
-	    return;
+	    return qtrue;
 	}
         if(SV_UseUids())
 		Com_Printf( "Command execution: %s   Invoked by: %s   InvokerUID: %i Power: %i\n", buffer, cl->name, cl->uid, power);
@@ -339,6 +339,7 @@ void SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	cmdInvoker.clientnum = -1;
 
 	Com_EndRedirect();
+	return qtrue;
 }
 
 
