@@ -2499,7 +2499,7 @@ void FS_GameCheckDir(cvar_t *var)
 }
 
 
-void FS_GameSetDirSep()
+void FS_SetDirSep(cvar_t* fs_dir)
 {
   int length;
   int i;
@@ -2508,7 +2508,7 @@ void FS_GameSetDirSep()
 
 
   flag = qfalse;
-  Q_strncpyz(buf, fs_gameDirVar->string, sizeof(buf));
+  Q_strncpyz(buf, fs_dir->string, sizeof(buf));
   length = strlen(buf);
 
   for (i = 0; length >= i; i++)
@@ -2530,7 +2530,7 @@ void FS_GameSetDirSep()
     flag = qtrue;
   }
   if ( flag )
-      Cvar_SetString(fs_gameDirVar, buf);
+      Cvar_SetString(fs_dir, buf);
 }
 
 void FS_AddGameDirectory_Single(const char *path, const char *dir_nolocal, qboolean last, int index);
@@ -2584,7 +2584,8 @@ void FS_DisplayPath( void ) {
 	int i;
 
 	Com_Printf("Current language: %s\n", SEH_GetLanguageName(SEH_GetCurrentLanguage()));
-
+	Com_Printf("Current fs_basepath: %s\n", fs_basepath->string);
+	Com_Printf("Current fs_homepath: %s\n", fs_homepath->string);
 	if ( fs_ignoreLocalized->integer)
 		Com_Printf("    localized assets are being ignored\n");
 
@@ -2633,18 +2634,19 @@ void FS_Startup(const char* gameName)
   fs_basepath = Cvar_RegisterString("fs_basepath", Sys_DefaultInstallPath(), 528, "Base game path");
   fs_basegame = Cvar_RegisterString("fs_basegame", "", 16, "Base game name");
   fs_gameDirVar = Cvar_RegisterString("fs_game", "", 28, "Game data directory. Must be \"\" or a sub directory of 'mods/'.");
-  FS_GameCheckDir(fs_gameDirVar);
-  FS_GameSetDirSep();
   fs_ignoreLocalized = Cvar_RegisterBool("fs_ignoreLocalized", qfalse, 160, "Ignore localized files");
 
   homePath = (char*)Sys_DefaultHomePath();
   if ( !homePath || !homePath[0] )
     homePath = fs_basepath->resetString;
   fs_homepath = Cvar_RegisterString("fs_homepath", homePath, 528, "Game home path");
-
   fs_restrict = Cvar_RegisterBool("fs_restrict", qfalse, 16, "Restrict file access for demos etc.");
   fs_usedevdir = Cvar_RegisterBool("fs_usedevdir", qfalse, 16, "Use development directories.");
 
+  FS_SetDirSep(fs_homepath);
+  FS_SetDirSep(fs_basepath);
+  FS_SetDirSep(fs_gameDirVar);
+  FS_GameCheckDir(fs_gameDirVar);
 
 
   if( fs_basepath->string[0] )
