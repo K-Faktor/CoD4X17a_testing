@@ -3,10 +3,10 @@
 
 echo Compiling C-code...
 cd bin
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../win32/sys_win32.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../win32/win_syscon.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../win32/sys_cod4linker_win32.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../win32/pe32_parser.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_win32.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/win_syscon.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_cod4linker_win32.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/pe32_parser.c
 gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/*.c
 cd ../
 

@@ -1,10 +1,10 @@
 
 echo Compiling C-code...
 cd bin
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../unix/sys_unix.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../unix/sys_mach.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../unix/sys_cod4linker_mach.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../unix/sys_con_tty.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/unix/sys_unix.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/unix/sys_mach.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/unix/sys_cod4linker_mach.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/unix/sys_con_tty.c
 gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/*.c
 cd ../
 

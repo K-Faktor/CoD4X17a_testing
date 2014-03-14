@@ -20,11 +20,11 @@
 */
 
 
-#include "../src/sys_main.h"
-#include "../src/q_shared.h"
-#include "../src/cmd_completion.h"
-#include "../src/qcommon_io.h"
-#include "../src/cvar.h"
+#include "../sys_main.h"
+#include "../q_shared.h"
+#include "../cmd_completion.h"
+#include "../qcommon_io.h"
+#include "../cvar.h"
 
 
 #include <unistd.h>
