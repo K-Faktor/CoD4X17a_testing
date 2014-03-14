@@ -1,10 +1,10 @@
-#include "../q_shared.h"
-#include "../cmd.h"
-#include "../qcommon.h"
-#include "../qcommon_mem.h"
-#include "../objfile_parser.h"
-#include "../sys_main.h"
-#include "../sys_cod4defs.h"
+#include "../src/q_shared.h"
+#include "../src/cmd.h"
+#include "../src/qcommon.h"
+#include "../src/qcommon_mem.h"
+#include "../src/objfile_parser.h"
+#include "../src/sys_main.h"
+#include "../src/sys_cod4defs.h"
 #include "sys_win32.h"
 
 #include <windows.h>

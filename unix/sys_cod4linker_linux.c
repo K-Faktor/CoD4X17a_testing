@@ -19,8 +19,8 @@
 ===========================================================================
 */
 
-#include "../sys_patch.h"
-#include "../sys_cod4loader.h"
+#include "../src/sys_patch.h"
+#include "../src/sys_cod4loader.h"
 
 #include <stdio.h>
 #include <stdlib.h>

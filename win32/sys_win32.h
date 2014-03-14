@@ -1,5 +1,5 @@
-#include "../q_shared.h"
-#include "../objfile_parser.h"
+#include "../src/q_shared.h"
+#include "../src/objfile_parser.h"
 #include <windows.h>
 
 typedef struct

@@ -52,7 +52,7 @@ typedef void convariable_t; //For plugins
 #include "sys_net.h"    // Tcp stuff
 #include "scr_vm.h"
 
-#include "plugins/plugin_declarations.h"
+#include "../plugins/plugin_declarations.h"
 #include "plugin_events.h"
 
 #define PLUGIN_MAX_MALLOCS 50

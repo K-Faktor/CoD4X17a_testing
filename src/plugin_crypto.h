@@ -18,16 +18,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>
 ===========================================================================
 */
-#ifndef SEC_MAIN_H
-#define SEC_MAIN_H
 
-#include "q_shared.h"
-#include "qcommon_io.h"
-#include "lib_tomcrypt/main.h"
-#include "sec_init.h"
-#include "sec_crypto.h"
-#include "sec_common.h"
-extern int SecCryptErr;
-char *Sec_CryptErrStr(int);
+#include "plugin_handler.h"
+#include "../lib_tomcrypt/main.h"
 
-#endif
+qboolean PHandler_Hash(pluginHash_t algo, void *in, size_t inSize, void *out, size_t outSize);
