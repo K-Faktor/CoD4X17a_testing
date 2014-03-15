@@ -26,10 +26,11 @@ nasm -f coff src/pluginexports.asm -dWin32 --prefix _ -o bin/pluginexports.o
 echo Linking...
 gcc -g -o bin/cod4x17a_dedrun bin/*.o src/win32/win_cod4.res -Llib/ -ltomcrypt_win32 -ltommath_win32 -lm -lws2_32 -lwsock32 -lgdi32 -mwindows -lwinmm
 echo Cleaning up...
-del bin/*.o
+cd bin
+del *.o
 
 echo Creating plugin export lib...
-cd bin
+
 pexports cod4x17a_dedrun.exe > cod4x17a_dedrun.def
 rename cod4x17a_dedrun.exe _____________________________________________cod4x17a_dedrun.exe
 dlltool -D _____________________________________________cod4x17a_dedrun.exe -d cod4x17a_dedrun.def -l plugins/libcom_plugin.a
