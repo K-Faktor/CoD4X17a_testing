@@ -33,9 +33,9 @@ echo Creating plugin export lib...
 
 pexports cod4x17a_dedrun.exe > cod4x17a_dedrun.def
 rename cod4x17a_dedrun.exe _____________________________________________cod4x17a_dedrun.exe
-dlltool -D _____________________________________________cod4x17a_dedrun.exe -d cod4x17a_dedrun.def -l plugins/libcom_plugin.a
+dlltool -D _____________________________________________cod4x17a_dedrun.exe -d cod4x17a_dedrun.def -l ..\plugins\libcom_plugin.a
 rename _____________________________________________cod4x17a_dedrun.exe cod4x17a_dedrun.exe
-cd ../
+
 echo Done!
 pause
 REM ./version_make_progress.sh
