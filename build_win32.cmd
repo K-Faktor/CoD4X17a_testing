@@ -24,7 +24,7 @@ nasm -f coff src/msg_hooks.asm             --prefix _ -o bin/msg_hooks.o
 nasm -f coff src/pluginexports.asm -dWin32 --prefix _ -o bin/pluginexports.o
 
 echo Linking...
-gcc -g -o bin/cod4x17a_dedrun bin/*.o win32/win_cod4.res -Llib/ -ltomcrypt_win32 -ltommath_win32 -lm -lws2_32 -lwsock32 -lgdi32 -mwindows -lwinmm
+gcc -g -o bin/cod4x17a_dedrun bin/*.o src/win32/win_cod4.res -Llib/ -ltomcrypt_win32 -ltommath_win32 -lm -lws2_32 -lwsock32 -lgdi32 -mwindows -lwinmm
 echo Cleaning up...
 del bin/*.o
 
