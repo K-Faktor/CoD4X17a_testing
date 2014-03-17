@@ -503,8 +503,8 @@ static void SV_Status_f( void ) {
 
 	Com_Printf ("map: %s\n", sv_mapname->string );
 
-	Com_Printf ("num score ping guid                             name            lastmsg address               qport rate\n");
-	Com_Printf ("--- ----- ---- -------------------------------- --------------- ------- --------------------- ----- -----\n");
+	Com_Printf ("num score ping guid                             name            lastmsg address                                              qport rate\n");
+	Com_Printf ("--- ----- ---- -------------------------------- --------------- ------- ---------------------------------------------------- ----- -----\n");
 
 	for (i=0,cl=svs.clients, gclient = level.clients; i < sv_maxclients->integer ; i++, cl++, gclient++)
 	{
@@ -550,10 +550,10 @@ static void SV_Status_f( void ) {
 		} while(j < l);
 
 		Com_Printf ("%7i ", svs.time - cl->lastPacketTime );
-
+		/* Length must be: [0000:1111:2222:3333:4444:5555:6666:7777:8888]:65535 = 52 */
 		s = NET_AdrToString( &cl->netchan.remoteAddress );
 		Com_Printf ("%s", s);
-		l = 21 - strlen(s);
+		l = 52 - strlen(s);
 		j = 0;
 
 		do
@@ -1029,9 +1029,9 @@ static void SV_MiniStatus_f( void ) {
 
 	Com_Printf ("map: %s\n", sv_mapname->string );
 
-	Com_Printf ("num score ping uid       name                             address                                        FPS OS\n");
+	Com_Printf ("num score ping uid       name                             address                                             FPS\n");
 
-	Com_Printf ("--- ----- ---- --------- -------------------------------- ---------------------------------------------- --- ---\n");
+	Com_Printf ("--- ----- ---- --------- -------------------------------- --------------------------------------------------- ---\n");
 	for (i=0,cl=svs.clients, gclient = level.clients ; i < sv_maxclients->integer ; i++, cl++, gclient++)
 	{
 		if (!cl->state)
@@ -1084,7 +1084,7 @@ static void SV_MiniStatus_f( void ) {
 
 		s = NET_AdrToConnectionStringMask( &cl->netchan.remoteAddress );
 		Com_Printf ("%s", s);
-		l = 47 - strlen(s);
+		l = 52 - strlen(s);
 		j = 0;
 
 		do
@@ -1094,17 +1094,6 @@ static void SV_MiniStatus_f( void ) {
 		} while(j < l);
 
 		Com_Printf("%3i ", cl->clFPS);
-
-		switch(cl->OS){
-			case 'M':
-				Com_Printf ("Mac ");
-				break;
-			case 'W':
-				Com_Printf ("Win ");
-				break;
-			default:
-				Com_Printf ("N/A ");
-		}
 
 		odd = ~odd;
 		Com_Printf ("\n");

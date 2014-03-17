@@ -968,11 +968,15 @@ A complete command line has been parsed, so try to execute it
 void	Cmd_ExecuteString( const char *text )
 {
 	cmd_function_t	*cmd, **prev;
+	char arg0[MAX_TOKEN_CHARS];
 #ifdef PUNKBUSTER
 	/* Trap commands going to PunkBuster here */
 	if(!Q_stricmpn(text, "pb_sv_", 6))
 	{
-		PbSvAddEvent(14, -1, strlen(text), (char*)text);
+		if(gamebinary_initialized == qtrue)
+			PbSvAddEvent(14, -1, strlen(text), (char*)text);
+		
+		return;
 	}
 #endif
 	// execute the command line
@@ -982,10 +986,17 @@ void	Cmd_ExecuteString( const char *text )
 		return;		// no tokens
 	}
 
+	Q_strncpyz(arg0, Cmd_Argv(0), sizeof(arg0));
+	
+	//Legacy fallback
+	if(!Q_stricmpn(arg0, "dvar", 4))
+	{
+		arg0[0] = 'c';
+	}
 	// check registered command functions	
 	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
 		cmd = *prev;
-		if ( !Q_stricmp( Cmd_Argv(0), cmd->name ) ) {
+		if ( !Q_stricmp( arg0, cmd->name ) ) {
 			// rearrange the links so that the command will be
 			// near the head of the list next time it is used
 			*prev = cmd->next;
@@ -1018,16 +1029,16 @@ void	Cmd_ExecuteString( const char *text )
 
 	Cmd_EndTokenizedString( );
 
-	if(!Q_stricmpn(text, "bind", 4))
+	if(!Q_stricmpn(arg0, "bind", 4))
 		return;
 
-	if(!Q_stricmpn(text, "unbindall", 9))
+	if(!Q_stricmpn(arg0, "unbindall", 9))
 		return;
 
-	if(!Q_stricmpn(text, "con_showchannel", 15))
+	if(!Q_stricmpn(arg0, "con_showchannel", 15))
 		return;
 
-	Com_Printf("Bad command or cvar: %s\n", text);
+	Com_Printf("Bad command or cvar: %s\n", arg0);
 }
 
 void Cmd_ExecuteSingleCommand(int arg1, int arg2, const char* text)

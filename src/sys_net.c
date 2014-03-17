@@ -886,19 +886,15 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 			ret = sendto( to->sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 	}else{//Send this packet to any available socket
 
-		if(addr.ss_family == AF_INET){
+		for(i = 0; i < numIP; i++)
+		{
+			if(ip_socket[i].sock == INVALID_SOCKET)
+				break;
 
-			for(i = 0; i < numIP; i++)
-			{
-				if(ip_socket[i].sock == INVALID_SOCKET)
-					break;
-
-				if(addr.ss_family == AF_INET && ip_socket[i].type == NA_IP)
-					ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
-
-				else if(addr.ss_family == AF_INET6 && ip_socket[i].type == NA_IP6)
-					ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
-			}
+			if(addr.ss_family == AF_INET && ip_socket[i].type == NA_IP)
+				ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
+			else if(addr.ss_family == AF_INET6 && ip_socket[i].type == NA_IP6)
+				ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 		}
 	}
 
