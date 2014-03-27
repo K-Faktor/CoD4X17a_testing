@@ -31,6 +31,7 @@
 #include "cmd.h"
 #include "server.h"
 #include "hl2rcon.h"
+#include "sv_auth.h"
 
 #include <string.h>
 
@@ -64,14 +65,26 @@ qboolean NV_ParseConfigLine(char* line, int linenumber){
         }
         return qtrue;
 
-    }else if(!Q_stricmp(Info_ValueForKey(line, "type") , "admin")){
+    }else if(!Q_stricmp(Info_ValueForKey(line, "type") , "authAdmin")){
 
+        if(!Auth_InfoAddAdmin( line ))
+        {
+            Com_Printf("Error at line: %d\n", linenumber);
+            return qfalse;
+        }
+        return qtrue;
+
+    }else if(!Q_stricmp(Info_ValueForKey(line, "type") , "admin")){
+	Com_Printf("^1WARNING: ^7GUID based admin authorization has been disabled. Go to https://guidError.iceops.in/ for details.\n");
+	return qfalse;
+	/*
         if(!SV_RemoteCmdInfoAddAdmin( line ))
         {
             Com_Printf("Error at line: %d\n", linenumber);
             return qfalse;
         }
         return qtrue;
+        */
 
     }else{
         Com_Printf("Error: unknown type (line: %d)\n", linenumber);
@@ -96,6 +109,7 @@ void NV_LoadConfig(){
 
     SV_RemoteCmdClearAdminList();
     HL2Rcon_ClearSourceRconAdminList();
+    Auth_ClearAdminList();
 
     FS_SV_FOpenFileRead("nvconfig.dat", &file);
     if(!file){
@@ -150,6 +164,7 @@ void NV_WriteConfig(){
     Cmd_WritePowerConfig( buffer, MAX_NVCONFIG_SIZE );
     SV_RemoteCmdWriteAdminConfig( buffer, MAX_NVCONFIG_SIZE );
     HL2Rcon_WriteAdminConfig( buffer, MAX_NVCONFIG_SIZE );
+    Auth_WriteAdminConfig( buffer, MAX_NVCONFIG_SIZE );
 
     FS_SV_WriteFile("nvconfig.dat", buffer, strlen(buffer));
     Hunk_FreeTempMemory( buffer );

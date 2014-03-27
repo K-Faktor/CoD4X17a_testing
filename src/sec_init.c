@@ -22,38 +22,7 @@
 #include "sec_init.h"
 #include "sec_main.h"
 
-qboolean initialized = qfalse;;
-
-/*
-void Sec_MakeCert_f(){
-    if(Cmd_Argc() != 4){
-        Com_Printf("Usage: %s <commonName> <publicName> <outfile (without extension, creates multiple files!)> <signedBy OR 0 (0 = CA root)>\n",Cmd_Argv(0));
-	return;
-    }
-    rsa_key key;
-    sec_certificate_t cert;
-    char fname[128];
-    
-    if(strlen(Cmd_Argv(3))>120){
-	Com_Printf("Error: filename too long!\n");
-	return;
-    }
-    sprintf(fname,"%s.isc");
-    if(!Sec_MakeRsaKey(1024,&key)){
-	Com_Printf("Error creating a key!\n");
-	return;
-    }
-    
-    if(!Sec_MakeCertificate(&key,Cmd_Argv(1),Cmd_Argv(2),time(NULL) + 3600*24*3650 * 10 years *,NULL,0,NULL,NULL,&cert)){
-	Com_Printf("Error creating a certificate!\n");
-	return;
-    }
-    if(!Sec_WriteCertificateToFile(&cert,fname)){
-	Com_Printf("Error writing to file!\n");
-	return;
-    }
-    
-}*/
+qboolean initialized = qfalse;
 
 qboolean Sec_Initialized(){
     return initialized;
@@ -62,6 +31,8 @@ qboolean Sec_Initialized(){
 void Sec_Init(void)
 {
     int result,i;
+    // Connect the math library with the crypt library
+    //ltc_mp = ltm_desc;
     //Cmd_AddCommand("createCert", Sec_MakeCert_f);
     sec_hashes[SEC_HASH_SHA1].name="SHA1";
     sec_hashes[SEC_HASH_SHA1].ID=SEC_HASH_SHA1;

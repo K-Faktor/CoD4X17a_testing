@@ -708,11 +708,11 @@ static void Cmd_BanPlayer_f() {
             Q_strcat(banreason,256," ");
         }
     }else{
-        Q_strncpyz(banreason, "The admin has no reason given", 256);
+        Q_strncpyz(banreason, "The admin has given no reason", 256);
     }
 
     if(strlen(banreason) > 126){
-        Com_Printf("Error: You have exceeded the maximum allowed length of 126 for the reason\n");
+        Com_Printf("Error: You have exceeded the maximum allowed length of 126 characters for the reason\n");
         return;
     }
 
@@ -727,14 +727,14 @@ static void Cmd_BanPlayer_f() {
             if(psvs.useuids){
                 Com_Printf( "Banrecord added for player: %s uid: %i\n", cl.cl->name, cl.uid);
                 SV_PrintAdministrativeLog( "banned player: %s uid: %i with the following reason: %s", cl.cl->name, cl.uid, banreason);
-                Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a permanent ban onto this gameserver\nYour ban will %s expire\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
+                Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour ban will %s expire\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
                     "never", cl.uid, SV_RemoteCmdGetInvokerUid(), banreason);
                 SV_DropClient(cl.cl, dropmsg);
 
             }else{
                 Com_Printf( "Banrecord added for player: %s guid: %s\n", cl.cl->name, cl.cl->pbguid);
                 SV_PrintAdministrativeLog( "banned player: %s guid: %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, banreason);
-                Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a permanent ban onto this gameserver\nYour GUID is: %s    Banning admin GUID is: %s\nReason for this ban:\n%s",
+                Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour GUID is: %s    Banning admin GUID is: %s\nReason for this ban:\n%s",
                     cl.cl->pbguid, SV_RemoteCmdGetInvokerGuid(), banreason);
                 SV_DropClient(cl.cl, dropmsg);
 

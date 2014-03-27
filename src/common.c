@@ -44,6 +44,7 @@
 #include "server.h"
 #include "nvconfig.h"
 #include "hl2rcon.h"
+#include "sv_auth.h"
 #include "punkbuster.h"
 #include "sec_init.h"
 #include "sys_cod4loader.h"
@@ -875,6 +876,7 @@ void Com_Init(char* commandLine){
 
 
     HL2Rcon_Init( );
+    Auth_Init( );
 
     AddRedirectLocations( );
 

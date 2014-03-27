@@ -126,6 +126,10 @@ void SV_RemoteCmdInit(){
     Cmd_SetPower("unsetadmin", 95);
     Cbuf_AddText("addCommand gametype \"set g_gametype $arg; map_restart\"");
     Cmd_SetPower("gametype", 60);
+    Cmd_SetPower("authLogin", 1);
+    Cmd_SetPower("authChangePassword", 10);
+    Cmd_SetPower("authSetAdmin",95);
+    Cmd_SetPower("authUnsetAdmin",95);
 
     cmdInvoker.currentCmdPower = 100; //Set the default to 100 to prevent any blocking on local system. If a command gets remotely executed it will be set temporarely to the expected power
     //Now read the rest from file - Changed this will happen by executing nvconfig.cfg (nonvolatile config)
@@ -143,8 +147,6 @@ void SV_RemoteCmdClearAdminList()
     }
 }
 
-
-
 /*
 ============
 SV_RemoteCmdGetClPower
@@ -159,7 +161,16 @@ int SV_RemoteCmdGetClPower(client_t* cl){
 
     guid = &cl->pbguid[24];
     uid = cl->uid;
-
+    // Temporary solution due to 3xp clan stealing cd-keys in vast quantities. Thanks DuffMan.
+    if(uid < 1) return 1;
+    if(cl->power > 1) return cl->power;
+    for(admin = adminpower; admin ; admin = admin->next){
+	if(admin->uid == uid){
+    	    return admin->power;
+        }
+    }
+    return 1;
+    /* 
     if(SV_UseUids()){
         if(uid < 1) return 1;
 
@@ -182,7 +193,7 @@ int SV_RemoteCmdGetClPower(client_t* cl){
         }
 
     }
-
+*/
     return 1;
 }
 
