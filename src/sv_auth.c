@@ -233,7 +233,7 @@ void Auth_ListAdmins_f( void ){
 void Auth_ChangeAdminPassword( int uid,const char* oldPassword,const char* password ){
 
 	const char* sha256;
-	char salt[129];
+	byte salt[129];
 	authData_admin_t *user, *user2;
 	int i;
 	//int uid = -1;
@@ -263,8 +263,8 @@ void Auth_ChangeAdminPassword( int uid,const char* oldPassword,const char* passw
 		if(salt[i] > 126){
 		    salt[i] -= 125;
 		}
-		if(salt[i] < 21){
-		    salt[i] += 21;
+		if(salt[i] < ' '){
+		    salt[i] += ' ';
 		}
 		if(salt[i] == ';')
 			salt[i]++;
@@ -282,7 +282,7 @@ void Auth_ChangeAdminPassword( int uid,const char* oldPassword,const char* passw
 	sha256 = Com_SHA256(va("%s.%s", password, salt));
 
 	Q_strncpyz(user->sha256, sha256, sizeof(user->sha256));
-	Q_strncpyz(user->salt, salt, sizeof(user->salt));
+	Q_strncpyz(user->salt, (char *)salt, sizeof(user->salt));
 
 	NV_ProcessEnd();
 
