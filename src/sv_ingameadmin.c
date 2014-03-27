@@ -268,6 +268,7 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
 	char cmd[30];
 	char buffer[256];
+	char *printPtr;
 	char oldinvokerguid[9];
 	int i = 0;
 	int j = 0;
@@ -303,20 +304,26 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 
         power = SV_RemoteCmdGetClPower(cl);
         powercmd = Cmd_GetPower(cmd);
+        if(!Q_stricmpn(cmd,"auth",4)){
+    	    printPtr = cmd;
+        
+        }else{
+	    printPtr = buffer;
+        }
 
 	if(powercmd == -1){
-            SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\n^3Command execution failed - Invalid command invoked - Type ^2$cmdlist ^3to get a list of all available commands\"", buffer);
+            SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\n^3Command execution failed - Invalid command invoked - Type ^2$cmdlist ^3to get a list of all available commands\"", printPtr);
             return qfalse;
 	}
 	if(powercmd > power){
             SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\n^3Command execution failed - Insufficient power to execute this command.\n^3You need at least ^6%i ^3powerpoints to invoke this command.\n^3Type ^2$cmdlist ^3to get a list of all available commands\"",
-            buffer, powercmd);
+            printPtr, powercmd);
 	    return qtrue;
 	}
         if(SV_UseUids())
-		Com_Printf( "Command execution: %s   Invoked by: %s   InvokerUID: %i Power: %i\n", buffer, cl->name, cl->uid, power);
+		Com_Printf( "Command execution: %s   Invoked by: %s   InvokerUID: %i Power: %i\n", printPtr, cl->name, cl->uid, power);
 	else
-		Com_Printf( "Command execution: %s   Invoked by: %s   InvokerGUID: %s Power: %i\n", buffer, cl->name, cl->pbguid, power);
+		Com_Printf( "Command execution: %s   Invoked by: %s   InvokerGUID: %s Power: %i\n", printPtr, cl->name, cl->pbguid, power);
 
 	Com_BeginRedirect(sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_ReliableSendRedirect);
 

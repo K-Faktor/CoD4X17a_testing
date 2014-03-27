@@ -157,8 +157,8 @@ void Auth_SetAdmin_f( void ){
 		if(salt[i] > 126){
 		    salt[i] -= 125;
 		}
-		if(salt[i] < 21){
-		    salt[i] += 21;
+		if(salt[i] < ' '){
+		    salt[i] += ' ';
 		}
 		if(salt[i] == ';')
 			salt[i]++;
@@ -171,6 +171,7 @@ void Auth_SetAdmin_f( void ){
 
 		if(salt[i] == '"')
 			salt[i]++;
+		
 	}
 
 	salt[sizeof(salt) -1] = 0;
