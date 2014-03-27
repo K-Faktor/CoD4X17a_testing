@@ -20,17 +20,21 @@
 
 #include <string.h>
 #include "sha256.h"
-
+#include "sec_crypto.h"
+#include "qcommon_io.h"
 const char* Com_SHA256( const char* string )
 {
 
     static char finalsha[65];
-    hash_state md;
-
+    unsigned long size = sizeof(finalsha);
+    if(Sec_HashMemory(SEC_HASH_SHA256,(void *)string,strlen(string),finalsha,&size,qfalse) != CRYPT_OK)
+	Com_Printf("Warning: Com_SHA256, error while hashing!\n");
+    /*hash_state md;
+    
     
     sha256_desc.init(&md);
     sha256_desc.process(&md, (const unsigned char *)string, strlen(string));
     sha256_desc.done(&md,(unsigned char *)finalsha);
-    finalsha[64]=0;
+    finalsha[64]=0;*/
     return finalsha;
 }
