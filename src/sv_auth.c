@@ -127,18 +127,17 @@ void Auth_SetAdmin_f( void ){
 	username = Cmd_Argv(1);
 	password = Cmd_Argv(2);
 	power = atoi(Cmd_Argv(3));
-	uid = auth_admins.maxUID + 1;
-	while(Auth_GetPower(uid)>1)
-	    ++uid; // Just in case it is already registered (shouldn't happen anyway)
-	    
-	auth_admins.maxUID++;
+	
 	if(!username || !*username || !password || strlen(password) < 6 || power < 1 || power > 100){
 		Com_Printf("Usage: %s <username, password (at least 6 characters), power (and integer between 1 and 100)>\n",Cmd_Argv(0));
 		return;
 	}
 
 	NV_ProcessBegin();
-
+	
+	uid = ++auth_admins.maxUID;
+	    
+		
 	for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++){
 
 		if(!Q_stricmp(user->username, username)){
