@@ -27,7 +27,7 @@ struct ltc_hash_descriptor sec_hashes[SEC_HASH_SIZE__];
 
 
 qboolean Sec_BinaryToHex(char *in,unsigned long inSize,char *out, unsigned long *outSize){
-    if(*outSize > inSize * 4+1){
+    if(*outSize < inSize * 2+1){
 	//printf("Sec_BinaryToHex: DEBUG: %lu, %lu\n",*outSize,inSize * 4);
 	SecCryptErr = CRYPT_MEM;
 	return qfalse;

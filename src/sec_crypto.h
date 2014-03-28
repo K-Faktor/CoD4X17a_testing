@@ -36,7 +36,7 @@ typedef enum{
 
 qboolean Sec_HashMemory(sec_hash_e algo, void *in, size_t inSize, void *out, long unsigned int *outSize,qboolean binaryOutput);
 qboolean Sec_HashFile(sec_hash_e algo, const char *fname, void *out, long unsigned *outSize,qboolean binaryOutput);
-
+qboolean Sec_BinaryToHex(char *in,unsigned long inSize,char *out,unsigned long *outSize);
 extern struct ltc_hash_descriptor sec_hashes[SEC_HASH_SIZE__];
 
 #endif
