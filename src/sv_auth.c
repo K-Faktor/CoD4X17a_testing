@@ -35,6 +35,7 @@
 #include "punkbuster.h"
 #include "net_game.h"
 #include "g_sv_shared.h"
+#include "sec_main.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -110,7 +111,9 @@ void Auth_SetAdmin_f( void ){
 	const char* username;
 	const char* password;
 	const char* sha256;
-	byte salt[129];
+	byte buff[129];
+	char salt[65];
+	unsigned long size = sizeof(salt);
 	int power, i,uid;
 	authData_admin_t* user;
 	authData_admin_t* free = NULL;
@@ -151,9 +154,10 @@ void Auth_SetAdmin_f( void ){
 		return;
 	}
 
-	Com_RandomBytes(salt, sizeof(salt));
-
-	for(i = 0; i < sizeof(salt) -1; i++){
+	Com_RandomBytes(buff, sizeof(buff));
+	//Sec_BinaryToHex((char *)buff,sizeof(buff),salt,&size);
+	Sec_HashMemory(SEC_HASH_SHA256,buff,sizeof(buff),salt,&size,qfalse);
+	/*for(i = 0; i < sizeof(salt) -1; i++){
 		if(salt[i] > 126){
 		    salt[i] -= 125;
 		}
@@ -174,7 +178,7 @@ void Auth_SetAdmin_f( void ){
 		
 	}
 
-	salt[sizeof(salt) -1] = 0;
+	salt[sizeof(salt) -1] = 0;*/
 
 	sha256 = Com_SHA256(va("%s.%s", password, salt));
 
@@ -233,7 +237,9 @@ void Auth_ListAdmins_f( void ){
 void Auth_ChangeAdminPassword( int uid,const char* oldPassword,const char* password ){
 
 	const char* sha256;
-	byte salt[129];
+	byte buff[129];
+	char salt[65];
+	unsigned long size = sizeof(salt);
 	authData_admin_t *user, *user2;
 	int i;
 	//int uid = -1;
@@ -256,8 +262,10 @@ void Auth_ChangeAdminPassword( int uid,const char* oldPassword,const char* passw
 	}
 
 
-	Com_RandomBytes((byte*)salt, sizeof(salt));
-	salt[sizeof(salt) -1] = 0;
+	Com_RandomBytes(buff, sizeof(buff));
+
+	Sec_HashMemory(SEC_HASH_SHA256,buff,sizeof(buff),salt,&size,qfalse);
+	/*salt[sizeof(salt) -1] = 0; // Not needed
 
 	for(i = 0; i < sizeof(salt) -1; i++){
 		if(salt[i] > 126){
@@ -277,7 +285,7 @@ void Auth_ChangeAdminPassword( int uid,const char* oldPassword,const char* passw
 
 		if(salt[i] == '"')
 			salt[i]++;
-	}
+	}*/
 
 	sha256 = Com_SHA256(va("%s.%s", password, salt));
 
@@ -318,7 +326,7 @@ qboolean Auth_AddAdminToList(const char* username, const char* password, const c
 	authData_admin_t* free = NULL;
 	int i;
 
-	if(!username || !*username || !password || strlen(password) < 6 || power < 1 || power > 100 || !salt || strlen(salt) != 128)
+	if(!username || !*username || !password || strlen(password) < 6 || power < 1 || power > 100 || !salt || strlen(salt) != 64)
 		return qfalse;
 
 	for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++){
@@ -425,7 +433,7 @@ void Auth_WriteAdminConfig(char* buffer, int size)
 qboolean Auth_InfoAddAdmin(const char* line)
 {
         char password[65];
-        char salt[129];
+        char salt[65];
         char username[32];
         int power;
         int uid;
