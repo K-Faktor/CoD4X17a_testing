@@ -155,8 +155,9 @@ void PHandler_CmdExecute_f()
                 if(strcmp(name,pluginFunctions.plugins[i].cmd[j].name)==0){
                     Com_DPrintf("Executing plugin command '%s' for plugin '%s', plugin ID: %d.\n",name,pluginFunctions.plugins[i].name,i);
                     func = (void (*)())(pluginFunctions.plugins[i].cmd[j].xcommand);
-
+		    pluginFunctions.hasControl = i;
                     func();
+                    pluginFunctions.hasControl = PLUGIN_UNKNOWN;
                     return;
                     }
         }
