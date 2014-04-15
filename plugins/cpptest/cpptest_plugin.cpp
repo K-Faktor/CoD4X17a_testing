@@ -66,7 +66,7 @@ PCL void OnTenSeconds();
 PCL void OnFrame();
 PCL void OnClientAuthorized();
 PCL void OnClientSpawn();
-PCL void OnClietnEnterWorld();
+PCL void OnClientEnterWorld();
 PCL void TCPServerPacket();
 
 /*
