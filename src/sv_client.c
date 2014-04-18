@@ -432,8 +432,14 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 		return;
 	}
 	version = atoi( Info_ValueForKey( userinfo, "protocol" ));
-	if ( version != PROTOCOL_VERSION ) {
-		NET_OutOfBandPrint( NS_SERVER, from, "error\nServer uses a different protocol version: %i\n You have to install the update to Call of Duty 4  v1.7", PROTOCOL_VERSION );
+	if ( version != sv_protocol->integer ) {
+		if( sv_protocol->integer == 6 && version < 6)
+		{
+			NET_OutOfBandPrint( NS_SERVER, from, "error\nServer uses a different protocol version: %i\n You have to install the update to Call of Duty 4  v1.7", sv_protocol->integer );
+		}else{
+			NET_OutOfBandPrint( NS_SERVER, from, "error\nServer uses a different protocol version: %i\n You use protocol version: %i", sv_protocol->integer, version );
+		}
+		
 		Com_Printf("rejected connect from version %i\n", version);
 		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
 		return;
@@ -1273,7 +1279,7 @@ sharedEntity_t* SV_AddBotClient(){
 	Info_SetValueForKey( userinfo, "snaps", "20");
 	Info_SetValueForKey( userinfo, "rate", "99999");
 	Info_SetValueForKey( userinfo, "name", name);
-	Info_SetValueForKey( userinfo, "protocol", va("%i",PROTOCOL_VERSION));
+	Info_SetValueForKey( userinfo, "protocol", va("%i", sv_protocol->integer));
 	Info_SetValueForKey( userinfo, "qport", va("%i", qport));
 
 	Com_Memset(&botnet,0,sizeof(botnet));

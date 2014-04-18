@@ -845,7 +845,7 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 
 	//Info_SetValueForKey( infostring, "gamename", com_gamename->string );
 
-	Info_SetValueForKey(infostring, "protocol", "6");
+	Info_SetValueForKey(infostring, "protocol", va("%d", sv_protocol->integer));
 
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
 
