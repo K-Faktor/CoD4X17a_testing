@@ -39,21 +39,14 @@
 #endif
 
 
-
-#ifndef __HUFFMAN_H__
-#pragma message "Function MSG_initHuffman() is undefined"
-void MSG_initHuffman(){}
-#endif
-
-
 /*
 This part makes msg.c undepended in case no proper qcommon_io.h is included
 */
 
 
 
-int pcount[256];
-static char bigstring[MAX_MSGLEN];
+//int pcount[256];
+//static char bigstring[MAX_MSGLEN];
 
 /*
 ==============================================================================
@@ -69,8 +62,6 @@ int oldsize = 0;
 
 void MSG_Init( msg_t *buf, byte *data, int length ) {
 
-	MSG_InitHuffman();
-
 	buf->data = data;
 	buf->maxsize = length;
 	buf->overflowed = qfalse;
@@ -85,8 +76,6 @@ void MSG_Init( msg_t *buf, byte *data, int length ) {
 
 void MSG_InitReadOnly( msg_t *buf, byte *data, int length ) {
 
-	MSG_InitHuffman();
-
 	MSG_Init( buf, data, length);
 	buf->data = data;
 	buf->cursize = length;
@@ -98,8 +87,6 @@ void MSG_InitReadOnly( msg_t *buf, byte *data, int length ) {
 }
 
 void MSG_InitReadOnlySplit( msg_t *buf, byte *data, int length, byte* arg4, int arg5 ) {
-
-	MSG_InitHuffman();
 
 	buf->data = data;
 	buf->cursize = length;
@@ -326,7 +313,7 @@ int MSG_ReadByte( msg_t *msg ) {
 	byte	*c;
 
 	if ( msg->readcount+sizeof(byte) > msg->cursize ) {
-		msg->readcount += sizeof(byte);
+		//msg->readcount += sizeof(byte); /* Hmm what a bad bug is this ? O_o*/
 		return -1;
 	}
 	c = &msg->data[msg->readcount];
@@ -339,7 +326,7 @@ int MSG_ReadShort( msg_t *msg ) {
 	signed short	*c;
 
 	if ( msg->readcount+sizeof(short) > msg->cursize ) {
-		msg->readcount += sizeof(short);
+		//msg->readcount += sizeof(short); /* Hmm what a bad bug is this ? O_o*/
 		return -1;
 	}	
 	c = (short*)&msg->data[msg->readcount];
@@ -352,7 +339,7 @@ int MSG_ReadLong( msg_t *msg ) {
 	int32_t		*c;
 
 	if ( msg->readcount+sizeof(int32_t) > msg->cursize ) {
-		msg->readcount += sizeof(int32_t);
+		//msg->readcount += sizeof(int32_t); /* Hmm what a bad bug is this ? O_o*/
 		return -1;
 	}	
 	c = (int32_t*)&msg->data[msg->readcount];
@@ -381,7 +368,7 @@ int MSG_SkipToString( msg_t *msg, const char* string ) {
 */
 
 
-char *MSG_ReadString( msg_t *msg ) {
+char *MSG_ReadString( msg_t *msg, char* bigstring, int len ) {
 	int l,c;
 
 	l = 0;
@@ -396,14 +383,14 @@ char *MSG_ReadString( msg_t *msg ) {
 		}
 		bigstring[l] = c;
 		l++;
-	} while ( l < sizeof( bigstring ) - 1 );
+	} while ( l < len - 1 );
 
 	bigstring[l] = 0;
 
 	return bigstring;
 }
 
-char *MSG_ReadStringLine( msg_t *msg ) {
+char *MSG_ReadStringLine( msg_t *msg, char* bigstring, int len ) {
 	int		l,c;
 
 	l = 0;
@@ -418,7 +405,7 @@ char *MSG_ReadStringLine( msg_t *msg ) {
 		}
 		bigstring[l] = c;
 		l++;
-	} while (l < sizeof(bigstring)-1);
+	} while (l < len -1);
 	
 	bigstring[l] = 0;
 	

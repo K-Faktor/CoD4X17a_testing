@@ -43,14 +43,14 @@ static fileHandle_t enterleavelogfile;
 
 void QDECL SV_EnterLeaveLog( const char *fmt, ... ) {
 
-	Sys_EnterCriticalSection(5);
-
 	va_list		argptr;
 	char		msg[MAXPRINTMSG];
 	char		inputmsg[MAXPRINTMSG];
 	struct tm 	*newtime;
 	char*		ltime;
 	time_t		realtime;
+	
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
 
         // logfile
 	if ( com_logfile && com_logfile->integer ) {
@@ -84,13 +84,13 @@ void QDECL SV_EnterLeaveLog( const char *fmt, ... ) {
 	    }
 
 	}
-	Sys_LeaveCriticalSection(5);
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 }
 
 
 void QDECL Com_PrintAdministrativeLog( const char *msg ) {
 
-	Sys_EnterCriticalSection(5);
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
 
 	struct tm 	*newtime;
 	char*		ltime;
@@ -127,14 +127,14 @@ void QDECL Com_PrintAdministrativeLog( const char *msg ) {
 	    }
 
 	}
-	Sys_LeaveCriticalSection(5);
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 }
 
 void Com_PrintLogfile( const char *msg )
 {
 
 	char	logwritestart[256];
-	Sys_EnterCriticalSection(5);
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
 
 
 	if ( com_logfile && com_logfile->integer ) {
@@ -170,7 +170,7 @@ void Com_PrintLogfile( const char *msg )
 	    	FS_Write(msg, strlen(msg), logfile);
 	    }
 	}
-	Sys_LeaveCriticalSection(5);
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 }
 
 
@@ -179,6 +179,8 @@ This function should close all opened non Zip files
 */
 void Com_CloseLogFiles()
 {
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+
 	if(adminlogfile){
 		FS_FCloseFile( adminlogfile );
 		adminlogfile = 0;
@@ -195,4 +197,7 @@ void Com_CloseLogFiles()
 		FS_FCloseFile( enterleavelogfile );
 		enterleavelogfile = 0;
 	}
+	
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 }

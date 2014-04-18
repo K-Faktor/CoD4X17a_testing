@@ -28,15 +28,6 @@
 void Sec_Update( qboolean getbasefiles );
 
 
-typedef struct{
-    int code;
-    char status[32];
-    int headerLength;
-    int contentLength;
-    char *header;
-    char *content;
-}sec_httpPacket_t;
-
 typedef struct sec_file_s{
     char name[MAX_OSPATH];
     char path[MAX_OSPATH];
@@ -56,18 +47,16 @@ typedef struct sec_file_s{
 
 
 //#undef QUOTE
-#define SEC_UPDATE_HOST "update.iceops.in:80"
+#define SEC_UPDATE_HOST "update.iceops.in"
 #define SEC_UPDATE_PHP(B,T) "/?ver=1.7&build=" B "&type=" T
 #define SEC_UPDATE_USER_AGENT "CoD4X AutoUpdater V. " SEC_UPDATE_VERSION
 //#define SEC_UPDATE_BOUNDARY "------------------------------------874ryg7v"
 #define SEC_UPDATE_PORT 80
 
 
-#define SEC_UPDATE_DOWNLOAD(baseurl, qpath) "GET %s%s HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", baseurl, qpath, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
-//#define SEC_UPDATE_TMP SEC_UPDATE_PHP(BUILD_NUMBER,"e")
-    #define SEC_UPDATE_GETVERSION "GET /?ver=%g&os=%s&build=%d&type=%c HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", SEC_VERSION, OS_STRING, BUILD_NUMBER, SEC_TYPE, SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
-#define SEC_UPDATE_GETGROUNDVERSION "GET /?ver=%g&os=%s&build=%d&type=%c HTTP/1.1 \r\nHost: %s \r\nUser-Agent: %s \r\nAccept-Encoding: \r\nConnection: Close\r\n\r\n", SEC_VERSION, OS_STRING, 753, 'b', SEC_UPDATE_HOST,SEC_UPDATE_USER_AGENT
-//#define SEC_UPDATE_GETVERSION SEC_UPDATE_DOWNLOAD(SEC_UPDATE_TMP)
+#define SEC_UPDATE_DOWNLOAD(baseurl, qpath) "%s%s", baseurl, qpath
+#define SEC_UPDATE_GETVERSION "/?ver=%g&os=%s&build=%d&type=%c", SEC_VERSION, OS_STRING, BUILD_NUMBER, SEC_TYPE
+#define SEC_UPDATE_GETGROUNDVERSION "/?ver=%g&os=%s&build=%d&type=%c", SEC_VERSION, OS_STRING, 753, 'b'
 
 #if defined(OFFICIAL) || defined(OFFICIALTESTING) || defined(OFFICIALBETA) || defined(OFFICIALDEBUG)
     #define CAN_UPDATE

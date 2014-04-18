@@ -341,6 +341,8 @@ __cdecl void ExitLevel( void ) {
 	int i;
 	gclient_t *gcl;
 	client_t *cl;
+	mvabuf;
+
 
         PHandler_Event(PLUGINS_ONEXITLEVEL,NULL);
 

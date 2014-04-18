@@ -305,7 +305,9 @@ static fileHandle_t FS_HandleForFileForThread(int FsThread)
   signed int startIndex;
   signed int size;
   signed int i;
+  mvabuf;
 
+	
   if ( FsThread == 1 )
   {
     startIndex = 49;
@@ -346,6 +348,8 @@ static fileHandle_t FS_HandleForFileForThread(int FsThread)
 #define FS_HandleForFile() FS_HandleForFileForThread(0)
 
 static FILE	*FS_FileForHandle( fileHandle_t f ) {
+
+	mvabuf;
 
 	if ( f < 0 || f > MAX_FILE_HANDLES ) {
 		Com_Error( ERR_DROP, "FS_FileForHandle: out of range %i\n", f);
@@ -389,6 +393,8 @@ on files returned by FS_FOpenFile...
 ==============
 */
 qboolean FS_FCloseFile( fileHandle_t f ) {
+
+	mvabuf;
 
 	if ( f < 0 || f > MAX_FILE_HANDLES ) {
 		Com_Error( ERR_DROP, "FS_FCloseFile: out of range %i\n", f);
@@ -716,6 +722,7 @@ FS_Rename
 void FS_Rename( const char *from, const char *to ) {
 	char	from_ospath[MAX_OSPATH];
 	char	to_ospath[MAX_OSPATH];
+	mvabuf;
 
 	FS_BuildOSPathForThread( fs_homepath->string, "", from, from_ospath, 0);
 	FS_BuildOSPathForThread( fs_homepath->string, "", to, to_ospath, 0);
@@ -740,6 +747,8 @@ FS_RenameOSPath
 ===========
 */
 void FS_RenameOSPath( const char *from_ospath, const char *to_ospath ) {
+
+	mvabuf;
 
 	if ( fs_debug->integer ) {
 		Sys_Print(va("^4FS_RenameOSPath: %s --> %s\n", from_ospath, to_ospath ));
@@ -783,6 +792,7 @@ void FS_SV_Rename( const char *from, const char *to ) {
 	char	from_ospath[MAX_OSPATH];
 	char	to_ospath[MAX_OSPATH];
 	FILE *f;
+	mvabuf;
 
 	FS_BuildOSPathForThread( fs_homepath->string, from, "", from_ospath, 0);
 	FS_BuildOSPathForThread( fs_homepath->string, to, "", to_ospath, 0);
@@ -831,6 +841,8 @@ ignores zip-files
 void FS_SV_HomeRename( const char *from, const char *to ) {
 	char	from_ospath[MAX_OSPATH];
 	char	to_ospath[MAX_OSPATH];
+	mvabuf;
+
 
 	FS_BuildOSPathForThread( fs_homepath->string, from, "", from_ospath, 0);
 	FS_BuildOSPathForThread( fs_homepath->string, to, "", to_ospath, 0);
@@ -1072,6 +1084,8 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 	int		len;
 	int		err;
 	unz_file_info	file_info;
+	mvabuf;
+
 
 	if(filename == NULL)
 		Com_Error(ERR_FATAL, "FS_FOpenFileRead: NULL 'filename' parameter passed");
@@ -1623,6 +1637,8 @@ we search in that order, matching FS_SV_FOpenFileRead order
 int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	char ospath[MAX_OSPATH];
 	fileHandle_t	f = 0;
+	mvabuf;
+
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
@@ -1687,6 +1703,7 @@ FS_SV_FOpenFileAppend
 fileHandle_t FS_SV_FOpenFileAppend( const char *filename ) {
 	char ospath[MAX_OSPATH];
 	fileHandle_t	f;
+	mvabuf;
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
@@ -1998,6 +2015,8 @@ FS_SV_FOpenFileWrite
 static fileHandle_t FS_SV_FOpenFileWriteGeneric( const char *filename, const char* basepath ) {
 	char ospath[MAX_OSPATH];
 	fileHandle_t	f;
+	mvabuf;
+
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
@@ -2199,6 +2218,8 @@ void FS_SV_HomeCopyFile( char *from, char *to ) {
 	byte	*buf;
 	char	from_ospath[MAX_OSPATH];
 	char	to_ospath[MAX_OSPATH];
+	mvabuf;
+
 
         FS_BuildOSPathForThread( fs_homepath->string, from, "", from_ospath, 0 );
         FS_BuildOSPathForThread( fs_homepath->string, to, "", to_ospath, 0 );
@@ -2626,6 +2647,8 @@ void FS_Startup(const char* gameName)
 {
 
   char* homePath;
+  mvabuf;
+
 
   Com_Printf("----- FS_Startup -----\n");
   fs_debug = Cvar_RegisterInt("fs_debug", 0, 0, 2, 0, "Enable file system debugging information");
@@ -3345,6 +3368,8 @@ void FS_CopyFile( char *fromOSPath, char *toOSPath ) {
 	FILE    *f;
 	int len;
 	byte    *buf;
+	mvabuf;
+
 
 	if ( fs_debug->integer ) {
 		Sys_Print( va("^4copy %s to %s\n", fromOSPath, toOSPath ) );
@@ -3391,6 +3416,8 @@ FS_FOpenFileWrite
 fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 	char            ospath[MAX_OSPATH];
 	fileHandle_t f;
+	mvabuf;
+
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
@@ -3438,7 +3465,9 @@ FS_FOpenFileAppend
 fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	char            ospath[MAX_OSPATH];
 	fileHandle_t f;
+	mvabuf;
 
+	
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}

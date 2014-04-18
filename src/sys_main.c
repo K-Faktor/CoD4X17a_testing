@@ -442,7 +442,7 @@ int Sys_Main(char* commandLine){
 
     Sys_PlatformInit( );
 
-    Sys_ThreadInit();
+    Sys_InitializeCriticalSections();
 
     Sys_ThreadMain();
 

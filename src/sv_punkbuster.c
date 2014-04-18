@@ -48,7 +48,7 @@ __cdecl int PbSvSendToAddrPort(char* netdest, unsigned short port, int msgsize, 
     char *sourcemsg;
     char msg[256];
     netadr_t netadr;
-
+	mvabuf;
 
     __asm("leal -0x836(,%%ebp,1), %%eax\n\t" :"=a"(sourcemsg));
 

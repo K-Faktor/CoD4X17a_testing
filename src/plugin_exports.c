@@ -262,6 +262,7 @@ P_P_F void Plugin_SetPlayerUID(unsigned int clientslot, unsigned int uid)
 {
     client_t *cl;
     int PID = PHandler_CallerID();
+	mvabuf;
 
     if(clientslot > sv_maxclients->integer)
     {
@@ -275,7 +276,9 @@ P_P_F unsigned int Plugin_GetPlayerUID(unsigned int clientslot)
 {
     client_t *cl;
     int PID = PHandler_CallerID();
+	mvabuf;
 
+	
     if(clientslot > sv_maxclients->integer)
     {
         PHandler_Error(PID,P_ERROR_DISABLE, va("Plugin tried to get UID for bad client: %d\n", clientslot));
@@ -288,6 +291,8 @@ P_P_F const char* Plugin_GetPlayerGUID(unsigned int clientslot)
 {
     client_t *cl;
     int PID = PHandler_CallerID();
+	mvabuf;
+	
     if(clientslot > sv_maxclients->integer)
     {
         PHandler_Error(PID,P_ERROR_DISABLE, va("Plugin tried to get GUID for bad client: %d\n", clientslot));
@@ -300,6 +305,8 @@ P_P_F void Plugin_SetPlayerGUID(unsigned int clientslot, const char* guid)
 {
     client_t *cl;
     int PID = PHandler_CallerID();
+	mvabuf;
+
     if(clientslot > sv_maxclients->integer)
     {
         PHandler_Error(PID,P_ERROR_DISABLE, va("Plugin tried to get GUID for bad client: %d\n", clientslot));
@@ -312,6 +319,8 @@ P_P_F void Plugin_SetPlayerNoPB(unsigned int clientslot)
 {
 #ifdef PUNKBUSTER
     client_t *cl;
+	mvabuf;
+	
     int PID = PHandler_CallerID();
     if(clientslot > sv_maxclients->integer)
     {

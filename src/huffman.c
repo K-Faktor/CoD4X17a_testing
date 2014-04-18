@@ -2729,7 +2729,7 @@ static void Huff_BuildFromData(huff_t* huff, const int* msg_hData)
 }
 
 
-void MSG_InitHuffman() {
+void Huffman_InitMain() {
 
 	static qboolean huffInit = qfalse;
 

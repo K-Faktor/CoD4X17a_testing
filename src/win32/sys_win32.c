@@ -606,6 +606,36 @@ void Sys_CloseLibrary(void* hModule)
 }
 
 
+qboolean Sys_SpawnNewThread(void* (*ThreadMain)(void*))
+{
+	
+	DWORD lastError;
+	LPTSTR errMessageBuf[512];
+	HANDLE thid = CreateThread(	NULL, // LPSECURITY_ATTRIBUTES lpsa,
+								0, // DWORD cbStack,
+								(LPTHREAD_START_ROUTINE)ThreadMain, // LPTHREAD_START_ROUTINE lpStartAddr,
+								0, // LPVOID lpvThreadParm,
+								0, // DWORD fdwCreate,
+								NULL );
+	
+	if(thid == NULL)
+	{
+		lastError = GetLastError();
+		
+		if(lastError != 0)
+		{
+			FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, lastError, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), errMessageBuf, sizeof(errMessageBuf) -1, NULL);
+			Com_PrintError("Failed to start thread with error: %s\n", errMessageBuf);
+		
+		}else{
+			Com_PrintError("Failed to start thread!\n");
+		}
+		return qfalse;
+	}
+	return qtrue;
+	
+}
+
 /*
 ==================
 Sys_Backtrace

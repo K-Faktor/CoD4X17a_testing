@@ -200,6 +200,7 @@ void SV_WriteBanlist(){
     fileHandle_t file;
     char infostring[1024];
     int i;
+	mvabuf;
 
     file = FS_SV_FOpenFileWrite(va("%s.tmp", banlistfile->string));
     if(!file){
@@ -237,10 +238,11 @@ void SV_WriteBanlist(){
 }
 
 
-char* SV_PlayerBannedByip(netadr_t *netadr){	//Gets called in SV_DirectConnect
+char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets called in SV_DirectConnect
     ipBanList_t *this;
     int i;
 
+	
     for(this = &ipBans[0], i = 0; i < 1024; this++, i++){
 
         if(NET_CompareBaseAdr(netadr, &this->remote)){
@@ -249,8 +251,10 @@ char* SV_PlayerBannedByip(netadr_t *netadr){	//Gets called in SV_DirectConnect
             {
 
                 if(this->expire == -1){
-                    return va("\nEnforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
+                    
+					Com_sprintf(message, len, "\nEnforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
                     this->uid,this->adminuid,this->banmsg);
+					return message;
 
                 }else{
 
@@ -261,8 +265,9 @@ char* SV_PlayerBannedByip(netadr_t *netadr){	//Gets called in SV_DirectConnect
                     remaining = remaining%(60*60);
                     int m = remaining/60;
 
-                    return va("\nEnforcing prior kick/ban\nTemporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
+                    Com_sprintf(message, len, "\nEnforcing prior kick/ban\nTemporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
                     d,h,m,this->uid,this->adminuid,this->banmsg);
+					return message;
                 }
 
 
@@ -388,11 +393,12 @@ void SV_RemoveBanByip(netadr_t *remote, int uid, char* guid)
 }
 
 
-char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr){
+char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr, char* message, int len){
 
   banList_t *this;
   int i;
 
+	
   this = banlist;
   if(!this)
         return NULL;
@@ -405,8 +411,9 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr){
 
             if(this->expire == (time_t)-1){
                 SV_PlayerAddBanByip(addr, this->reason, this->playeruid, pbguid, this->adminuid, -1);
-                return va("\nEnforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
+                Com_sprintf(message, len, "\nEnforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
                 this->playeruid,this->adminuid,this->reason);
+				return message;
             }
 
             if(this->expire > Com_GetRealtime()){
@@ -419,8 +426,9 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr){
 		remaining = remaining%(60*60);
 		int m = remaining/60;
 
-                return va("\nEnforcing prior kick/ban\nTemporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
+                Com_sprintf(message, len, "\nEnforcing prior kick/ban\nTemporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
                 d,h,m,this->playeruid,this->adminuid,this->reason);
+				return message;
             }
         }
     }
@@ -433,8 +441,9 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr){
         if(!Q_strncmp(this->pbguid, &pbguid[24], 8)){
 
             if(this->expire == (time_t)-1){
-                return va("Permanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your GUID is: %s\nReason for this ban:\n%s\n",
+                Com_sprintf(message, len, "Permanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your GUID is: %s\nReason for this ban:\n%s\n",
                 this->pbguid, this->reason);
+				return message;
             }
 
             if(this->expire > Com_GetRealtime()){
@@ -446,8 +455,9 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr){
 		remaining = remaining%(60*60);
 		int m = remaining/60;
 
-                return va("Temporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your GUID is: %s\nReason for this ban:\n%s\n",
+                Com_sprintf(message, len, "Temporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your GUID is: %s\nReason for this ban:\n%s\n",
                 d,h,m, this->pbguid, this->reason);
+				return message;
             }
 
         }

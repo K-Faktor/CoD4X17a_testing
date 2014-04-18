@@ -697,6 +697,8 @@ __optimize3 __regparm1 void SVC_Status( netadr_t *from ) {
 	int statusLength;
 	int playerLength;
 	char infostring[MAX_INFO_STRING];
+	mvabuf;
+
 
 
 	// Allow getstatus to be DoSed relatively easily, but prevent
@@ -763,6 +765,8 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 	qboolean	masterserver;
 	char		infostring[MAX_INFO_STRING];
 	char*		s;
+	mvabuf;
+
 
 	s = SV_Cmd_Argv(1);
 	masterserver = qfalse;
@@ -926,6 +930,7 @@ __optimize3 __regparm2 static void SVC_RemoteCommand( netadr_t *from, msg_t *msg
 	// (OOB messages are the bottleneck here)
 	char		sv_outputbuf[SV_OUTPUTBUF_LENGTH];
 	char *cmd_aux;
+	char stringlinebuf[MAX_STRING_CHARS];
 
 	svse.redirectAddress = *from;
 
@@ -956,7 +961,7 @@ __optimize3 __regparm2 static void SVC_RemoteCommand( netadr_t *from, msg_t *msg
 	MSG_ReadLong(msg); //0xffffffff
 	MSG_ReadLong(msg); //rcon
 
-	cmd_aux = MSG_ReadStringLine(msg);
+	cmd_aux = MSG_ReadStringLine(msg, stringlinebuf, sizeof(stringlinebuf));
 
 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=543
 	// get the command directly, "rcon <pass> <command>" to avoid quoting issues
@@ -1012,11 +1017,12 @@ connectionless packets.
 __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg ) {
 	char	*s;
 	char	*c;
+	char	stringlinebuf[MAX_STRING_CHARS];
 
 	MSG_BeginReading( msg );
 	MSG_ReadLong( msg );		// skip the -1 marker
 
-	s = MSG_ReadStringLine( msg );
+	s = MSG_ReadStringLine( msg, stringlinebuf, sizeof(stringlinebuf) );
 	SV_Cmd_TokenizeString( s );
 
 	c = SV_Cmd_Argv(0);
@@ -1487,6 +1493,8 @@ void	serverStatus_Write(){
     char	teamname[32];
     char	cid[4];
     char	ping[4];
+	mvabuf;
+
 
     time_t	realtime = Com_GetRealtime();
     char *timestr = ctime(&realtime);
@@ -2083,6 +2091,7 @@ void SV_WriteRconStatus( msg_t* msg ) {
 	client_t    *cl;
 	gclient_t *gclient;
 	char infostring[MAX_INFO_STRING];
+	mvabuf;
 
 	infostring[0] = 0;
 
@@ -2204,7 +2213,8 @@ void SV_PreLevelLoad(){
 
 	client_t* client;
 	int i;
-
+	char buf[MAX_STRING_CHARS];
+	
 	Com_UpdateRealtime();
 	time_t realtime = Com_GetRealtime();
 	char *timestr = ctime(&realtime);
@@ -2240,7 +2250,7 @@ void SV_PreLevelLoad(){
 			continue;
 		}
 
-		if(SV_PlayerIsBanned(client->uid, client->pbguid, &client->netchan.remoteAddress)){
+		if(SV_PlayerIsBanned(client->uid, client->pbguid, &client->netchan.remoteAddress, buf, sizeof(buf))){
 			SV_DropClient(client, "Prior kick/ban");
 			continue;
 		}
@@ -2575,13 +2585,14 @@ happen before SV_Frame is called
 __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 	unsigned int frameUsec;
 	char mapname[MAX_QPATH];
-        client_t* client;
-        int i;
-        static qboolean underattack = qfalse;
+	client_t* client;
+	int i;
+    static qboolean underattack = qfalse;
+	mvabuf;
 
 
 	if ( !com_sv_running->boolean ) {
-		usleep(100000);
+		usleep(20000);
 		return qtrue;
 	}
 

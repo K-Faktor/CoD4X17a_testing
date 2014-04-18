@@ -59,6 +59,7 @@ void Com_Quit_f( void );
 unsigned int Com_GetFrameTime(void);
 unsigned long long Com_GetUsecFrameTime(void);
 
+
 extern unsigned long long com_frameTime;
 extern unsigned long long com_uFrameTime;
 extern qboolean gamebinary_initialized;

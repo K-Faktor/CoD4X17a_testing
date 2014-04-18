@@ -58,7 +58,7 @@ typedef struct {
 
 int MSG_ReadBitsCompress(const byte* input, byte* outputBuf, int readsize);
 int MSG_WriteBitsCompress( char dummy, const byte *datasrc, byte *buffdest, int bytecount);
-void MSG_InitHuffman();
+void Huffman_InitMain();
 
 #endif
 

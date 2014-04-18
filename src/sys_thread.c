@@ -25,31 +25,12 @@
 
 #include "q_shared.h"
 #include "sys_thread.h"
+#include "qcommon_io.h"
 
-void __cdecl Sys_EnterCriticalSection(int section)
-{
+#include <string.h>
+#include <stdarg.h>
 
-}
 
-void __cdecl Sys_LeaveCriticalSection(int section)
-{
-
-}
-
-void __cdecl Sys_ThreadInit( void )
-{
-
-}
-
-void __cdecl Sys_ThreadMain( void )
-{
-    Com_InitThreadData();
-}
-
-qboolean __cdecl Sys_IsMainThread( void )
-{
-	return qtrue;
-}
 
 qboolean __cdecl Sys_IsDatabaseThread( void )
 {
@@ -62,11 +43,146 @@ qboolean __cdecl Sys_IsDatabaseThread( void )
 const void* sys_valuestoreage[MAX_KEYS];
 
 const void* __cdecl Sys_GetValue(int key)
-{
-    return sys_valuestoreage[key +1];
+{	
+	if(key < 1 || key > MAX_KEYS)
+		Com_Error(ERR_FATAL, "Sys_GetValue: Invalid value");
+	
+    return sys_valuestoreage[key -1];
 }
 
 void __cdecl Sys_SetValue(int key, const void* value)
 {
-    sys_valuestoreage[key +1] = value;
+	if(key < 1 || key > MAX_KEYS)
+		Com_Error(ERR_FATAL, "Sys_GetValue: Invalid value");
+	
+    sys_valuestoreage[key -1] = value;
+}
+
+
+
+#define MAX_CALLBACKS 20
+#define MAX_CALLBACKARGS 8
+typedef struct{
+	void (*callbackMain)();
+	void (*threadMain)(void* a, ...);
+	qboolean isActive;
+	qboolean lock;
+	void* callback_args[MAX_CALLBACKARGS];
+	void* thread_args[MAX_CALLBACKARGS];
+	threadid_t tid;
+}thread_callback_t;
+
+thread_callback_t thread_callbacks[MAX_CALLBACKS];
+
+
+void Sys_RunThreadCallbacks()
+{
+	int i;
+	thread_callback_t* tcb;
+	
+	for ( tcb = thread_callbacks, i = 0; i < MAX_CALLBACKS ; i++) {
+		
+		if(tcb->lock == qfalse || tcb->isActive == qfalse){
+			continue;
+		}
+		
+		if(thread_callbacks[i].callbackMain != NULL)
+			thread_callbacks[i].callbackMain(tcb->callback_args[0], tcb->callback_args[1], tcb->callback_args[2], tcb->callback_args[3],
+											 tcb->callback_args[4], tcb->callback_args[5], tcb->callback_args[6], tcb->callback_args[7]);
+		
+		Com_Memset(&thread_callbacks[i], 0, sizeof(thread_callback_t));
+		
+	}
+}
+
+
+
+void* Sys_CbThreadStub(void* arg)
+{
+	thread_callback_t *tcb = arg;
+	
+	tcb->threadMain(tcb->thread_args[0], tcb->thread_args[1], tcb->thread_args[2], tcb->thread_args[3],
+					tcb->thread_args[4], tcb->thread_args[5], tcb->thread_args[6], tcb->thread_args[7]); //real main-thread
+	tcb->isActive = qtrue;
+	return NULL;
+}
+
+qboolean Sys_SetupThreadCallback(void* callbackMain,...)
+{
+	thread_callback_t* tcb;
+	int i;
+	va_list		argptr;
+		
+	if(Sys_IsMainThread() == qtrue)
+	{
+		Com_Error(ERR_FATAL, "Sys_SetupThreadCallback: Can not call this function from the main-thread!\n");
+		return qfalse;
+	}
+	
+	for ( tcb = thread_callbacks, i = 0; i < MAX_CALLBACKS ; i++) {
+		if(Sys_ThreadisSame(tcb->tid));
+		{
+			break;
+		}
+	}
+	if(i == MAX_CALLBACKS)
+	{
+		Com_PrintError("Couldn't find this thread\n");
+		return qfalse;
+	}
+	
+	va_start(argptr, callbackMain);
+	
+	for(i = 0; i < MAX_CALLBACKARGS; i++)
+		tcb->callback_args[i] = va_arg(argptr, void*);
+	
+	va_end(argptr);
+	
+	tcb->callbackMain = callbackMain;
+	return qtrue;
+	
+}
+
+qboolean Sys_CreateCallbackThread(void* threadMain,...)
+{
+	thread_callback_t* tcb;
+
+	int i;
+	va_list		argptr;
+	qboolean	success;
+	
+	if(Sys_IsMainThread() == qfalse)
+	{
+		Com_Error(ERR_FATAL, "Sys_CreateCallbackThread: Can only call this function from the main-thread!\n");
+		return qfalse;
+	}
+	
+	for ( tcb = thread_callbacks, i = 0; i < MAX_CALLBACKS ; i++) {
+		if(tcb->threadMain == NULL)
+		{
+			break;
+		}
+	}
+	if(i == MAX_CALLBACKS)
+	{
+		Com_PrintError("Couldn't create a callback-thread. Max handles exceeded");
+		return qfalse;
+	}
+	
+	va_start(argptr, threadMain);
+	
+	for(i = 0; i < MAX_CALLBACKARGS; i++)
+		tcb->thread_args[i] = va_arg(argptr, void*);
+	
+	va_end(argptr);
+	
+	tcb->lock = qtrue;
+	tcb->isActive = qfalse;
+	tcb->threadMain = threadMain;
+	tcb->callbackMain = NULL;
+	success = Sys_CreateNewThread(Sys_CbThreadStub, &tcb->tid, tcb);
+	
+	if(success == qfalse)
+		tcb->isActive = qtrue;
+	return success;
 }

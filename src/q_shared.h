@@ -191,7 +191,11 @@ int Q_CountChar(const char *string, char tocount);
 int QDECL Com_sprintf(char *dest, int size, const char *fmt, ...);
 void Q_strchrrepl(char *string, char torepl, char repl);
 char* Q_BitConv(int val);
-char	* QDECL va( char *format, ... );
+/* char	* QDECL va( char *format, ... ); */
+char* QDECL va_replacement(char *dest, int size, const char *fmt, ...);
+#define mvabuf char va_buffer[MAX_STRING_CHARS]
+#define va(fmt,... ) va_replacement(va_buffer, sizeof(va_buffer), fmt, __VA_ARGS__)
+
 void Com_TruncateLongString( char *buffer, const char *s );
 
 

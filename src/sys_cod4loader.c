@@ -72,6 +72,24 @@ static void __cdecl Cbuf_InsertText_Wrapper_IW(int dummy, const char *text )
     Cbuf_InsertText( text );
 }
 
+
+char * QDECL va_binaryfuc( char *format, ... ) {
+	va_list		argptr;
+	static char string[2][32000]; // in case va is called by nested functions
+	static int	index = 0;
+	char		*buf;
+	
+	buf = string[index & 1];
+	index++;
+	
+	va_start (argptr, format);
+	Q_vsnprintf (buf, sizeof(*string), format, argptr);
+	va_end (argptr);
+	
+	return buf;
+}
+
+
 static void Sys_PatchImageData( void )
 {
 
@@ -225,7 +243,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x81aa0be, BigInfo_SetValueForKey);
 	SetJump(0x81d6fca, Sys_Milliseconds);
 	SetJump(0x81d6f7c, Sys_MillisecondsRaw);
-	SetJump(0x81a9f8a, va);
+	SetJump(0x81a9f8a, va_binaryfuc);
 	SetJump(0x8131200, MSG_Init);
 	SetJump(0x8131320, MSG_InitReadOnly);
 	SetJump(0x8131294, MSG_InitReadOnlySplit);

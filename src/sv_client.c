@@ -335,6 +335,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	char			*password;
 	const char		*denied;
 	qboolean		pluginreject;
+	char			buf[MAX_STRING_CHARS];
 
 	
 	Q_strncpyz( userinfo, SV_Cmd_Argv(1), sizeof(userinfo) );
@@ -416,7 +417,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 
 	Q_strncpyz(nick, Info_ValueForKey( userinfo, "name" ),33);
 
-	denied = SV_PlayerBannedByip(from);
+	denied = SV_PlayerBannedByip(from, buf, sizeof(buf));
 	if(denied){
             NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied);
 	    Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
@@ -587,10 +588,10 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
         PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, &denied);
 
         if(!psvs.useuids)
-            denied = SV_PlayerIsBanned(0, newcl->pbguid, from);
+            denied = SV_PlayerIsBanned(0, newcl->pbguid, from, buf, sizeof(buf));
 
         else if(newcl->uid != 0)
-            denied = SV_PlayerIsBanned(newcl->uid, NULL, from);
+            denied = SV_PlayerIsBanned(newcl->uid, NULL, from, buf, sizeof(buf));
 
         if(denied){
                 NET_OutOfBandPrint( NS_SERVER, from, "error\n%s", denied);
@@ -1143,6 +1144,8 @@ SV_ClientEnterWorld
 void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	int clientNum;
 	sharedEntity_t *ent;
+	mvabuf;
+
 /*
 	if(client->netchan.remoteAddress.type != NA_BOT && ((sv_pure->integer != 0 && client->pureAuthentic == 0) || !psvs.serverAuth))
 		return;
@@ -1219,6 +1222,7 @@ sharedEntity_t* SV_AddBotClient(){
     netadr_t botnet;
     usercmd_t ucmd;
     fileHandle_t file;
+	mvabuf;
 
         //Getting a new name for our bot
 	FS_SV_FOpenFileRead("botnames.txt", &file);
@@ -2249,9 +2253,10 @@ qboolean SV_ClientCommand( client_t *cl, msg_t *msg, qboolean inDl) {
 	const char  *s;
 	qboolean clientOk = qtrue;
 	qboolean floodprotect = qtrue;
+	char stringbuf[MAX_STRING_CHARS];
 
 	seq = MSG_ReadLong( msg );
-	s = MSG_ReadString( msg );
+	s = MSG_ReadString( msg, stringbuf, sizeof(stringbuf));
 
 	// see if we have already executed it
 	if ( cl->lastClientCommand >= seq ) {

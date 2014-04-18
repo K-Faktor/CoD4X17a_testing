@@ -400,14 +400,16 @@ Inserts the current value of a variable as command text
 */
 void Cmd_Vstr_f( void ) {
 	char	*v;
-
+	char	buf[MAX_STRING_CHARS];
+	
 	if (Cmd_Argc () != 2) {
 		Com_Printf ("vstr <variablename> : execute a variable command\n");
 		return;
 	}
 
 	v = Cvar_VariableString( Cmd_Argv( 1 ) );
-	Cbuf_InsertText( va("%s\n", v ) );
+	Com_sprintf(buf, sizeof(buf), "%s", v);
+	Cbuf_InsertText( buf );
 }
 
 
@@ -893,6 +895,7 @@ qboolean Cmd_InfoSetPower( const char *infostring )
 void Cmd_WritePowerConfig(char* buffer, int size)
 {
     char infostring[MAX_INFO_STRING];
+	mvabuf;
 
     Q_strcat(buffer, size,"\n//Minimum power settings\n");
     cmd_function_t *cmd;
@@ -1089,7 +1092,6 @@ void Cmd_CompleteCfgName( char *args, int argNum ) {
 	}
 }
 */
-
 void Cmd_Init( void ) {
 
 	Cmd_AddCommand( "cmdlist",Cmd_List_f );
@@ -1098,4 +1100,5 @@ void Cmd_Init( void ) {
 	Cmd_AddCommand( "vstr",Cmd_Vstr_f );
 	Cmd_AddCommand( "echo",Cmd_Echo_f );
 	Cmd_AddCommand( "wait", Cmd_Wait_f );
+
 }

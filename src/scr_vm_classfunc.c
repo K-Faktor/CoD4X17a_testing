@@ -34,6 +34,7 @@ __cdecl void ClientScr_SetSessionTeam(gclient_t* gcl, client_fields_t* gfl)
 
     short index;
     int cid;
+	mvabuf;
 
     if((void*)gcl - (void*)level.clients >= MAX_CLIENTS * sizeof(gclient_t))
     {

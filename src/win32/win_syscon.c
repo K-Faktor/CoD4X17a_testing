@@ -272,7 +272,7 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 LONG WINAPI InputLineWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) {
 	char inputBuffer[1024];
-
+	mvabuf;
 	switch ( uMsg )
 	{
 	case WM_KILLFOCUS:
@@ -455,6 +455,7 @@ void CON_Shutdown( void ) {
 */
 void CON_Show( int visLevel, qboolean quitOnClose ) {
 	s_wcd.quitOnClose = quitOnClose;
+	mvabuf;
 	
 	if ( visLevel == s_wcd.visLevel ) {
 		return;

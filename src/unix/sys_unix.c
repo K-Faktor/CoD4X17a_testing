@@ -29,6 +29,7 @@
 #include "../sys_main.h"
 #include "../cmd.h"
 #include "../sys_cod4defs.h"
+#include "../sys_thread.h"
 
 #include <sys/resource.h>
 #include <libgen.h>
@@ -44,6 +45,7 @@
 #include <pwd.h>
 #include <execinfo.h>
 #include <sys/time.h>
+#include<pthread.h>
 
 /*
 ==================
@@ -580,4 +582,69 @@ void Sys_CloseLibrary(void* hModule)
 		currentLibHandle = NULL;
 	}
 	dlclose(hModule);
+}
+
+qboolean Sys_CreateNewThread(void* (*ThreadMain)(void*), threadid_t *tid, void* arg)
+{
+	int err;
+
+	err = pthread_create(tid, NULL, ThreadMain, arg);
+	if(err != 0)
+	{
+		Com_PrintError("Thread creation failed with the following error: %s\n", strerror(errno));
+		return qfalse;
+	}
+	return qtrue;
+}
+
+
+static pthread_mutex_t crit_sections[CRIT_SIZE];
+threadid_t mainthread;
+
+void Sys_InitializeCriticalSections( void )
+{
+	int i;
+	pthread_mutexattr_t muxattr;
+	
+	pthread_mutexattr_init(&muxattr);
+	pthread_mutexattr_settype(&muxattr, PTHREAD_MUTEX_RECURSIVE);
+	
+	for (i = 0; i < CRIT_SIZE; i++) {
+		pthread_mutex_init( &crit_sections[i], &muxattr );
+
+	}
+	
+	pthread_mutexattr_destroy(&muxattr);
+	
+}
+
+void __cdecl Sys_ThreadMain( void )
+{
+	mainthread = pthread_self();
+
+    Com_InitThreadData();
+}
+
+void __cdecl Sys_EnterCriticalSection(int section)
+{
+	pthread_mutex_lock(&crit_sections[section]);
+}
+
+void __cdecl Sys_LeaveCriticalSection(int section)
+{
+	pthread_mutex_unlock(&crit_sections[section]);
+}
+
+
+qboolean __cdecl Sys_IsMainThread( void )
+{	
+	return Sys_ThreadisSame(mainthread);
+}
+
+qboolean Sys_ThreadisSame(threadid_t threadid)
+{
+	threadid_t thread = pthread_self();
+
+	return pthread_equal(threadid, thread) != 0;
+	
 }

@@ -506,25 +506,31 @@ int QDECL Com_sprintf(char *dest, int size, const char *fmt, ...)
 va
 
 does a varargs printf into a temp buffer, so I don't need to have
-varargs versions of all text functions.
-============
+varargs versions of all text functions. 
+ ============
 */
-char	* QDECL va( char *format, ... ) {
-	va_list		argptr;
-	static char string[2][32000]; // in case va is called by nested functions
-	static int	index = 0;
-	char		*buf;
 
-	buf = string[index & 1];
-	index++;
+/***********
+ See q_shared.h for details.
+ ***********/
 
-	va_start (argptr, format);
-	Q_vsnprintf (buf, sizeof(*string), format, argptr);
+
+char* QDECL va_replacement(char *dest, int size, const char *fmt, ...)
+{
+	int		len;
+	va_list	argptr;
+	
+	va_start (argptr,fmt);
+	len = Q_vsnprintf(dest, size, fmt, argptr);
 	va_end (argptr);
-
-	return buf;
+	
+	if(len >= size)
+		Com_Printf("Com_sprintf: Output length %d too short, require %d bytes.\n", size, len + 1);
+	
+	return dest;
 }
 
+ 
 /*
 ============
 Com_TruncateLongString

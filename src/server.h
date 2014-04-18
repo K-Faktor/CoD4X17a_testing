@@ -624,8 +624,8 @@ void __cdecl SV_UnlinkEntity(gentity_t*);
 //sv_banlist.c
 void SV_InitBanlist( void );
 qboolean  SV_ReloadBanlist();
-char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr);
-char* SV_PlayerBannedByip(netadr_t *netadr);	//Gets called in SV_DirectConnect
+char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr, char* message, int len);
+char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len);	//Gets called in SV_DirectConnect
 void SV_PlayerAddBanByip(netadr_t *remote, char *reason, int uid, char* guid, int adminuid, int expire);		//Gets called by future implemented ban-commands and if a prior ban got enforced again - This function can also be used to unset bans by setting 0 bantime
 qboolean SV_RemoveBan(int uid, char* guid, char* name);
 void SV_DumpBanlist( void );

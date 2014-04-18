@@ -1575,6 +1575,7 @@ Toggles a cvar for easy single key binding
 */
 void Cvar_Toggle_f( void ) {
 	int		v;
+	mvabuf;
 
 	if ( Cmd_Argc() != 2 ) {
 		Com_Printf ("usage: toggle <variable>\n");

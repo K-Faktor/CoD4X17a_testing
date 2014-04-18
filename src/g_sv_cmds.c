@@ -88,6 +88,8 @@ __cdecl void Cmd_CallVote_f( gentity_t *ent ) {
 	char arg3[MAX_STRING_TOKENS];
 	char cleanName[64];    // JPW NERVE
 	int mask = 0;
+	mvabuf;
+
 
 	if ( !g_allowVote->boolean ) {
 		SV_GameSendServerCommand( ent - g_entities, 0, va("%c \"GAME_VOTINGNOTENABLED\"\0", 0x65));
@@ -169,7 +171,6 @@ __cdecl void Cmd_CallVote_f( gentity_t *ent ) {
 
 		if( !(g_voteFlags & VOTEFLAGS_ANYMAP) ){
 			if(!strstr(SV_GetMapRotation(), va("map %s",arg3))){
-				Com_Printf("Debug: %s  %s\n", va("map %s",arg3), SV_GetMapRotation());
 				SV_GameSendServerCommand( ent - g_entities, 0, va("%c \"Voting for map %s is disabled on this server\"\0", 0x65));
 				return;
 			}

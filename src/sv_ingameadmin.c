@@ -466,7 +466,9 @@ void SV_RemoteCmdWriteAdminConfig(char* buffer, int size)
 {
     char infostring[1024];
     adminPower_t *admin;
+	mvabuf;
 
+	
     Q_strcat(buffer, size, "\n//Admins | Users power settings\n");
 
     for ( admin = adminpower ; admin ; admin = admin->next )

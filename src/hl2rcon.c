@@ -65,6 +65,8 @@ void HL2Rcon_SetSourceRconAdmin_f( void ){
 	int power, i;
 	rconLogin_t* user;
 	rconLogin_t* free = NULL;
+	mvabuf;
+
 
 
 	if(Cmd_Argc() != 4){
@@ -182,6 +184,8 @@ void HL2Rcon_ChangeSourceRconAdminPassword( const char* password ){
 	char salt[129];
 	rconLogin_t* user;
 	int i;
+	mvabuf;
+
 
 	if(sourceRcon.redirectUser < 1 || sourceRcon.redirectUser > MAX_RCONUSERS){
 		Com_Printf("This command can only be used from SourceRcon\n");
@@ -341,8 +345,10 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 	rconUser_t* user;
 	rconLogin_t* login;
 	int i;
+	char buf[MAX_STRING_CHARS];
+	char stringlinebuf[MAX_STRING_CHARS];
 
-	if(SV_PlayerBannedByip(from)){
+	if(SV_PlayerBannedByip(from, buf, sizeof(buf))){
 		return TCP_AUTHBAD;
 	}
 	MSG_BeginReading(msg);
@@ -371,7 +377,7 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 	MSG_Init(&sendmsg, msgbuf, sizeof(msgbuf));
 	MSG_WriteLong(&sendmsg, 10);
 
-	loginstring = MSG_ReadStringLine(msg);
+	loginstring = MSG_ReadStringLine(msg, stringlinebuf, sizeof(stringlinebuf));
 
 	Cmd_TokenizeString(loginstring);
 
@@ -636,6 +642,7 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int socketfd, int c
     char sv_outputbuf[HL2RCON_SOURCEOUTPUTBUF_LENGTH];
     msg_t msg2;
     byte data[20000];
+	char stringbuf[8 * MAX_STRING_CHARS];
 
     MSG_BeginReading(msg);
 
@@ -676,7 +683,7 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int socketfd, int c
 
 		case SERVERDATA_EXECCOMMAND:
 
-		    command = MSG_ReadString(msg);
+		    command = MSG_ReadString(msg, stringbuf, sizeof(stringbuf));
 
 		    //Pop the end of body byte
 		    MSG_ReadByte(msg);
@@ -694,7 +701,7 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int socketfd, int c
 
 		case SERVERDATA_CHANGEPASSWORD:
 
-		    password = MSG_ReadString(msg);
+		    password = MSG_ReadString(msg, stringbuf, sizeof(stringbuf));
 
 		    //Pop the end of body byte
 		    MSG_ReadByte(msg);
@@ -724,7 +731,7 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int socketfd, int c
 		case SERVERDATA_SAY:
 		    clientnum = MSG_ReadByte(msg); // -1 if Team or for all is used
 		    team = MSG_ReadByte(msg); // teamnumber or -1 if it is for all team or clientnum is set
-		    chatline = MSG_ReadString(msg);
+		    chatline = MSG_ReadString(msg, stringbuf, sizeof(stringbuf));
 
 		    //Pop the end of body byte
 		    MSG_ReadByte(msg);
@@ -837,7 +844,8 @@ void HL2Rcon_WriteAdminConfig(char* buffer, int size)
     char infostring[MAX_INFO_STRING];
     int i;
     rconLogin_t *rconadmin;
-
+	mvabuf;
+	
     Q_strcat(buffer, size, "\n//RconAdmins\n");
 
     for ( rconadmin = sourceRcon.rconUsers, i = 0; i < MAX_RCONLOGINS ; rconadmin++, i++ ){

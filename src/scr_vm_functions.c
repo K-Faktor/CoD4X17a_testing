@@ -54,7 +54,9 @@ void PlayerCmd_GetUid(scr_entref_t arg){
     gentity_t* gentity;
     int entityNum = 0;
     int uid;
+	mvabuf;
 
+	
     if(HIWORD(arg)){
 
         Scr_ObjectError("Not an entity");
@@ -89,6 +91,8 @@ void PlayerCmd_GetPower(scr_entref_t arg){
     int entityNum = 0;
     int power;
     client_t *cl;
+	mvabuf;
+
 
     if(HIWORD(arg)){
 
@@ -133,6 +137,8 @@ void PlayerCmd_GetUserinfo(scr_entref_t arg){
     gentity_t* gentity;
     int entityNum = 0;
     client_t *cl;
+	mvabuf;
+
 
     if(HIWORD(arg)){
 
@@ -175,6 +181,8 @@ void PlayerCmd_GetPing(scr_entref_t arg){
     gentity_t* gentity;
     int entityNum = 0;
     client_t *cl;
+	mvabuf;
+
 
     if(HIWORD(arg)){
 
@@ -214,6 +222,8 @@ void PlayerCmd_SetGravity(scr_entref_t arg){
     gentity_t* gentity;
     int entityNum = 0;
     int gravity;
+	mvabuf;
+
 
     if(HIWORD(arg)){
 
@@ -264,6 +274,7 @@ void PlayerCmd_SetJumpHeight(scr_entref_t arg){
     gentity_t* gentity;
     int entityNum = 0;
     int height;
+	mvabuf;
 
     if(HIWORD(arg)){
 
@@ -313,6 +324,7 @@ void PlayerCmd_SetMoveSpeed(scr_entref_t arg){
     gentity_t* gentity;
     int entityNum = 0;
     int speed;
+	mvabuf;
 
     if(HIWORD(arg)){
 
@@ -371,6 +383,7 @@ void PlayerCmd_GetGeoLocation(scr_entref_t arg){
     int rettype;
     int locIndex;
     const char* countryname;
+	mvabuf;
 
     if(HIWORD(arg)){
 
@@ -1338,6 +1351,7 @@ void GScr_FS_InitParamList(){
     char* filename;
     qboolean type;
     int i;
+	mvabuf;
 
     if(Scr_GetNumParam() != 2)
         Scr_Error("FS_InitParamList(string <filename>, bool <indexed_list>)\n");
@@ -1551,7 +1565,7 @@ void GScr_KickClient()
 
     cl = &svs.clients[clnum];
 
-    SV_DropClient(cl, va("Player kicked by scriptadmin\n"));
+    SV_DropClient(cl, "Player kicked by scriptadmin\n");
 }
 
 void GScr_BanClient()
@@ -1571,16 +1585,16 @@ void GScr_BanClient()
     if(!SV_UseUids()){
 
         SV_AddBan(0, 0, &cl->pbguid[24], cl->name, (time_t)-1, "Banned by scriptadmin");
-        SV_DropClient(cl, va("Banned by scriptadmin\n"));
+        SV_DropClient(cl, "Banned by scriptadmin\n");
     }else{
 
         if(cl->uid > 0)
         {
             SV_AddBan(cl->uid, 0, cl->pbguid, cl->name, (time_t)-1, "Banned by scriptadmin");
-            SV_DropClient(cl, va("Banned by scriptadmin\n"));
+            SV_DropClient(cl, "Banned by scriptadmin\n");
 
         }else{
-            SV_DropClient(cl, va("Player kicked by scriptadmin\n"));
+            SV_DropClient(cl, "Player kicked by scriptadmin\n");
         }
     }
 }
@@ -1591,6 +1605,7 @@ void PlayerCmd_spawn(scr_entref_t arg){
     gentity_t* gentity = NULL;
     vec3_t position;
     vec3_t direction;
+	mvabuf;
 
     int entityNum = 0;
 
@@ -1849,6 +1864,8 @@ void GScr_SetCvar()
   const char *newstringval;
   const char *var_name;
   char buffer[1024];
+  mvabuf;
+
 
   var_name = Scr_GetString(0);
   if ( Scr_GetType(1) == 3 )
@@ -2023,6 +2040,7 @@ void ScrCmd_SetStance(scr_entref_t arg){
     gentity_t* gentity;
     int entityNum = 0;
     short strindex;
+    mvabuf;
 
     if(HIWORD(arg)){
 

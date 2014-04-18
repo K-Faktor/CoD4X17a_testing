@@ -30,6 +30,7 @@
 #include "cmd.h"
 #include "cvar.h"
 #include "sys_cod4defs.h"
+#include "httpftp.h"
 
 #include <unistd.h>
 #include <errno.h>
@@ -86,110 +87,6 @@ char *Sec_StrTok(char *str,char *tokens,int id){
     }	
 }
 
-#define TCP_TIMEOUT 12
-
-int Sec_GetHTTPPacket(int sock, sec_httpPacket_t *out){
-    byte buff[8192]; // Would say 'risky', but it is only 0.8% of the stack in most cases :)
-    msg_t msg_c, msg_h;
-    int status;
-    char* line;
-    unsigned int time;
-
-    memset(out,0,sizeof(sec_httpPacket_t));
-
-    status = 1;
-    out->contentLength = -1;
-
-    time = Sys_Milliseconds() + TCP_TIMEOUT*1000;
-
-    MSG_Init(&msg_h, buff, sizeof(buff));
-
-    do{
-        while(status > 0 && status != 2 && time > Sys_Milliseconds())
-        {
-            status = NET_ReceiveData(sock, &msg_h);
-            usleep(10000);
-        }
-        if(status < 1 && msg_h.cursize - msg_h.readcount < 1){
-
-		Com_PrintError("Sec_GetHTTPPacket: Failed to receive data!\n");
-		return -1;
-	}
-
-	if(out->code < 1)
-	{
-		line = MSG_ReadStringLine(&msg_h);
-		if(Q_stricmpn(line,"HTTP/1.",7) || isInteger(line + 9, 4) == qfalse){
-			Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n", line);
-			return -3;
-		}
-		out->code = atoi(line + 9);
-	}
-	line = MSG_ReadStringLine(&msg_h);
-	if(out->contentLength < 0)
-	{
-		if(!Q_stricmpn("Content-Length:", line, 15))
-		{
-			if(isInteger(line + 15, 0) == qfalse)
-			{
-				Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n", line);
-				return -5;
-			}
-			out->contentLength = atoi(line + 15);
-		}
-	}else if(line[0] == '\r'){
-            /* We are done with header */
-            break;
-	}
-    }while(line[0] != '\0');
-
-
-    if(line[0] == '\0')
-    {
-	Com_PrintError("Sec_GetHTTPPacket: Packet has unexpected end!\n");
-	return -2;
-    }
-
-    if(out->contentLength < 0)
-    {
-        out->contentLength = 0;
-	Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\n");
-	return -4;
-    }
-
-    out->headerLength = msg_h.readcount;
-    out->header = Sec_SMalloc(out->headerLength + 1);
-    Com_Memcpy(out->header, msg_h.data, out->headerLength);
-    out->header[out->headerLength] = 0; // A valid C string :)
-    out->content = Sec_SMalloc(out->contentLength + 1);
-
-    MSG_Init(&msg_c, (byte*)out->content, out->contentLength);
-    MSG_WriteData(&msg_c, msg_h.data + msg_h.readcount, msg_h.cursize - msg_h.readcount);
-
-    while(status > 0 && time > Sys_Milliseconds() && msg_c.cursize != out->contentLength)
-    {
-        status = NET_ReceiveData(sock, &msg_c);
-        usleep(10000);
-    }
-
-    out->content[out->contentLength] = '\0';
-
-    if(status > 0)
-    {
-        NET_TcpCloseSocket(sock);
-    }
-    if(msg_c.cursize != out->contentLength){
-	    Com_PrintError("Sec_GetHTTPPacket: Packet has invalid length. Length is: %d Expected %d!\n", msg_c.cursize, out->contentLength);
-	    return -7;
-    }
-    return out->code;
-}
-
-
-void Sec_FreeHttpPacket(sec_httpPacket_t *packet){
-    Sec_Free(packet->content);
-    Sec_Free(packet->header);
-}
 void Sec_FreeFileStruct(sec_file_t *file){
     if(file->next != NULL)
 	Sec_FreeFileStruct(file->next);
@@ -202,14 +99,18 @@ void Sec_Update( qboolean getbasefiles ){
     char baseurl[1024];
     char commandline[1024];
     char name1[256],name2[256];
-    int sock,status;
+    int status;
     sec_file_t files, *currFile = &files;
-    sec_httpPacket_t packet,packet2;
     qboolean dlExec = qfalse;
     int len;
     char hash[128];
     long unsigned size;
-    
+	ftRequest_t* filetransferobj;
+	ftRequest_t* curfileobj;
+	int transret;
+	mvabuf;
+
+	
     if(!Sec_Initialized()){
 	return;
     }
@@ -227,166 +128,183 @@ void Sec_Update( qboolean getbasefiles ){
     if(getbasefiles == qtrue)
     {
 
-        Com_sprintf(buff, sizeof(buff), SEC_UPDATE_GETGROUNDVERSION);
+        Com_sprintf(buff, sizeof(buff), "http://" SEC_UPDATE_HOST SEC_UPDATE_GETGROUNDVERSION);
 
     }else{
 
         if(canupdate->boolean == qfalse)
             return;
 
-        Com_sprintf(buff, sizeof(buff), SEC_UPDATE_GETVERSION);
+        Com_sprintf(buff, sizeof(buff), "http://" SEC_UPDATE_HOST SEC_UPDATE_GETVERSION);
     }
 #else
     if(getbasefiles == qtrue)
     {
-        Com_sprintf(buff, sizeof(buff), SEC_UPDATE_GETGROUNDVERSION);
+        Com_sprintf(buff, sizeof(buff), "http://" SEC_UPDATE_HOST SEC_UPDATE_GETGROUNDVERSION);
     }else{
         return;
     }
 #endif
-    sock = NET_TcpClientConnect(SEC_UPDATE_HOST);
+	
+	filetransferobj = FileDownloadRequest( buff );
 
-    if(sock < 0){
-	return;
+    if(filetransferobj == NULL){
+		return;
     }
 
-    status = NET_TcpSendData(sock, buff, strlen(buff));
+	do {
+		transret = FileDownloadSendReceive( filetransferobj );
+		usleep(20000);
+	} while (transret == 0);
 
-    if(status < 0){
-	return;
+    if(transret < 0)
+	{
+		FileDownloadFreeRequest(filetransferobj);
+		return;
     }
     /* Need to catch errors */
  //   FS_WriteFile("tmp.txt", va("%d", status), 1);
 
     // TODO: Do something with the status?
 
-    status = Sec_GetHTTPPacket(sock, &packet);
-
 //    FS_WriteFile("tmp2.txt", packet.header, packet.headerLength);
 //    FS_WriteFile("tmp3.txt", packet.content, packet.contentLength);
-
-    if(status <= 0){
-	Com_PrintError("Receiving data. Error code: %d.\n", status);
-	Sec_FreeHttpPacket(&packet);
-	return;
+    if(filetransferobj->code <= 0){
+		Com_PrintError("Receiving data. Error code: %d.\n", filetransferobj->code);
+		FileDownloadFreeRequest(filetransferobj);
+		return;
     }
-    if(status == 204){
-	Com_Printf("\nServer is up to date.\n\n");
-	Sec_FreeHttpPacket(&packet);
-	return;
+    if(filetransferobj->code == 204){
+		Com_Printf("\nServer is up to date.\n\n");
+		FileDownloadFreeRequest(filetransferobj);
+		return;
     }
-    else if(status != 200){
-	Com_PrintWarning("The update server's malfunction.\nStatus code: %d.\n",status);
-	Sec_FreeHttpPacket(&packet);
-	return;
+    else if(filetransferobj->code != 200){
+		Com_PrintWarning("The update server's malfunction.\nStatus code: %d.\n", filetransferobj->code);
+		FileDownloadFreeRequest(filetransferobj);
+		return;
     }
 
     Com_Memset(&files, 0, sizeof(files));
 
     /* We need to parse filenames etc */
-    ptr = Sec_StrTok(packet.content,"\n",42); // Yes, 42.
+    ptr = Sec_StrTok((char*)(filetransferobj->recvmsg.data + filetransferobj->headerLength),"\n",42); // Yes, 42.
     if(ptr == NULL || Q_stricmpn("baseurl: ", ptr, 9))
     {
 	    Com_PrintWarning("Sec_Update: Corrupt data from update server. Update aborted.\n");
-	    Sec_FreeHttpPacket(&packet);
-	    return;
+		FileDownloadFreeRequest(filetransferobj);
+		return;
     }
     Q_strncpyz(baseurl, ptr +9, sizeof(baseurl));
 
     ptr = Sec_StrTok(NULL,"\n",42); // Yes, 42 again.
 
-    while(ptr != NULL){
-	
-	currFile->next = Sec_GMalloc(sec_file_t,1);
-	currFile = currFile->next;
-	Com_Memset(currFile,0,sizeof(sec_file_t));
-	ptr2 = strchr(ptr,' ');
-	if(ptr2 == NULL){
-	    Com_PrintWarning("Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
-	    Sec_FreeHttpPacket(&packet);
-	    return;
-	}
-	*ptr2++ = 0;
-	Q_strncpyz(currFile->path,ptr,sizeof(currFile->path));
-	ptr = ptr2;
-	ptr2 = strchr(ptr,' ');
-	if(ptr2 == NULL){
-	    Com_PrintWarning("Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
-	    Sec_FreeHttpPacket(&packet);
-	    return;
-	}
-	*ptr2++ = 0;
-	if(!isInteger(ptr, 0)){
-	    Com_PrintWarning("Sec_Update: Corrupt data from update server - size is not a number. Update aborted.\nDebug:\"%s\"\n",ptr);
-	    Sec_FreeHttpPacket(&packet);
-	    return;
-	}
-	currFile->size = atoi(ptr);
-	Q_strncpyz(currFile->hash,ptr2,sizeof(currFile->hash));
-	Q_strncpyz(currFile->name,currFile->path, sizeof(currFile->name));
-	//printf("DEBUG: File to download: link: \"%s\", name: \"%s\", size: %d, hash: \"%s\"\n\n",file.path,file.name,file.size,file.hash);
-
-        sock = NET_TcpClientConnect(SEC_UPDATE_HOST);
-
-        if(sock < 0){
-		Sec_FreeHttpPacket(&packet);
-		return;
-        }
-
-	Com_sprintf(buff, sizeof(buff), SEC_UPDATE_DOWNLOAD(baseurl, currFile->path));
-	status = NET_TcpSendData(sock, buff, strlen(buff));
-
-	Q_strncpyz(buff,currFile->name, sizeof(buff));
-	Q_strcat(buff, sizeof(buff),".new");
-
-	Com_Printf("Downloading file: \"%s\"\n",currFile->name);
-
-	status = Sec_GetHTTPPacket(sock, &packet2);
-	if(status != 200){
-	    Com_PrintError("Downloading has failed! Error code: %d. Update aborted.\n", status);
-	    Sec_FreeHttpPacket(&packet);
-	    Sec_FreeHttpPacket(&packet2);
-	    return;
-	}
-
-	len = FS_SV_BaseWriteFile(buff, packet2.content, packet2.contentLength);
-	if(len != packet2.contentLength){
-
-		len = FS_SV_HomeWriteFile(buff, packet2.content, packet2.contentLength);
-		if(len != packet2.contentLength)
-		{
-		    Com_PrintError("Opening \"%s\" for writing! Update aborted.\n",buff);
-		    Sec_FreeHttpPacket(&packet);
-		    Sec_FreeHttpPacket(&packet2);
-		    return;
+	while(ptr != NULL){
+		
+		currFile->next = Sec_GMalloc(sec_file_t,1);
+		currFile = currFile->next;
+		Com_Memset(currFile,0,sizeof(sec_file_t));
+		ptr2 = strchr(ptr,' ');
+		if(ptr2 == NULL){
+			Com_PrintWarning("Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
+			FileDownloadFreeRequest(filetransferobj);
+			return;
 		}
+		*ptr2++ = 0;
+		Q_strncpyz(currFile->path,ptr,sizeof(currFile->path));
+		ptr = ptr2;
+		ptr2 = strchr(ptr,' ');
+		if(ptr2 == NULL){
+			Com_PrintWarning("Sec_Update: Corrupt data from update server. Update aborted.\nDebug:\"%s\"\n",ptr);
+			FileDownloadFreeRequest(filetransferobj);
+			return;
+		}
+		*ptr2++ = 0;
+		if(!isInteger(ptr, 0)){
+			Com_PrintWarning("Sec_Update: Corrupt data from update server - size is not a number. Update aborted.\nDebug:\"%s\"\n",ptr);
+			FileDownloadFreeRequest(filetransferobj);
+			return;
+		}
+		currFile->size = atoi(ptr);
+		Q_strncpyz(currFile->hash,ptr2,sizeof(currFile->hash));
+		Q_strncpyz(currFile->name,currFile->path, sizeof(currFile->name));
+		//printf("DEBUG: File to download: link: \"%s\", name: \"%s\", size: %d, hash: \"%s\"\n\n",file.path,file.name,file.size,file.hash);
+
+		Com_sprintf(buff, sizeof(buff), SEC_UPDATE_DOWNLOAD(baseurl, currFile->path));
+		
+		curfileobj = FileDownloadRequest(buff);
+		if(curfileobj == NULL)
+		{
+			FileDownloadFreeRequest(filetransferobj);
+			return;	
+		}
+
+		Com_Printf("Downloading file: \"%s\"\n\n",currFile->name);
+
+		do {
+			transret = FileDownloadSendReceive( curfileobj );
+			Com_Printf("%s", FileDownloadGenerateProgress( curfileobj ));
+			usleep(20000);
+		} while (transret == 0);
+		
+		Com_Printf("\n");
+
+		if(transret < 0)
+		{
+			FileDownloadFreeRequest(curfileobj);
+			FileDownloadFreeRequest(filetransferobj);
+			return;
+		}
+
+		Q_strncpyz(buff,currFile->name, sizeof(buff));
+		Q_strcat(buff, sizeof(buff),".new");
+
+		if(curfileobj->code != 200){
+			Com_PrintError("Downloading has failed! Error code: %d. Update aborted.\n", status);
+			FileDownloadFreeRequest(filetransferobj);
+			FileDownloadFreeRequest(curfileobj);
+			return;
+		}
+
+		len = FS_SV_BaseWriteFile(buff, curfileobj->recvmsg.data + curfileobj->headerLength, curfileobj->contentLength);
+		if(len != curfileobj->contentLength){
+
+			len = FS_SV_HomeWriteFile(buff, curfileobj->recvmsg.data + curfileobj->headerLength, curfileobj->contentLength);
+			if(len != curfileobj->contentLength)
+			{
+				Com_PrintError("Opening \"%s\" for writing! Update aborted.\n",buff);
+				FileDownloadFreeRequest(filetransferobj);
+				FileDownloadFreeRequest(curfileobj);
+				return;
+			}
+		}
+
+		ptr = Sec_StrTok(NULL,"\n",42); // Yes, 42 again.
+
+		size = sizeof(hash);
+		
+		if(!Sec_HashMemory(SEC_HASH_SHA256, curfileobj->recvmsg.data + curfileobj->headerLength, curfileobj->contentLength, hash, &size,qfalse)){
+			Com_PrintError("Hashing the file \"%s\". Error code: %s.\nUpdate aborted.\n",currFile->name,Sec_CryptErrStr(SecCryptErr));
+			FileDownloadFreeRequest(filetransferobj);
+			FileDownloadFreeRequest(curfileobj);
+			return;
+		}
+
+		FileDownloadFreeRequest(curfileobj);
+		
+		if(!Q_strncmp(hash, currFile->hash, size)){
+			Com_Printf("Successfully downloaded file \"%s\".\n", currFile->name);
+		}
+		else{
+			Com_PrintError("File \"%s\" is corrupt!\nUpdate aborted.\n",currFile->name);
+			Com_DPrintf("Hash: \"%s\", correct hash: \"%s\".\n",hash,currFile->hash);
+			FileDownloadFreeRequest(filetransferobj);
+			return;
+		}
+		
 	}
 
-	ptr = Sec_StrTok(NULL,"\n",42); // Yes, 42 again.
-
-	size = sizeof(hash);
-	
-	if(!Sec_HashMemory(SEC_HASH_SHA256,packet2.content, packet2.contentLength, hash, &size,qfalse)){
-	    Com_PrintError("Hashing the file \"%s\". Error code: %s.\nUpdate aborted.\n",currFile->name,Sec_CryptErrStr(SecCryptErr));
-	    Sec_FreeHttpPacket(&packet);
-	    Sec_FreeHttpPacket(&packet2);
-	    return;
-	}
-
-	Sec_FreeHttpPacket(&packet);
-	Sec_FreeHttpPacket(&packet2);
-
-	if(!Q_strncmp(hash, currFile->hash, size)){
-	    Com_Printf("Successfully downloaded file \"%s\".\n", currFile->name);
-	}
-	else{
-	    Com_PrintError("File \"%s\" is corrupt!\nUpdate aborted.\n",currFile->name);
-	    Com_DPrintf("Hash: \"%s\", correct hash: \"%s\".\n",hash,currFile->hash);
-
-	    return;
-	}
-	
-    }
+	FileDownloadFreeRequest(filetransferobj);
 
     Com_Printf("All files downloaded successfully. Applying update...\n");
 

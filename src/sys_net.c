@@ -2186,38 +2186,30 @@ Return -1 if an fatal error happened on this socket otherwise 0
 
 int NET_TcpSendData( int sock, const void *data, int length ) {
 
-	int state, err;
+	int state, err, numbytes;
+	
+	numbytes = length;
 
 	if(sock < 1)
 		return -1;
 
-	do
-	{
-		state = send( sock, data, length, NET_NOSIGNAL); // FIX: flag NOSIGNAL prevents SIGPIPE in case of connection problems
+	state = send( sock, data, numbytes, NET_NOSIGNAL); // FIX: flag NOSIGNAL prevents SIGPIPE in case of connection problems
 
-		if(state == SOCKET_ERROR)
-		{
+	if(state == SOCKET_ERROR)
+	{
 			err = SOCKET_ERROR;
 
 			if( err == EAGAIN )
 			{
-				Com_PrintNoRedirect("NET_TcpSendData: Command overflow\n");
+				return 0; 
 			}else{
 				Com_PrintWarningNoRedirect ("NET_SendTCPPacket: Couldn't send data to remote host: %s\n", NET_ErrorString());
 			}
 			NET_TcpCloseSocket(sock);
 			return -1;
-		}
+	}
 
-		length -= state;
-		data += state;
-
-		if(state == 0)
-			return 0;
-
-	}while( length > 0);
-
-	return 0;
+	return state;
 }
 
 /*========================================================================================================

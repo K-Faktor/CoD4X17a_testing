@@ -117,6 +117,7 @@ void Auth_SetAdmin_f( void ){
 	int power, i,uid;
 	authData_admin_t* user;
 	authData_admin_t* free = NULL;
+	mvabuf;
 
 
 	if(Cmd_Argc() != 4){
@@ -242,6 +243,8 @@ void Auth_ChangeAdminPassword( int uid,const char* oldPassword,const char* passw
 	authData_admin_t *user, *user2;
 	int i;
 	//int uid = -1;
+	mvabuf;
+
 	
 	if(!password || strlen(password) < 6){
 		Com_Printf("Error: the new password must have at least 6 characters\n");
@@ -408,7 +411,9 @@ void Auth_WriteAdminConfig(char* buffer, int size)
     char infostring[MAX_INFO_STRING];
     int i;
     authData_admin_t *admin;
+	mvabuf;
 
+	
     Q_strcat(buffer, size, "\n//Admins authorization data\n");
 
     for ( admin = auth_admins.admins, i = 0; i < MAX_AUTH_ADMINS ; admin++, i++ ){

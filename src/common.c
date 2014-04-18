@@ -48,6 +48,8 @@
 #include "punkbuster.h"
 #include "sec_init.h"
 #include "sys_cod4loader.h"
+#include "httpftp.h"
+#include "huffman.h"
 
 #include <string.h>
 #include <setjmp.h>
@@ -574,6 +576,7 @@ void Com_Quit_f( void ) {
 static void Com_InitCvars( void ){
     static const char* dedicatedEnum[] = {"listen server", "dedicated LAN server", "dedicated internet server", NULL};
     static const char* logfileEnum[] = {"disabled", "async file write", "sync file write", NULL};
+	mvabuf;
 
     char* s;
 
@@ -598,6 +601,7 @@ static void Com_InitCvars( void ){
     com_logfile = Cvar_RegisterEnum("logfile", logfileEnum, 0, 0, "Write to logfile");
     com_sv_running = Cvar_RegisterBool("sv_running", qfalse, 64, "Server is running");
 }
+
 
 
 void Com_InitThreadData()
@@ -739,6 +743,7 @@ void Com_Init(char* commandLine){
 
     static char creator[16];
     char creatorname[37];
+	mvabuf;
 
     int	qport;
 
@@ -851,7 +856,7 @@ void Com_Init(char* commandLine){
 
     Com_RandomBytes( (byte*)&qport, sizeof(int) );
     Netchan_Init( qport );
-
+	Huffman_InitMain();
 
     PHandler_Init();
 
@@ -1039,6 +1044,10 @@ __optimize3 void Com_Frame( void ) {
 	//
 	// server side
 	//
+	
+	Com_EventLoop();
+
+	
 #ifdef TIMEDEBUG
 	if ( com_speeds->integer ) {
 		timeBeforeServer = Sys_Milliseconds ();
@@ -1050,10 +1059,11 @@ __optimize3 void Com_Frame( void ) {
 	PHandler_Event(PLUGINS_ONFRAME);
 
 	Com_TimedEventLoop();
-	Com_EventLoop();
 	Cbuf_Execute (0 ,0);
 	NET_Sleep(0);
 	NET_TcpServerPacketEventLoop();
+	Cbuf_Execute (0 ,0);
+	Sys_RunThreadCallbacks();
 	Cbuf_Execute (0 ,0);
 
 #ifdef TIMEDEBUG
@@ -1287,6 +1297,8 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	static int	errorCount;
 	int		currentTime;
 	jmp_buf*	abortframe;
+	mvabuf;
+
 
 	if(com_developer && com_developer->integer > 1)
 		__asm__("int $3");
@@ -1337,3 +1349,5 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	Com_CloseLogFiles( );
 	Sys_Error ("%s", com_errorMessage);
 }
+
+
