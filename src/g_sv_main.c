@@ -1113,3 +1113,19 @@ void G_CopyCvars()
    *(cvar_t**)0x828DE04 = perk_parabolicIcon;
    *(cvar_t**)0x828DE08 = perk_sprintMultiplier;
 }
+
+
+int G_GetClientSize()
+{
+	return sizeof(gclient_t);
+}
+
+gclient_t* G_GetPlayerState(int num)
+{
+	return &level.clients[num];
+}
+
+clientSession_t * G_GetClientState(int num)
+{
+	return &level.clients[num].sess;
+}

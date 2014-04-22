@@ -267,6 +267,8 @@ typedef enum {
 // time and reading them back at connection time.  Anything added here
 // MUST be dealt with in G_InitSessionData() / G_ReadSessionData() / G_WriteSessionData()
 typedef struct {
+
+	int clientState;		// 0x300c
 	//Most is not active
 	team_t sessionTeam;		//0x3010
 	int spectatorTime;              // for determining next-in-line to play
@@ -358,7 +360,6 @@ typedef struct {
 	int clientCanSpectate;		// 0x3004
 	int freeaddr1;			// 0x3008
 
-	int clientState;		// 0x300c
 } clientPersistant_t;
 
 

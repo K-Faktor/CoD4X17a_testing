@@ -626,10 +626,10 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 		}
 	}
 #endif
-	newcl->unknowndirectconnect1 = 0;	//Whatever it is ???
+	newcl->unsentVoiceData = 0;
 	newcl->hasVoip = 1;
-        newcl->gentity = SV_GentityNum(clientNum);
-        newcl->clscriptid = Scr_AllocArray();
+    newcl->gentity = SV_GentityNum(clientNum);
+    newcl->clscriptid = Scr_AllocArray();
 
 	// get the game a chance to reject this connection or modify the userinfo
 	denied = ClientConnect(clientNum, newcl->clscriptid);
@@ -695,59 +695,41 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 __optimize3 __regparm2 void SV_ReceiveStats(netadr_t *from, msg_t* msg){
 
 	short qport;
-	qport = MSG_ReadShort( msg );// & 0xffff;
 	client_t *cl;
-	int i;
 	byte curstatspacket;
 	byte var_02;
 	int buffersize;
 
+	qport = MSG_ReadShort( msg );
+	
 	// find which client the message is from
-	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++,cl++ ) {
-		if ( cl->state == CS_FREE ) {
-			continue;
-		}
-		if ( !NET_CompareBaseAdr( from, &cl->netchan.remoteAddress ) ) {
-			continue;
-		}
-
-		// it is possible to have multiple clients from a single IP
-		// address, so they are differentiated by the qport variable
-		if ( cl->netchan.qport != qport ) {
-			continue;
-		}
-
-		// the IP port can't be used to differentiate them, because
-		// some address translating routers periodically change UDP
-		// port assignments
-		if ( cl->netchan.remoteAddress.port != from->port ) {
-			Com_Printf( "SV_ReceiveStats: fixing up a translated port\n" );
-			cl->netchan.remoteAddress.port = from->port;
-		}
-
-		curstatspacket = MSG_ReadByte(msg);
-		if(curstatspacket > 6){
-		    Com_Printf("Invalid stat packet %i of stats data\n", curstatspacket);
-		    return;
-		}
-		Com_Printf("Received packet %i of stats data\n", curstatspacket);
-		if((curstatspacket+1)*1240 >= sizeof(cl->stats)){
-		    buffersize = sizeof(cl->stats)-(curstatspacket*1240);
-		}else{
-		    buffersize = 1240;
-		}
-		MSG_ReadData(msg, &cl->stats[1240*curstatspacket], buffersize);
-
-		cl->receivedstats |= (1 << curstatspacket);
-		var_02 = cl->receivedstats;
-		var_02 = ~var_02;
-		var_02 = var_02 & 127;
-		cl->lastPacketTime = svs.time;
-
-		NET_OutOfBandPrint( NS_SERVER, from, "statResponse %i", var_02 );
+	cl = SV_ReadPackets(from, qport);
+	if(cl == NULL)
+	{
+		Com_DPrintf("SV_ReceiveStats: Received statspacket from disconnected remote client: %s qport: %d\n", NET_AdrToString(from), qport);
 		return;
 	}
-	Com_DPrintf("SV_ReceiveStats: Received statspacket from disconnected remote client: %s qport: %d\n", NET_AdrToString(from), qport);
+	
+	curstatspacket = MSG_ReadByte(msg);
+	if(curstatspacket > 6){
+		Com_Printf("Invalid stat packet %i of stats data\n", curstatspacket);
+		return;
+	}
+	Com_Printf("Received packet %i of stats data\n", curstatspacket);
+	if((curstatspacket+1)*1240 >= sizeof(cl->stats)){
+		buffersize = sizeof(cl->stats)-(curstatspacket*1240);
+	}else{
+		buffersize = 1240;
+	}
+	MSG_ReadData(msg, &cl->stats[1240*curstatspacket], buffersize);
+
+	cl->receivedstats |= (1 << curstatspacket);
+	var_02 = cl->receivedstats;
+	var_02 = ~var_02;
+	var_02 = var_02 & 127;
+	cl->lastPacketTime = svs.time;
+
+	NET_OutOfBandPrint( NS_SERVER, from, "statResponse %i", var_02 );
 }
 
 
@@ -1299,7 +1281,7 @@ sharedEntity_t* SV_AddBotClient(){
 	// save the userinfo
 	Q_strncpyz(cl->userinfo, userinfo, 1024 );
 
-	cl->unknowndirectconnect1 = 0;	//Whatever it is ???
+	cl->unsentVoiceData = 0;
 	cl->hasVoip = 0;
         cl->gentity = SV_GentityNum(i);
         cl->clscriptid = Scr_AllocArray();
@@ -2344,4 +2326,98 @@ void SV_DelayDropClient(client_t *client, const char *dropmsg)
 	{
 		client->delayDropMsg = dropmsg;
 	}
+}
+
+
+void SV_WriteClientVoiceData(msg_t *msg, client_t *client)
+{	
+	int i;
+	
+	MSG_WriteByte(msg, client->unsentVoiceData);
+	
+	for(i = 0; i < client->unsentVoiceData; i++)
+	{
+		MSG_WriteByte( msg, client->voicedata[i].num );
+		MSG_WriteByte( msg, client->voicedata[i].dataLen );
+		MSG_WriteData( msg, client->voicedata[i].data, client->voicedata[i].dataLen );
+	}
+	
+}
+
+void SV_SendClientVoiceData(client_t *client)
+{
+	
+	msg_t msg;
+	byte buff[0x20000];
+	
+	if ( client->state < CS_ACTIVE || client->unsentVoiceData == 0)
+	{
+		return;
+	}
+    MSG_Init(&msg, buff, sizeof(buff));
+    MSG_WriteString(&msg, "v");
+    SV_WriteClientVoiceData(&msg, client);
+    if ( msg.overflowed )
+    {
+		Com_PrintWarning( "WARNING: voice msg overflowed for %s\n", client->shortname);
+		return;
+    }
+    NET_OutOfBandData(NS_SERVER, &client->netchan.remoteAddress, msg.data, msg.cursize);
+    client->unsentVoiceData = 0;
+}
+
+void SV_GetVoicePacket(netadr_t *from, msg_t *msg)
+{
+	int qport;
+
+	client_t *cl;
+	
+	qport = MSG_ReadShort(msg);
+
+	cl = SV_ReadPackets(from, qport);
+	
+	if ( cl->state >= CS_CONNECTED)
+	{
+		cl->lastPacketTime = svs.time;
+		if ( cl->state >= CS_ACTIVE )
+			SV_UserVoice(cl, msg);
+		else
+			SV_PreGameUserVoice(cl, msg);
+
+	}
+}
+
+client_t* SV_ReadPackets(netadr_t *from, int qport)
+{
+	int i;
+	client_t *cl;
+
+	// find which client the message is from
+	for (i = 0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++)
+	{
+		
+		if ( cl->state == CS_FREE ) {
+			continue;
+		}
+		if ( !NET_CompareBaseAdr( from, &cl->netchan.remoteAddress ) ) {
+			continue;
+		}
+		
+		// it is possible to have multiple clients from a single IP
+		// address, so they are differentiated by the qport variable
+		if ( cl->netchan.qport != qport ) {
+			continue;
+		}
+		
+		// the IP port can't be used to differentiate them, because
+		// some address translating routers periodically change UDP
+		// port assignments
+		if ( cl->netchan.remoteAddress.port != from->port ) {
+			Com_Printf( "SV_ReceiveStats: fixing up a translated port\n" );
+			cl->netchan.remoteAddress.port = from->port;
+		}
+		return cl;
+	
+	}
+	return NULL;
 }

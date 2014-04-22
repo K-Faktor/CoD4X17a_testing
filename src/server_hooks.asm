@@ -30,13 +30,28 @@ global SV_ScriptUsage_f
 SV_ScriptUsage_f:
 	jmp dword [oSV_ScriptUsage_f]
 
-global SV_BeginClientSnapshot
-SV_BeginClientSnapshot:
-	jmp dword [oSV_BeginClientSnapshot]
+;global SV_BeginClientSnapshot
+;SV_BeginClientSnapshot:
+;	jmp dword [oSV_BeginClientSnapshot]
 
-global SV_EndClientSnapshot
-SV_EndClientSnapshot:
-	jmp dword [oSV_EndClientSnapshot]
+;global SV_EndClientSnapshot
+;SV_EndClientSnapshot:
+;	jmp dword [oSV_EndClientSnapshot]
+global SV_ArchiveSnapshot
+SV_ArchiveSnapshot:
+	jmp dword [oSV_ArchiveSnapshot]
+
+global SV_UserVoice
+SV_UserVoice:
+	jmp dword [oSV_UserVoice]
+
+global SV_PreGameUserVoice
+SV_PreGameUserVoice:
+	jmp dword [oSV_PreGameUserVoice]
+
+global SV_BuildClientSnapshot
+SV_BuildClientSnapshot:
+	jmp dword [oSV_BuildClientSnapshot]
 
 global SV_ClientThink
 SV_ClientThink:
@@ -65,14 +80,6 @@ SV_ResetSekeletonCache:
 global SV_PreFrame
 SV_PreFrame:
 	jmp dword [oSV_PreFrame]
-
-global SV_SendClientMessages
-SV_SendClientMessages:
-	jmp dword [oSV_SendClientMessages]
-
-global SV_SetServerStaticHeader
-SV_SetServerStaticHeader:
-	jmp dword [oSV_SetServerStaticHeader]
 
 global SV_ShutdownGameProgs
 SV_ShutdownGameProgs:
@@ -144,3 +151,7 @@ oSV_UnlinkEntity dd 0x817d5e0
 oSV_AddServerCommand_old dd 0x817664c
 oSV_GameCommand dd 0x817c674
 oFS_GetMapBaseName dd  0x8127e0c
+oSV_BuildClientSnapshot dd 0x817a988
+oSV_PreGameUserVoice dd 0x817c388
+oSV_UserVoice dd 0x817c08e
+oSV_ArchiveSnapshot dd 0x816b758

@@ -1049,7 +1049,8 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 		if(msg->data[7] == 0x43 || msg->data[7] == 0x31 || msg->data[7] == 0x4a)
 		    return;
 
-		for ( i = 0, clnum = -1, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ ){
+		for ( i = 0, clnum = -1, cl = svs.clients ; i < sv_maxclients->integer ; i++, cl++ )
+		{
 			if ( !NET_CompareBaseAdr( from, &cl->netchan.remoteAddress ) )	continue;
 			if(cl->netchan.remoteAddress.port != from->port) continue;
 			clnum = i;
@@ -1059,6 +1060,9 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 		if(NET_GetDefaultCommunicationSocket() == NULL)
 			NET_RegisterDefaultCommunicationSocket(from);
 
+		if(clnum == -1)
+			return;
+		
 		PbSvAddEvent(13, clnum, msg->cursize-4, (char *)&msg->data[4]);
 		return;
 #endif
@@ -1076,7 +1080,10 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 
 	} else if (!Q_stricmp(c, "getchallenge")) {
 		SV_GetChallenge(from);
-
+		
+	} else if (!Q_stricmp(c, "v")) {
+		SV_GetVoicePacket(from, msg);
+		
 	} else {
 		Com_DPrintf ("bad connectionless packet from %s\n", NET_AdrToString (from));
 	}
@@ -1095,7 +1102,7 @@ SV_ReadPackets
 =================
 */
 __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
-	int i;
+
 	client_t    *cl;
 	short qport;
 
@@ -1117,68 +1124,61 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 	qport = MSG_ReadShort( msg );  // & 0xffff;
 
 	// find which client the message is from
-	for ( i = 0, cl = svs.clients ; i < sv_maxclients->integer ; i++,cl++ ) {
-		if ( cl->state == CS_FREE ) {
-			continue;
-		}
-		if ( !NET_CompareBaseAdr( from, &cl->netchan.remoteAddress ) ) {
-			continue;
-		}
+	cl = SV_ReadPackets( from, qport );
 
-		// it is possible to have multiple clients from a single IP
-		// address, so they are differentiated by the qport variable
-		if ( cl->netchan.qport != qport ) {
-			continue;
-		}
-
-		// the IP port can't be used to differentiate them, because
-		// some address translating routers periodically change UDP
-		// port assignments
-		if ( cl->netchan.remoteAddress.port != from->port ) {
-			Com_Printf( "SV_PacketEvent: fixing up a translated port\n" );
-			cl->netchan.remoteAddress.port = from->port;
-		}
-		// make sure it is a valid, in sequence packet
-		if ( Netchan_Process( &cl->netchan, msg ) ) {
-			// zombie clients still need to do the Netchan_Process
-			// to make sure they don't need to retransmit the final
-			// reliable message, but they don't do any other processing
-			cl->serverId = MSG_ReadByte( msg );
-			cl->messageAcknowledge = MSG_ReadLong( msg );
-
-			if(cl->messageAcknowledge < 0){
-				Com_Printf("Invalid reliableAcknowledge message from %s - reliableAcknowledge is %i\n", cl->name, cl->reliableAcknowledge);
-				return;
-			}
-			cl->reliableAcknowledge = MSG_ReadLong( msg );
-
-			if((cl->reliableSequence - cl->reliableAcknowledge) > (MAX_RELIABLE_COMMANDS - 1)){
-				Com_Printf("Out of range reliableAcknowledge message from %s - reliableSequence is %i, reliableAcknowledge is %i\n",
-				cl->name, cl->reliableSequence, cl->reliableAcknowledge);
-				cl->reliableAcknowledge = cl->reliableSequence;
-				return;
-			}
-			SV_Netchan_Decode(cl, &msg->data[msg->readcount], msg->cursize - msg->readcount);
-			if ( cl->state != CS_ZOMBIE ) {
-				cl->lastPacketTime = svs.time;  // don't timeout
-				if(msg->cursize > 2000){
-					//This will fix up a buffer overflow.
-					//CoD4's message Decompress-function has no buffer overrun check
-					//Because the compression algorithm is very poor this is already sufficent
-					Com_Printf("Oversize message received from: %s\n", cl->name);
-					SV_DropClient(cl, "Oversize client message");
-				}else{
-
-	//				SV_DumpCommands(cl, msg->data, msg->cursize, qtrue);
-					SV_ExecuteClientMessage( cl, msg );
-				}
-			}
-		}
+	if(cl == NULL)
+	{
+		// if we received a sequenced packet from an address we don't recognize,
+		// send an out of band disconnect packet to it
+		NET_OutOfBandPrint( NS_SERVER, from, "disconnect" );
 		return;
 	}
-	// if we received a sequenced packet from an address we don't recognize,
-	// send an out of band disconnect packet to it
-	NET_OutOfBandPrint( NS_SERVER, from, "disconnect" );
+	// make sure it is a valid, in sequence packet
+	if ( !Netchan_Process( &cl->netchan, msg ) )
+	{
+		return;
+	}
+
+	// zombie clients still need to do the Netchan_Process
+	// to make sure they don't need to retransmit the final
+	// reliable message, but they don't do any other processing
+	cl->serverId = MSG_ReadByte( msg );
+	cl->messageAcknowledge = MSG_ReadLong( msg );
+
+	if(cl->messageAcknowledge < 0){
+		Com_Printf("Invalid reliableAcknowledge message from %s - reliableAcknowledge is %i\n", cl->name, cl->reliableAcknowledge);
+		return;
+	}
+	cl->reliableAcknowledge = MSG_ReadLong( msg );
+
+	if((cl->reliableSequence - cl->reliableAcknowledge) > (MAX_RELIABLE_COMMANDS - 1)){
+		Com_Printf("Out of range reliableAcknowledge message from %s - reliableSequence is %i, reliableAcknowledge is %i\n",
+		cl->name, cl->reliableSequence, cl->reliableAcknowledge);
+		cl->reliableAcknowledge = cl->reliableSequence;
+		return;
+	}
+	
+	SV_Netchan_Decode(cl, &msg->data[msg->readcount], msg->cursize - msg->readcount);
+	
+	if ( cl->state == CS_ZOMBIE )
+	{
+		return;
+	}
+	
+	cl->lastPacketTime = svs.time;  // don't timeout
+	if(msg->cursize > 2000){
+		//This will fix up a buffer overflow.
+		//CoD4's message Decompress-function has no buffer overrun check
+		//Because the compression algorithm is very poor this is already sufficent
+		Com_Printf("Oversize message received from: %s\n", cl->name);
+		SV_DropClient(cl, "Oversize client message");
+	}else{
+
+//			SV_DumpCommands(cl, msg->data, msg->cursize, qtrue);
+		SV_ExecuteClientMessage( cl, msg );
+	}
+	
+
 }
 
 
@@ -1682,7 +1682,6 @@ void SV_CopyCvars()
 	*(cvar_t**)0x13ed8974 = sv_mapname;
 	*(cvar_t**)0x13ed8960 = sv_maxclients;
 	*(cvar_t**)0x13ed89c8 = sv_clientSideBullets;
-	*(cvar_t**)0x13ed897c = sv_maxRate;
 	*(cvar_t**)0x13ed89e4 = sv_floodProtect;
 	*(cvar_t**)0x13ed89ec = sv_showcommands;
 	*(cvar_t**)0x13ed899c = sv_iwds;
@@ -1696,11 +1695,12 @@ void SV_CopyCvars()
 	*(cvar_t**)0x13ed8978 = sv_serverid;
 	*(cvar_t**)0x13ed89d0 = sv_pure;
 	*(cvar_t**)0x13ed8950 = sv_fps;
-	*(cvar_t**)0x13ed89f4 = sv_showAverageBPS;
 	*(cvar_t**)0x13ed8a04 = sv_botsPressAttackBtn;
 	*(cvar_t**)0x13ed89c0 = sv_debugRate;
 	*(cvar_t**)0x13ed89c4 = sv_debugReliableCmds;
 	*(cvar_t**)0x13f19004 = sv_clientArchive;
+	*(cvar_t**)0x13ed8a08 = sv_voice;
+	*(cvar_t**)0x13ed8a0c = sv_voiceQuality;
 }
 
 
@@ -2160,15 +2160,51 @@ void SV_WriteRconStatus( msg_t* msg ) {
 }
 
 void SV_GetServerStaticHeader(){
-	svs.nextCachedSnapshotFrames = svsHeader.var_01;
-	svs.nextCachedSnapshotEntities = svsHeader.var_03;
-	svs.nextCachedSnapshotClients = svsHeader.var_04;
+	svs.nextCachedSnapshotFrames = svsHeader.nextCachedSnapshotFrames;
+	svs.nextCachedSnapshotEntities = svsHeader.nextCachedSnapshotEntities;
+	svs.nextCachedSnapshotClients = svsHeader.nextCachedSnapshotClients;
+}
+
+void SV_SetServerStaticHeader()
+{
+	svsHeader.mapCenter[0] = svs.mapCenter[0];
+	svsHeader.mapCenter[1] = svs.mapCenter[1];
+	svsHeader.mapCenter[2] = svs.mapCenter[2];
+
+	svsHeader.snapFlagServerBit = svs.snapFlagServerBit;
+	svsHeader.time = svs.time;
+	svsHeader.numSnapshotEntities = svs.numSnapshotEntities;
+	svsHeader.numSnapshotClients = svs.numSnapshotClients;
+	svsHeader.nextSnapshotEntities = svs.nextSnapshotEntities;
+	svsHeader.nextSnapshotClients = svs.nextSnapshotClients;
+	svsHeader.nextCachedSnapshotFrames = svs.nextCachedSnapshotFrames;
+	svsHeader.nextArchivedSnapshotFrames = svs.nextArchivedSnapshotFrames;
+	svsHeader.nextCachedSnapshotEntities = svs.nextCachedSnapshotEntities;
+	svsHeader.nextCachedSnapshotClients = svs.nextCachedSnapshotClients;
+	svsHeader.num_entities = sv.num_entities;
+	svsHeader.clients = svs.clients;
+	svsHeader.snapshotEntities = svs.snapshotEntities;
+	svsHeader.snapshotClients = svs.snapshotClients;
+	svsHeader.svEntities = sv.svEntities;
+	svsHeader.archivedEntities = svs.archivedEntities;
+	svsHeader.entUnknown2 = svs.entUnknown2;
+	svsHeader.archiveSnapBuffer = svs.archiveSnapBuffer;
+	svsHeader.entUnknown1 = svs.entUnknown1;
+	svsHeader.maxClients = sv_maxclients->integer;
+	svsHeader.fps = sv_fps->integer;
+	svsHeader.gentitySize = sv.gentitySize;
+	svsHeader.canArchiveData = sv_clientArchive->integer;
+
+	svsHeader.gentities = sv.gentities;
+	svsHeader.gclientstate = G_GetClientState( 0 );
+	svsHeader.gplayerstate = G_GetPlayerState( 0 );
+	svsHeader.gclientSize = G_GetClientSize();
+
 }
 
 
-
 void SV_InitArchivedSnapshot(){
-
+	
 	svs.nextArchivedSnapshotFrames = 0;
 	svs.nextArchivedSnapshotBuffer = 0;
 	svs.nextCachedSnapshotEntities = 0;
@@ -2471,6 +2507,7 @@ if necessary
 #define SV_MAXCS_CONNECTEDTIME 6
 
 void SV_CheckTimeouts( void ) {
+
 	int i;
 	client_t    *cl;
 	int primeddroppoint;
@@ -2849,3 +2886,18 @@ const char* SV_GetNextMap()
     return sv_nextmap->string;
 }
 
+
+void SV_ShowClientUnAckCommands( client_t *client )
+{
+	int i;
+	
+	Com_Printf("-- Unacknowledged Server Commands for client %i:%s --\n", client - svs.clients, client->name);
+	
+	for ( i = client->reliableAcknowledge + 1; i <= client->reliableSequence; ++i )
+	{
+		Com_Printf("cmd %5d: %8d: %s\n", i, client->reliableCommands[i & (MAX_RELIABLE_COMMANDS -1)].cmdTime,
+				   client->reliableCommands[i & (MAX_RELIABLE_COMMANDS -1)].command );
+	}
+	
+	Com_Printf("-----------------------------------------------------\n");
+}

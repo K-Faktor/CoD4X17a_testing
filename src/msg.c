@@ -99,9 +99,17 @@ void MSG_InitReadOnlySplit( msg_t *buf, byte *data, int length, byte* arg4, int 
 
 
 void MSG_Clear( msg_t *buf ) {
+	
+	if(buf->readonly == qtrue || buf->var_01 != NULL)
+	{
+		Com_Error(ERR_FATAL, "MSG_Clear: Can not clear a read only msg");
+		return;
+	}
+	
 	buf->cursize = 0;
 	buf->overflowed = qfalse;
-	buf->bit = 0;					//<- in bits
+	buf->bit = 0;			//<- in bits
+	buf->readcount = 0;
 }
 
 

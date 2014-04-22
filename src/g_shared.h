@@ -458,6 +458,10 @@ int BG_GetPerkIndexForName(const char* name);
 int G_GetSavePersist(void);
 void G_SetSavePersist(int val);
 
+int G_GetClientSize();
+gclient_t* G_GetPlayerState(int num);
+clientSession_t * G_GetClientState(int num);
+
 //This defines Cvars directly related to executable file
 #define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
 

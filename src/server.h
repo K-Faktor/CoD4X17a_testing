@@ -55,7 +55,7 @@
 // MAX_CHALLENGES is made large to prevent a denial
 // of service attack that could cycle all of them
 // out before legitimate users connected
-#define	MAX_CHALLENGES	2048
+#define	MAX_CHALLENGES	1024
 // Allow a certain amount of challenges to have the same IP address
 // to make it a bit harder to DOS one single IP address from connecting
 // while not allowing a single ip to grab all challenge resources
@@ -111,6 +111,14 @@ typedef enum {
     UN_OK
 }username_t;
 #pragma pack(1)
+
+
+typedef struct
+{
+	char num;
+	char data[256];
+	int dataLen;
+}voices_t;
 
 typedef struct client_s {//90b4f8c
 	clientState_t		state;
@@ -217,9 +225,9 @@ typedef struct client_s {//90b4f8c
 	short			clscriptid; //0xa0d22
 	int			canNotReliable; 
 	int			serverId; //0xa0d28
-	int			unknown7[2610];
-	int			unknowndirectconnect1;//(0xa35f4)
-	byte			mutedClients[64];
+	voices_t	voicedata[40];
+	int			unsentVoiceData;//(0xa35f4)
+	byte			mutedClients[MAX_CLIENTS];
 	byte			hasVoip;//(0xa3638)
 	byte			stats[8192];		//(0xa3639)
 	byte			receivedstats;		//(0xa5639)
@@ -269,10 +277,102 @@ svs.snapflagServerbit 0x13f18f88  //copied from real svs. to something else
 
 */
 
+#pragma pack(push, 1)
+
+typedef struct
+{
+	int buffer;
+	int msgsize;
+
+}svArchiveBuf_t;
+
+typedef struct clientState_s
+{
+	int number;
+	byte b[0x60];
+}clientState_ts;
+
+typedef struct
+{
+	entityState_t ent;
+	int field_F4;
+	int field_F8;
+	int field_FC;
+	int field_100;
+	int field_104;
+	int field_108;
+	int field_10C;
+	int field_110;
+	int field_114;
+}archivedEntity_t;
+
+typedef struct
+{
+	int num;
+	int field_4;
+	int field_8;
+	int field_C;
+	int field_10;
+	int field_14;
+	int field_18;
+}entityUnknownStr_t;
+
+typedef struct
+{
+	playerState_t ps;
+	int field_2F64;
+	int field_2F68;
+	int field_2F6C;
+	int field_2F70;
+	int field_2F74;
+	int field_2F78;
+	int field_2F7C;
+	int field_2F80;
+	int field_2F84;
+	int field_2F88;
+	int field_2F8C;
+	int field_2F90;
+	int field_2F94;
+	int field_2F98;
+	int field_2F9C;
+	int field_2FA0;
+	int field_2FA4;
+	int field_2FA8;
+	int field_2FAC;
+	int field_2FB0;
+	int field_2FB4;
+	int field_2FB8;
+	int field_2FBC;
+	int field_2FC0;
+	int field_2FC4;
+	int field_2FC8;
+}entityUnknownStr2_t;
+
+typedef struct
+{
+	int adr[5];
+	int challenge;
+	int time;
+	int pingTime;
+	int firstTime;
+	int firstPing;
+	qboolean connected;
+	char pbguid[33];
+	char field_4D;
+	char field_4E;
+	char field_4F;
+}challenge2_t;
+
+typedef struct{
+	int time;
+	char guid[32];
+}banlist_t;
+
 typedef struct {//0x8c51780
 
-	int		unknown[0x118e00];
-
+	entityUnknownStr_t entUnknown1[512];
+	archivedEntity_t archivedEntities[16384];
+	
 	qboolean	initialized;				//0x90b4f80 sv_init has completed
 
 	int		time;					// will be strictly increasing across level changes
@@ -287,36 +387,43 @@ typedef struct {//0x8c51780
 	int		numSnapshotClients;
 	int		nextSnapshotEntities;		//0xba0de94 next snapshotEntities to use
 	int		nextSnapshotClients;
-/*	//entityState_t	*snapshotEntities;		// [numSnapshotEntities]
-	int		nextHeartbeatTime;
-	challenge_t	challenges[MAX_CHALLENGES];	// to prevent invalid IPs from connecting
-	netadr_t	redirectAddress;			// for rcon return messages
-	netadr_t	authorizeAddress;			// ??? for rcon return messages
-	client_t	*redirectClient;		//used for SV_ExecuteRemoteControlCmd()
-	cmdInvoker_t	cmdInvoker;
-	qboolean	cmdSystemInitialized;
-	int		secret;
-//	cmdPower_t	cmdPower[MAX_POWERLIST];
-	adminPower_t	*adminPower;
-	badwordsList_t	*badwords;
-	translatedCmds_t	translatedCmd[MAX_TRANSCMDS];
-	authserver_t	authserver;
-	int		authorizeSVChallenge;
-//	netsendbuffer_t	resendbuffer[256];*/
+	
+	entityState_t snapshotEntities[0x2A000];
+	clientState_ts snapshotClients[0x20000];
 
-	int		bigunknown[0xd22000];			//0xba0de9c next snapshotEntities to use
+	int nextArchivedSnapshotFrames; //0xee95e9c
+	
+	svArchiveBuf_t archiveSnaps[1200];
+	byte archiveSnapBuffer[0x2000000];
+	int nextArchivedSnapshotBuffer;
+	int nextCachedSnapshotEntities; //0x10e98420
+	int nextCachedSnapshotClients;
+	int nextCachedSnapshotFrames;
+	entityUnknownStr2_t entUnknown2[4096];
+	
+	int nextHeartbeatTime;
+	
+	int field_4;
+	
+	challenge2_t challenges[MAX_CHALLENGES];
+	
+	int redirectAddress[5];
+	int authorizeAddress[5];
+	
+	char netProfilingBuf[1504];
+	
+	banlist_t banlist[16];
+	
+	int field_14850;
+	
+	vec3_t mapCenter;
+	
+	char field_14860[112];
+	
+}serverStatic_t; //Size: 0xb227580
 
-	int		nextArchivedSnapshotFrames;		//0xee95e9c
-	int		bigunknown2[0x800960];			//0xba0de9c next snapshotEntities to use
 
-	int		nextArchivedSnapshotBuffer;		//0x10e98420
-	int		nextCachedSnapshotEntities;
-	int		nextCachedSnapshotClients;
-	int		nextCachedSnapshotFrames;		//0x10e9842c
-	int		bigunknown3[0xbf8234];
-} serverStatic_t;//Size: 0xb227580
-
-
+#pragma pack(pop)
 
 typedef struct {
 	unsigned long long	nextHeartbeatTime;
@@ -360,7 +467,9 @@ typedef struct svEntity_s {//Everything is not validated except size
 	int			unk[11];
 } svEntity_t; //size: 0x178
 
+#define MAX_BPS_WINDOW 20
 
+#pragma pack(push, 1)
 
 typedef struct {//0x13e78d00
 	serverState_t		state;
@@ -383,9 +492,7 @@ typedef struct {//0x13e78d00
 
 	short			unk3; //0x13e7a82e
 	svEntity_t		svEntities[MAX_GENTITIES]; //0x1b30 (0x13e7a830) size: 0x5e000
-/*
-	char			*entityParsePoint;	// used during game VM init
-*/
+
 	// the game virtual machine will update these on init and changes
 	sharedEntity_t		*gentities;	//0x5fb30  (0x13ed8830)
 	int			gentitySize;	//0x5fb34  (0x13ed8834)
@@ -397,24 +504,31 @@ typedef struct {//0x13e78d00
 	int				restartTime;
 	int				time;*/
 	
-	byte			unk2[92]; //0x5fb44
-	int			var_01; //0x5fba0 (0x13ed88a0)
-	int			unk4[25]; //0x5fba4
-	char			gametype[MAX_QPATH]; //(0x13ed8908)
-	qboolean		unk5;
-	qboolean		unk6;
+	int			field_5FB44;
+	int			field_5FB48;
+	int			bpsWindow[MAX_BPS_WINDOW];
+	int			bpsWindowSteps;
+	int			bpsTotalBytes;
+	int			bpsMaxBytes;
+	int			ubpsWindow[MAX_BPS_WINDOW];
+	int			ubpsTotalBytes;
+	int			ubpsMaxBytes;
+	float		ucompAve;
+	int			ucompNum;
+	char		gametype[MAX_QPATH]; //(0x13ed8908)
+	qboolean	unk5;
+	qboolean	unk6;
 } server_t;//Size: 0x5fc50
 
+#pragma pack(pop)
 
-typedef struct clientState_s{
-	int number;
-	byte b[0x60];
-}clientState_ts;
+
+
 
 
 
 typedef struct{//13F18F80
-	client_t		*clients;
+	client_t	*clients;
 	int			time;
 	int			snapFlagServerBit;// ^= SNAPFLAG_SERVERCOUNT every SV_SpawnServer()
 	int			numSnapshotEntities;	//0x13f18f8c sv_maxclients->integer*PACKET_BACKUP*MAX_PACKET_ENTITIES
@@ -424,11 +538,34 @@ typedef struct{//13F18F80
 	entityState_t		*snapshotEntities;	//0x13f18f9c
 	clientState_ts		*snapshotClients;	//0x13f18fa0
 	svEntity_t		*svEntities;		//0x13f18fa4
+	
+	vec3_t mapCenter;
+	archivedEntity_t *archivedEntities;
+	entityUnknownStr2_t *entUnknown2;
+	byte *archiveSnapBuffer;
+	entityUnknownStr_t *entUnknown1;
+	int nextCachedSnapshotFrames;
+	int nextArchivedSnapshotFrames;
+	int nextCachedSnapshotEntities;
+	int nextCachedSnapshotClients;
+	int num_entities;
+	int maxClients;
+	int fps;
+	qboolean canArchiveData;
+	sharedEntity_t *gentities;
+	int gentitySize;
+	clientSession_t *gclientstate;
+	gclient_t *gplayerstate;
+	int gclientSize;
+	
+	
+	/*
 	int			unkBig[7];
 	int			var_01;			//0x13f18fc4
 	int			var_02;
 	int			var_03;
 	int			var_04;			//0x13f18fd0
+	 */
 }svsHeader_t;
 
 
@@ -452,6 +589,12 @@ void SV_ExecuteClientCommand( client_t *cl, const char *s, qboolean clientOK, qb
 void SV_SendClientSnapshot( client_t *cl );
 
 qboolean SV_Acceptclient(int);
+client_t* SV_ReadPackets(netadr_t *from, int qport);
+void SV_GetVoicePacket(netadr_t *from, msg_t* msg);
+void SV_UserVoice(client_t* cl, msg_t* msg);
+void SV_PreGameUserVoice(client_t* cl, msg_t* msg);
+void SV_BuildClientSnapshot(client_t* cl);
+void SV_ArchiveSnapshot(msg_t* msg);
 
 void QDECL SV_SendServerCommand_IW(client_t *cl, int type, const char *fmt, ...);
 void QDECL SV_SendServerCommand(client_t *cl, const char *fmt, ...);
@@ -470,6 +613,8 @@ void SV_WriteGameState(msg_t*, client_t*);
 
 void SV_GetServerStaticHeader(void);
 
+void SV_ShowClientUnAckCommands( client_t *client );
+
 
 void SV_WriteDemoMessageForClient( byte *msg, int dataLen, client_t *client );
 void SV_StopRecord( client_t *cl );
@@ -477,6 +622,7 @@ void SV_RecordClient( client_t* cl, char* basename );
 void SV_DemoSystemShutdown( void );
 void SV_WriteDemoArchive(client_t *client);
 
+void SV_SendClientVoiceData(client_t *client);
 
 void SV_InitCvarsOnce( void );
 
@@ -599,6 +745,7 @@ extern cvar_t* sv_serverid;
 extern cvar_t* sv_maxRate;
 extern cvar_t* sv_mapname;
 extern cvar_t* sv_floodProtect;
+extern cvar_t* sv_showAverageBPS;
 
 void __cdecl SV_StringUsage_f(void);
 void __cdecl SV_ScriptUsage_f(void);
