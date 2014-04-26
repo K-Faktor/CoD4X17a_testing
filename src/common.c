@@ -969,13 +969,9 @@ __optimize3 void Com_Frame( void ) {
         jmp_buf* abortframe = (jmp_buf*)Sys_GetValue(2);
 
         if(setjmp(*abortframe)){
-
-            Sys_EnterCriticalSection(2);
-
-            if(com_errorEntered)
-                Com_Error(ERR_FATAL,"Recursive error");
-
-            Sys_LeaveCriticalSection(2);
+			/* Invokes Com_Error if needed */
+            Sys_EnterCriticalSection(CRIT_ERRORCHECK);
+            Sys_LeaveCriticalSection(CRIT_ERRORCHECK);
         }
 	//
 	// main event loop
@@ -1113,13 +1109,10 @@ __optimize3 void Com_Frame( void ) {
 	com_frameNumber++;
 
 	Com_UpdateRealtime();
-
-        Sys_EnterCriticalSection(2);
-
-        if(com_errorEntered)
-            Com_Error(ERR_FATAL,"Recursive error");
-
-        Sys_LeaveCriticalSection(2);
+	
+	/* Invokes Com_Error if needed */
+	Sys_EnterCriticalSection(CRIT_ERRORCHECK);
+	Sys_LeaveCriticalSection(CRIT_ERRORCHECK);
 }
 
 
@@ -1283,6 +1276,11 @@ int Com_FilterPath( char *filter, char *name, int casesensitive ) {
 	return Com_Filter( new_filter, new_name, casesensitive );
 }
 
+qboolean Com_InError()
+{
+	return com_errorEntered;
+}
+
 /*
 =============
 Com_Error
@@ -1295,21 +1293,49 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	va_list		argptr;
 	static int	lastErrorTime;
 	static int	errorCount;
+	static int	lastErrorCode;
 	int		currentTime;
 	jmp_buf*	abortframe;
 	mvabuf;
 
 
 	if(com_developer && com_developer->integer > 1)
-		__asm__("int $3");
+		__builtin_trap ( );
+		
+	Sys_EnterCriticalSection(CRIT_ERROR);
+	
+	if(Sys_IsMainThread() == qfalse)
+	{
+		com_errorEntered = qtrue;
+		
+		va_start (argptr,fmt);
+		Q_vsnprintf (com_errorMessage, sizeof(com_errorMessage),fmt,argptr);
+		va_end (argptr);
+		lastErrorCode = code;
+		/* Terminate this thread and wait for the main-thread entering this function */
+		Sys_LeaveCriticalSection(CRIT_ERROR);
+		Sys_ExitThread(-1);
+		return;
+	}
+	/* Main thread can't be twice in this function at same time */
+	Sys_LeaveCriticalSection(CRIT_ERROR);
 
-	if(com_errorEntered)
-		Sys_Error("recursive error after: %s", com_errorMessage);
-
-	com_errorEntered = qtrue;
-
+	
+	if(com_errorEntered == qfalse)
+	{
+		com_errorEntered = qtrue;
+		
+		va_start (argptr,fmt);
+		Q_vsnprintf (com_errorMessage, sizeof(com_errorMessage),fmt,argptr);
+		va_end (argptr);
+		lastErrorCode = code;
+	
+	}
+	
+	code = lastErrorCode;
+	
 	Cvar_RegisterInt("com_errorCode", code, code, code, CVAR_ROM, "The last calling error code");
-
+	
 	// if we are getting a solid stream of ERR_DROP, do an ERR_FATAL
 	currentTime = Sys_Milliseconds();
 	if ( currentTime - lastErrorTime < 400 ) {
@@ -1323,9 +1349,6 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	lastErrorTime = currentTime;
 	abortframe = (jmp_buf*)Sys_GetValue(2);
 
-	va_start (argptr,fmt);
-	Q_vsnprintf (com_errorMessage, sizeof(com_errorMessage),fmt,argptr);
-	va_end (argptr);
 
 	if (code != ERR_DISCONNECT)
 		Cvar_RegisterString("com_errorMessage", com_errorMessage, CVAR_ROM, "The last calling error message");
@@ -1348,6 +1371,7 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	NET_Shutdown();
 	Com_CloseLogFiles( );
 	Sys_Error ("%s", com_errorMessage);
+	
 }
 
 

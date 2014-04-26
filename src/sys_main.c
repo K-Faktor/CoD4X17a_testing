@@ -321,8 +321,13 @@ Sys_Print
 */
 void Sys_Print( const char *msg )
 {
+	Sys_EnterCriticalSection(CRIT_CONSOLE);
+
 //	CON_LogWrite( msg );
 	CON_Print( msg );
+
+	Sys_LeaveCriticalSection(CRIT_CONSOLE);
+
 }
 
 /*

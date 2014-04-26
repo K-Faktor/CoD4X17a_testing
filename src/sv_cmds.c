@@ -39,9 +39,13 @@ These commands can only be entered from stdin or by a remote operator datagram
 #include "g_shared.h"
 #include "g_sv_shared.h"
 #include "nvconfig.h"
+#include "httpftp.h"
+#include "qcommon_mem.h"
+#include "sys_thread.h"
 
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 typedef enum {
     SAY_CHAT,
@@ -1861,15 +1865,198 @@ static void SV_ShowConfigstring_f()
 }
 
 
+
+
+qboolean SV_RunDownload(const char* url, const char* filename)
+{
+	ftRequest_t* curfileobj;
+	int len, transret;
+
+	curfileobj = FileDownloadRequest(url);
+	if(curfileobj == NULL)
+	{
+		Com_Printf("Couldn't connect to download-server for downloading. Failed to download %s\n", filename);
+		return qfalse;	
+	}
+		
+	do
+	{
+		transret = FileDownloadSendReceive( curfileobj );
+		usleep(20000);
+		
+	} while (transret == 0);
+		
+	if(transret < 0)
+	{
+		Com_Printf("Downloading of file: \"%s\" has failed\n", filename );
+		FileDownloadFreeRequest(curfileobj);
+		return qfalse;
+	}
+	
+	if(curfileobj->code != 200)
+	{
+		Com_Printf("Downloading of file: \"%s\" has failed with the following message: %d %s\n", filename, curfileobj->code, curfileobj->status);
+		FileDownloadFreeRequest(curfileobj);
+		return qfalse;
+		
+	}
+	
+	len = FS_SV_BaseWriteFile(filename, curfileobj->recvmsg.data + curfileobj->headerLength, curfileobj->contentLength);
+	if(len != curfileobj->contentLength){
+		
+		len = FS_SV_HomeWriteFile(filename, curfileobj->recvmsg.data + curfileobj->headerLength, curfileobj->contentLength);
+		if(len != curfileobj->contentLength)
+		{
+			Com_PrintError("Opening of \"%s\" for writing has failed! Download aborted.\n", filename);
+			FileDownloadFreeRequest(curfileobj);
+			return qfalse;
+		}
+	}
+	FileDownloadFreeRequest(curfileobj);
+	return qtrue;
+}
+
+void SV_DownloadMapThread(char *inurl)
+{
+	int len;
+	
+	char url[MAX_STRING_CHARS];
+	char dlurl[MAX_STRING_CHARS];
+	char *mapname;
+	char filename[MAX_OSPATH];
+	static qboolean downloadActive = 0;
+	
+	Q_strncpyz(url, inurl, sizeof(url));
+	Z_Free(inurl);
+	
+	
+	Sys_EnterCriticalSection(CRIT_MISC);
+
+	if(downloadActive)
+	{
+		Com_Printf("There is already a map download running. Won't download this.\n");
+		Sys_LeaveCriticalSection(CRIT_MISC);		
+		return;
+	}
+	downloadActive = qtrue;
+	
+	Sys_LeaveCriticalSection(CRIT_MISC);
+
+	
+	len = strlen(url);
+	
+	if(url[len -1] == '/')
+		url[len -1] = '\0';
+	
+	mapname = strrchr(url, '/');
+
+	if(mapname == NULL)
+	{
+		Com_Printf("Invalid map download path\n");
+		downloadActive = qfalse;
+		return;
+	}
+	
+	mapname++;
+		
+	
+	Com_sprintf(filename, sizeof(filename), "usermaps/%s/%s%s", mapname ,mapname, ".ff" );
+	Com_sprintf(dlurl, sizeof(dlurl), "%s/%s%s", url, mapname, ".ff");
+	
+	Com_Printf("Begin downloading of file: \"%s\"\n", filename );
+	
+	if(SV_RunDownload(dlurl, filename) == qfalse)
+	{
+		Com_Printf("Aborted map download\n");
+		downloadActive = qfalse;
+		return;
+	}
+	Com_Printf("Received file: %s\n", filename );
+	
+	
+	
+	
+	Com_sprintf(filename, sizeof(filename), "usermaps/%s/%s%s", mapname ,mapname, "_load.ff" );
+	Com_sprintf(dlurl, sizeof(dlurl), "%s/%s%s", url, mapname, "_load.ff");
+	
+	Com_Printf("Begin downloading of file: \"%s\"\n", filename );
+	
+	if(SV_RunDownload(dlurl, filename) == qfalse)
+	{
+		Com_Printf("Aborted map download\n");
+		downloadActive = qfalse;
+		return;
+	}
+	Com_Printf("Received file: %s\n", filename );
+	
+	
+	
+	Com_sprintf(filename, sizeof(filename), "usermaps/%s/%s%s", mapname ,mapname, ".iwd" );
+	Com_sprintf(dlurl, sizeof(dlurl), "%s/%s%s", url, mapname, ".iwd");
+	
+	Com_Printf("Begin downloading of file: \"%s\"\n", filename );
+	
+	if(SV_RunDownload(dlurl, filename) == qfalse)
+	{
+		Com_Printf("File %s was not downloaded. This map has maybe no .iwd file\n");
+		Com_Printf("Download of map \"%s\" has been completed\n", mapname);
+		downloadActive = qfalse;
+		return;
+	}
+	Com_Printf("Received file: %s\n", filename );
+	Com_Printf("Download of map \"%s\" has been completed\n", mapname);
+	downloadActive = qfalse;
+
+}
+
+void SV_DownloadMap_f()
+{
+	char *url;
+	int len;
+	char buf[128];
+	
+	if ( Cmd_Argc() != 2 )
+	{
+		Com_Printf( "Usage: downloadmap <\"url\">\nFor example: downloadmap \"http://somehost/cod4/usermaps/mapname\"\n" );
+		return;
+    }
+	
+	len = strlen(Cmd_Argv(1));
+	
+	Cmd_Args(buf, sizeof(buf));
+	
+	if(len < 3 || len > MAX_STRING_CHARS)
+	{
+		Com_Printf( "Usage: downloadmap <\"url\">\n" );
+		return;
+	}
+	
+	url = Z_Malloc(len +1);
+	if(url == NULL)
+	{
+		Com_PrintError("SV_DownloadMap_f(): Out of memory\n");
+		return;
+	}
+	
+	Q_strncpyz(url, Cmd_Argv(1), len +1);
+
+	if(Sys_CreateCallbackThread(SV_DownloadMapThread, url) == qfalse)
+	{
+		Com_PrintError("SV_DownloadMap_f(): Failed to start download thread\n");
+		Z_Free(url);
+	}
+}
+
+
 void SV_AddOperatorCommands(){
-
+	
 	static qboolean	initialized;
-
+	
 	if ( initialized ) {
 		return;
 	}
 	initialized = qtrue;
-
+	
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
 	Cmd_AddCommand ("setPerk", SV_SetPerk_f);
 	Cmd_AddCommand ("map_restart", SV_MapRestart_f);
@@ -1897,21 +2084,20 @@ void SV_AddOperatorCommands(){
 	Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
 	Cmd_AddCommand ("stringUsage", SV_StringUsage_f);
 	Cmd_AddCommand ("scriptUsage", SV_ScriptUsage_f);
-
+	
 	Cmd_AddCommand ("setadmin", SV_SetAdmin_f);
 	Cmd_AddCommand ("unsetadmin", SV_UnsetAdmin_f);
-
+	
 	Cmd_AddCommand ("stoprecord", SV_StopRecord_f);
 	Cmd_AddCommand ("record", SV_Record_f);
-
+	
 	if(Com_IsDeveloper()){
 		Cmd_AddCommand ("showconfigstring", SV_ShowConfigstring_f);
 		Cmd_AddCommand ("devmap", SV_Map_f);
-
+		
 	}
-
+	
 }
-
 
 void SV_AddSafeCommands(){
 
@@ -1921,7 +2107,7 @@ void SV_AddSafeCommands(){
 		return;
 	}
 	initialized = qtrue;
-
+	
 	Cmd_AddCommand ("systeminfo", SV_Systeminfo_f);
 	Cmd_AddCommand ("serverinfo", SV_Serverinfo_f);
 	Cmd_AddCommand ("map", SV_Map_f);
@@ -1935,6 +2121,7 @@ void SV_AddSafeCommands(){
 	Cmd_AddCommand ("adminlist", SV_ListAdmins_f);
 	Cmd_AddCommand ("status", SV_Status_f);
 	Cmd_AddCommand ("addCommand", Cmd_AddTranslatedCommand_f);
+	Cmd_AddCommand ("downloadmap", SV_DownloadMap_f);
 }
 
 

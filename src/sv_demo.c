@@ -313,9 +313,9 @@ NOTE TTimo: this goes with FS_FOpenFileWrite for opening the file afterwards
 qboolean FS_DemoFileExists( const char *file )
 {
 	FILE *f;
-	char *testpath;
+	char testpath[MAX_OSPATH];
 
-	testpath = FS_BuildOSPath( fs_homepath->string, file, "" );
+	FS_BuildOSPathForThread( fs_homepath->string, file, "", testpath, 0 );
 	testpath[strlen(testpath)-1] = '\0';
 
 	f = fopen( testpath, "rb" );
@@ -381,13 +381,14 @@ FS_FOpenDemoFileWrite
 ===========
 */
 qboolean FS_FOpenDemoFileWrite( const char *filename, fileHandleData_t *fh ) {
-	char *ospath;
+	
+	char ospath[MAX_OSPATH];
 
 	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-	ospath = FS_BuildOSPath( fs_homepath->string, filename, "" );
+	FS_BuildOSPathForThread( fs_homepath->string, filename, "", ospath, 0 );
 	ospath[strlen(ospath)-1] = '\0';
 
 	fh->zipFile = qfalse;

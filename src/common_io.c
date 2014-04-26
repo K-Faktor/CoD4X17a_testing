@@ -95,45 +95,46 @@ __cdecl void Com_PrintMessage( int dumbIWvar, char *msg, msgtype_t type) {
 
 	int msglen = strlen(msg);
 
-	Sys_EnterCriticalSection(CRIT_REDIRECTPRINT);
+	if(type != MSG_NORDPRINT && !lock)
+	{
+	
+		Sys_EnterCriticalSection(CRIT_REDIRECTPRINT);
 
-	if ( type != MSG_NORDPRINT && !lock) {
+		if ( !lock) {
 
-		lock = qtrue;
-		Com_PrintRedirect(msg, msglen);
-		lock = qfalse;
+			lock = qtrue;
+			Com_PrintRedirect(msg, msglen);
+			lock = qfalse;
 
-		if ( rd_buffer ) {
-			if(!rd_flush){
+			if ( rd_buffer ) {
+				if(!rd_flush){
+					Sys_LeaveCriticalSection(CRIT_REDIRECTPRINT);
+					return;
+				}
+				if ((msglen + strlen(rd_buffer)) > (rd_buffersize - 1)) {
+
+					lock = qtrue;
+					rd_flush(rd_buffer, qfalse);
+					lock = qfalse;
+
+					*rd_buffer = 0;
+				}
+				Q_strcat(rd_buffer, rd_buffersize, msg);
+				// TTimo nooo .. that would defeat the purpose
+				//rd_flush(rd_buffer);
+				//*rd_buffer = 0;
 				Sys_LeaveCriticalSection(CRIT_REDIRECTPRINT);
 				return;
 			}
-			if ((msglen + strlen(rd_buffer)) > (rd_buffersize - 1)) {
-
-				lock = qtrue;
-				rd_flush(rd_buffer, qfalse);
-				lock = qfalse;
-
-				*rd_buffer = 0;
-			}
-			Q_strcat(rd_buffer, rd_buffersize, msg);
-			// TTimo nooo .. that would defeat the purpose
-			//rd_flush(rd_buffer);
-			//*rd_buffer = 0;
-			Sys_LeaveCriticalSection(CRIT_REDIRECTPRINT);
-			return;
 		}
+		
+		Sys_LeaveCriticalSection(CRIT_REDIRECTPRINT);
+	
 	}
-	
-	Sys_LeaveCriticalSection(CRIT_REDIRECTPRINT);
-	
 
-	Sys_EnterCriticalSection(CRIT_CONSOLE);
 	
 	// echo to dedicated console and early console
 	Sys_Print( msg );
-
-	Sys_LeaveCriticalSection(CRIT_CONSOLE);
 
 	// logfile
 	Com_PrintLogfile( msg );

@@ -625,12 +625,12 @@ void __cdecl Sys_ThreadMain( void )
     Com_InitThreadData();
 }
 
-void __cdecl Sys_EnterCriticalSection(int section)
+void __cdecl Sys_EnterCriticalSectionInternal(int section)
 {
 	pthread_mutex_lock(&crit_sections[section]);
 }
 
-void __cdecl Sys_LeaveCriticalSection(int section)
+void __cdecl Sys_LeaveCriticalSectionInternal(int section)
 {
 	pthread_mutex_unlock(&crit_sections[section]);
 }
@@ -647,4 +647,18 @@ qboolean Sys_ThreadisSame(threadid_t threadid)
 
 	return pthread_equal(threadid, thread) != 0;
 	
+}
+
+threadid_t Sys_GetCurrentThreadId( )
+{
+	threadid_t thread = pthread_self();
+	
+	return thread;
+	
+}
+
+void Sys_ExitThread(int code)
+{
+	pthread_exit(&code);
+
 }

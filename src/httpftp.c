@@ -959,7 +959,11 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 			}
 			Com_Memcpy(&request->recvmsg, &request->transfermsg, sizeof(msg_t));
 			Com_Memset(&request->transfermsg, 0, sizeof(msg_t));
+			request->contentLength = request->recvmsg.cursize;
+			request->headerLength = 0;
 			request->stage = 10001;
+			request->code = 200;
+			Q_strncpyz(request->status, "OK", sizeof(request->status));
 			break;
 		case 10001:
 			Com_Printf("\n");

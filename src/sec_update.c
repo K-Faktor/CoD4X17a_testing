@@ -96,6 +96,7 @@ void Sec_FreeFileStruct(sec_file_t *file){
 void Sec_Update( qboolean getbasefiles ){
     char buff[SEC_UPDATE_INITIALBUFFSIZE];
     char *ptr,*ptr2, *testfile;
+	char filepathbuf[MAX_OSPATH];
     char baseurl[1024];
     char commandline[1024];
     char name1[256],name2[256];
@@ -319,12 +320,12 @@ void Sec_Update( qboolean getbasefiles ){
 
 		Q_strcat(name2, sizeof(name2), ".new");
 
-		testfile = FS_SV_GetFilepath(name1);
+		testfile = FS_SV_GetFilepath(name1, filepathbuf, sizeof(filepathbuf));
 		if(testfile != NULL)
 		{ // Old file exists, back it up
 			FS_SV_BaseRemove( name1 );
 			FS_SV_HomeRemove( name1 );
-			testfile = FS_SV_GetFilepath(name1);
+			testfile = FS_SV_GetFilepath(name1, filepathbuf, sizeof(filepathbuf));
 			if(testfile != NULL)
 			{
 				Com_PrintWarning("Couldn't remove backup file: %s\n", testfile);
@@ -335,18 +336,18 @@ void Sec_Update( qboolean getbasefiles ){
 			}
 		}
 		// Check if an old file exists with this name
-		testfile = FS_SV_GetFilepath(currFile->name);
+		testfile = FS_SV_GetFilepath(currFile->name, filepathbuf, sizeof(filepathbuf));
 		if(testfile != NULL)
 		{ // Old file exists, back it up
 			FS_SV_Rename(currFile->name, name1);
 		}
-		testfile = FS_SV_GetFilepath(currFile->name);
+		testfile = FS_SV_GetFilepath(currFile->name, filepathbuf, sizeof(filepathbuf));
 		// We couldn't back it up. Now we try to just delete it.
 		if(testfile != NULL)
 		{
 			FS_SV_BaseRemove( currFile->name );
 			FS_SV_HomeRemove( currFile->name );
-			testfile = FS_SV_GetFilepath( currFile->name );
+			testfile = FS_SV_GetFilepath( currFile->name, filepathbuf, sizeof(filepathbuf) );
 			if(testfile != NULL)
 			{
 				Com_PrintWarning("Couldn't remove file: %s\n", testfile);
@@ -362,7 +363,7 @@ void Sec_Update( qboolean getbasefiles ){
 		if(Q_strncmp(currFile->name, EXECUTABLE_NAME, 15)){
 			/* This is not the executable file */
 			FS_SV_Rename(name2, currFile->name);
-			testfile = FS_SV_GetFilepath(currFile->name);
+			testfile = FS_SV_GetFilepath(currFile->name, filepathbuf, sizeof(filepathbuf));
 			if(testfile == NULL)
 			{
 				Com_PrintError("Failed to rename file %s to %s\n", name2,currFile->name);
@@ -373,7 +374,7 @@ void Sec_Update( qboolean getbasefiles ){
 
 		}else{
 			/* This is the executable file */
-			testfile = FS_SV_GetFilepath(name2);
+			testfile = FS_SV_GetFilepath(name2, filepathbuf, sizeof(filepathbuf));
 			if(testfile == NULL)
 			{
 				Com_PrintError("Can not find file %s\n", name2);

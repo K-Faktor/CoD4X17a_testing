@@ -118,7 +118,7 @@ qboolean PHandler_VerifyPlugin(void* buf, int len)
 	return qtrue;
 }
 
-const char* PHandler_OpenTempFile(char* name){ // Load a plugin, safe for use
+const char* PHandler_OpenTempFile(char* name, char* fullfilepath, int fplen){ // Load a plugin, safe for use
 
     void *buf;
     int len;
@@ -149,11 +149,11 @@ const char* PHandler_OpenTempFile(char* name){ // Load a plugin, safe for use
 	}
 	Com_sprintf(tmpfile, sizeof(tmpfile), "plugin.%s.tmp", name);
     /* If there is already such a file remove it now */
-    file = FS_SV_GetFilepath( tmpfile );
+    file = FS_SV_GetFilepath( tmpfile, fullfilepath, fplen );
     if(file)
     {
         FS_RemoveOSPath(file);
-        file = FS_SV_GetFilepath( tmpfile );
+        file = FS_SV_GetFilepath( tmpfile, fullfilepath, fplen );
         if(file)
         {
             FS_RemoveOSPath(file);
@@ -168,7 +168,7 @@ const char* PHandler_OpenTempFile(char* name){ // Load a plugin, safe for use
     }
     //Additional test if a file is there and creation of full filepath
     FS_FreeFile(buf);
-    return FS_SV_GetFilepath( tmpfile );
+    return FS_SV_GetFilepath( tmpfile, fullfilepath, fplen );
 }
 
 
@@ -183,6 +183,7 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
 {
     int i,j;
     char* realpath;
+	char filepathbuf[MAX_OSPATH];
     void *lib_handle;
     pluginInfo_t info;
 
@@ -211,7 +212,7 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
     Com_DPrintf("Checking if the plugin file exists and is of correct format...\n");
 
     //Additional test if a file is there
-    realpath = (char*)PHandler_OpenTempFile(name); // Load a plugin, safe for use
+    realpath = (char*)PHandler_OpenTempFile(name, filepathbuf, sizeof(filepathbuf)); // Load a plugin, safe for use
     if(realpath == NULL)
     {
         return;

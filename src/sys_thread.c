@@ -25,8 +25,11 @@
 
 #include "q_shared.h"
 #include "sys_thread.h"
+#include "qcommon.h"
 #include "qcommon_io.h"
-
+#ifdef THREAD_DEBUG	
+#include "sys_main.h"
+#endif
 #include <string.h>
 #include <stdarg.h>
 
@@ -58,7 +61,43 @@ void __cdecl Sys_SetValue(int key, const void* value)
     sys_valuestoreage[key -1] = value;
 }
 
+#ifdef THREAD_DEBUG
+int mutex_depth[CRIT_SIZE] = { 0 };
+#endif
 
+void Sys_EnterCriticalSection(int section)
+{
+#ifdef THREAD_DEBUG
+	mvabuf;
+	
+	if( section > CRIT_ERRORCHECK)
+		Sys_Print(va("^6Sys_EnterCriticalSection for Thread: %d Section: %d Depth: %d\n", Sys_GetCurrentThreadId(), section, mutex_depth[section]) );
+	mutex_depth[section] ++;
+#endif	
+	if(Com_InError() && section != CRIT_ERROR && Sys_IsMainThread() == qtrue)
+	{
+		Com_Error(0, "Error Cleanup");		
+	}
+	
+	Sys_EnterCriticalSectionInternal(section);
+	
+#ifdef THREAD_DEBUG
+	if( section > CRIT_ERRORCHECK)
+		Sys_Print(va("^6Section %d Locked for: %d\n", section, Sys_GetCurrentThreadId()) );
+#endif	
+	
+}
+
+void Sys_LeaveCriticalSection(int section)
+{
+#ifdef THREAD_DEBUG	
+	mutex_depth[section] --;
+	mvabuf;
+	if( section > CRIT_ERRORCHECK )
+		Sys_Print(va("^6Sys_LeaveCriticalSection for Thread: %d Section: %d\n", Sys_GetCurrentThreadId(), section ));
+#endif	
+	Sys_LeaveCriticalSectionInternal(section);
+}
 
 #define MAX_CALLBACKS 20
 #define MAX_CALLBACKARGS 8
@@ -99,8 +138,13 @@ void Sys_RunThreadCallbacks()
 
 void* Sys_CbThreadStub(void* arg)
 {
-	thread_callback_t *tcb = arg;
+#ifdef THREAD_DEBUG	
+	mvabuf;
+	Sys_Print( va("^6Created new Thread: %d\n", Sys_GetCurrentThreadId()) );
+#endif	
 	
+	thread_callback_t *tcb = arg;
+
 	tcb->threadMain(tcb->thread_args[0], tcb->thread_args[1], tcb->thread_args[2], tcb->thread_args[3],
 					tcb->thread_args[4], tcb->thread_args[5], tcb->thread_args[6], tcb->thread_args[7]); //real main-thread
 	tcb->isActive = qtrue;
@@ -157,7 +201,7 @@ qboolean Sys_CreateCallbackThread(void* threadMain,...)
 		return qfalse;
 	}
 	
-	for ( tcb = thread_callbacks, i = 0; i < MAX_CALLBACKS ; i++) {
+	for ( tcb = thread_callbacks, i = 0; i < MAX_CALLBACKS ; i++, tcb++) {
 		if(tcb->threadMain == NULL)
 		{
 			break;
@@ -165,7 +209,7 @@ qboolean Sys_CreateCallbackThread(void* threadMain,...)
 	}
 	if(i == MAX_CALLBACKS)
 	{
-		Com_PrintError("Couldn't create a callback-thread. Max handles exceeded");
+		Com_PrintError("Couldn't create a callback-thread. Max handles exceeded\n");
 		return qfalse;
 	}
 	
@@ -181,7 +225,6 @@ qboolean Sys_CreateCallbackThread(void* threadMain,...)
 	tcb->threadMain = threadMain;
 	tcb->callbackMain = NULL;
 	success = Sys_CreateNewThread(Sys_CbThreadStub, &tcb->tid, tcb);
-	
 	if(success == qfalse)
 		tcb->isActive = qtrue;
 	return success;

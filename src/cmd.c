@@ -32,6 +32,7 @@
 #include "filesystem.h"
 #include "server.h"
 #include "punkbuster.h"
+#include "sys_thread.h"
 
 /*
 =============================================================================
@@ -81,6 +82,8 @@ void Cbuf_AddText( const char *text ) {
 	byte*		new_buf;
 	len = strlen (text) +1;
 
+	Sys_EnterCriticalSection(CRIT_CBUF);
+	
 	if ( len + cmd_text.cursize > cmd_text.maxsize ) {
 
 		if(cmd_text.data == cmd_text_buf)
@@ -97,6 +100,7 @@ void Cbuf_AddText( const char *text ) {
 		if(new_buf == NULL)
 		{
 			Com_PrintError( "Cbuf_AddText overflowed ; realloc failed\n" );
+			Sys_LeaveCriticalSection(CRIT_CBUF);
 			return;
 		}
 		cmd_text.data = new_buf;
@@ -105,6 +109,9 @@ void Cbuf_AddText( const char *text ) {
 
 	Com_Memcpy(&cmd_text.data[cmd_text.cursize], text, len -1);
 	cmd_text.cursize += len -1;
+
+	Sys_LeaveCriticalSection(CRIT_CBUF);
+	
 }
 
 /*
@@ -121,6 +128,10 @@ void Cbuf_InsertText( const char *text ) {
 	byte*		new_buf;
 
 	len = strlen( text ) + 1;
+
+	Sys_EnterCriticalSection(CRIT_CBUF);
+
+	
 	if ( len + cmd_text.cursize > cmd_text.maxsize ) {
 
 		if(cmd_text.data == cmd_text_buf)
@@ -137,6 +148,8 @@ void Cbuf_InsertText( const char *text ) {
 		if(new_buf == NULL)
 		{
 			Com_PrintError( "Cbuf_InsertText overflowed ; realloc failed\n" );
+			
+			Sys_LeaveCriticalSection(CRIT_CBUF);
 			return;
 		}
 		cmd_text.data = new_buf;
@@ -155,6 +168,8 @@ void Cbuf_InsertText( const char *text ) {
 	cmd_text.data[ len - 1 ] = '\n';
 
 	cmd_text.cursize += len;
+	
+	Sys_LeaveCriticalSection(CRIT_CBUF);
 }
 
 /*
@@ -167,6 +182,9 @@ void Cbuf_ExecuteText (int exec_when, const char *text)
 	switch (exec_when)
 	{
 	case EXEC_NOW:
+		
+		Sys_EnterCriticalSection(CRIT_CBUF);
+		
 		if (text && strlen(text) > 0) {
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", text);
 			Cmd_ExecuteString (text);
@@ -174,6 +192,9 @@ void Cbuf_ExecuteText (int exec_when, const char *text)
 			Cbuf_Execute();
 			Com_DPrintf(S_COLOR_YELLOW "EXEC_NOW %s\n", cmd_text.data);
 		}
+		
+		Sys_LeaveCriticalSection(CRIT_CBUF);
+			
 		break;
 	case EXEC_INSERT:
 		Cbuf_InsertText (text);
@@ -288,7 +309,7 @@ void __cdecl Cbuf_Execute_WrapperIW(int arg1, int arg2)
 /*
 ==============================================================================
 
-						SCRIPT COMMANDS
+								COMMANDS
 
 ==============================================================================
 */

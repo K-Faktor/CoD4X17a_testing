@@ -170,14 +170,13 @@ fileHandle_t FS_FOpenFileAppend(const char* filename);
 qboolean FS_Initialized();
 int FS_filelength( fileHandle_t f );
 
-char *FS_BuildOSPath( const char *base, const char *game, const char *qpath );
 qboolean FS_HomeRemove( const char *path );
 qboolean FS_SV_HomeRemove( const char *path );
 
 qboolean FS_FileExists( const char *file );
 qboolean FS_SV_HomeFileExists( const char *file );
 
-char* FS_SV_GetFilepath( const char *file );
+char* FS_SV_GetFilepath( const char *file, char* buf, int buflen );
 void FS_Rename( const char *from, const char *to );
 void FS_SV_Rename( const char *from, const char *to );
 qboolean FS_FCloseFile( fileHandle_t f );
@@ -205,6 +204,7 @@ int FS_WriteFile( const char *qpath, const void *buffer, int size );
 #define FS_SV_WriteFile FS_SV_HomeWriteFile
 int FS_SV_HomeWriteFile( const char *qpath, const void *buffer, int size );
 int FS_SV_BaseWriteFile( const char *qpath, const void *buffer, int size );
+void FS_BuildOSPathForThread(const char *base, const char *game, const char *qpath, char *fs_path, int fs_thread);
 
 void QDECL FS_Printf( fileHandle_t h, const char *fmt, ... );
 int FS_Seek( fileHandle_t f, long offset, int origin );
@@ -228,12 +228,13 @@ unsigned Com_BlockChecksumKey32( void *buffer, int length, int key );
 void FS_PatchFileHandleData();
 int FS_LoadStack();
 void FS_CopyCvars();
-char* FS_SV_GetFilepath( const char *file );
 qboolean FS_SV_BaseRemove( const char *path );
 
 void FS_RemoveOSPath(const char *);
 qboolean FS_FileExistsOSPath( const char *ospath );
 void FS_RenameOSPath( const char *from_ospath, const char *to_ospath );
 qboolean FS_SetPermissionsExec(const char* ospath);
+
+
 #endif
 

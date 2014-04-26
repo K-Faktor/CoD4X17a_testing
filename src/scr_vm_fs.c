@@ -64,22 +64,6 @@ Handle based file calls for virtual machines
 
 
 
-/*
-=============
-FS_FreeFile
-=============
-*/
-/*
-void Scr_FS_FreeFile( void *buffer ) {
-
-	if ( !buffer ) {
-		Com_Error( ERR_FATAL, "FS_FreeFile( NULL )" );
-	}
-	*fs_loadStack = (*fs_loadStack)-1;
-
-	free( buffer );
-}
-*/
 
 
 /*
@@ -156,15 +140,17 @@ Scr_FS_FOpenFile
 ===========
 */
 qboolean Scr_FS_FOpenFile( const char *filename, fsMode_t mode, scr_fileHandle_t* f ) {
-	char *ospath;
+	
+	char ospath[MAX_OSPATH];
+	
 	f->fh = NULL;
 
 	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
-        // search homepath
-	ospath = FS_BuildOSPath( fs_homepath->string, "", filename );
+	// search homepath
+	FS_BuildOSPathForThread( fs_homepath->string, "", filename, ospath, 0);
 	// remove trailing slash
 	if((ospath[strlen(ospath)-1]) == '/')
 		ospath[strlen(ospath)-1] = '\0';
@@ -196,7 +182,7 @@ qboolean Scr_FS_FOpenFile( const char *filename, fsMode_t mode, scr_fileHandle_t
         // NOTE TTimo on non *nix systems, fs_homepath == fs_basepath, might want to avoid
             if (Q_stricmp(fs_homepath->string,fs_basepath->string)){
                 // search basepath
-                ospath = FS_BuildOSPath( fs_basepath->string, "", filename);
+                FS_BuildOSPathForThread( fs_basepath->string, "", filename, ospath, 0);
                 // remove trailing slash
                 if((ospath[strlen(ospath)-1]) == '/')
                     ospath[strlen(ospath)-1] = '\0';

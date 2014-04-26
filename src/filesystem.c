@@ -206,6 +206,7 @@ or configs will never get loaded from disk!
 #include "qcommon_parsecmdline.h"
 #include "sys_main.h"
 #include "cmd.h"
+#include "sys_thread.h"
 
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -286,6 +287,7 @@ FS_Initialized
 */
 
 qboolean FS_Initialized() {
+	
 	return (fs_searchpaths != NULL);
 }
 
@@ -296,7 +298,26 @@ return load stack
 =================
 */
 int FS_LoadStack() {
-	return fs_loadStack;
+	int val;
+	
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+	val = fs_loadStack;
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+	
+	return val;
+}
+
+void FS_LoadStackInc()
+{
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+	fs_loadStack++;
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);	
+}
+void FS_LoadStackDec()
+{
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+	fs_loadStack--;
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);	
 }
 
 
@@ -322,16 +343,24 @@ static fileHandle_t FS_HandleForFileForThread(int FsThread)
     startIndex = 1;
 	size = 48;
   }
-
+  
+  Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+	
   for (i = 0 ; size > i ; i++)
   {
-    if ( fsh[i + startIndex].handleFiles.file.o == NULL)
+    if ( fsh[i + startIndex].handleFiles.file.o == NULL )
     {
-	if ( fs_debug->integer > 1 )
-		Sys_Print(va("^4Open filehandle: %d\n", i + startIndex));
-	return i + startIndex;
+		if ( fs_debug->integer > 1 )
+			Sys_Print(va("^4Open filehandle: %d\n", i + startIndex));
+		
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+		
+		return i + startIndex;
     }
   }
+  
+  Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+	
   if ( !FsThread )
   {
 	for(i = 1; i < MAX_FILE_HANDLES; i++)
@@ -523,27 +552,6 @@ void FS_BuildOSPathForThread(const char *base, const char *game, const char *qpa
   FS_ReplaceSeparators(fs_path);
 }
 
-
-/*
-===================
-FS_BuildOSPath
-
-Qpath may have either forward or backwards slashes
-===================
-*/
-char *FS_BuildOSPath( const char *base, const char *game, const char *qpath ) {
-
-	static char ospath[2][MAX_OSPATH];
-	static int toggle;
-
-	toggle ^= 1;	// flip-flop to allow two returns without clash
-
-	FS_BuildOSPathForThread( base, game, qpath, ospath[toggle], 0);
-
-	return ospath[toggle];
-}
-
-
 /*
 ============
 FS_CreatePath
@@ -686,12 +694,14 @@ qboolean FS_SV_HomeFileExists( const char *file )
 
 
 
-char* FS_SV_GetFilepath( const char *file )
+char* FS_SV_GetFilepath( const char *file, char* testpath, int lenpath )
 {
 	FILE *f;
-	char *testpath;
 
-	testpath = FS_BuildOSPath( fs_homepath->string, file, "" );
+	if(lenpath < MAX_OSPATH)
+		Com_Error(ERR_FATAL, "FS_SV_GetFilepath: Given buffer has less than %d bytes length\n", MAX_OSPATH );
+	
+	FS_BuildOSPathForThread(fs_homepath->string, file, "", testpath, 0 );
 	FS_StripTrailingSeperator( testpath );
 
 	f = fopen( testpath, "rb" );
@@ -700,7 +710,7 @@ char* FS_SV_GetFilepath( const char *file )
 		return testpath;
 	}
 
-        testpath = FS_BuildOSPath( fs_basepath->string, file, "");
+	FS_BuildOSPathForThread( fs_basepath->string, file, "", testpath, 0 );
 	FS_StripTrailingSeperator( testpath );
 
 	f = fopen( testpath, "rb" );
@@ -1179,7 +1189,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 		
 		return -1;
 	}
-
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
 	*file = FS_HandleForFileForThread(FsThread);
 
 	if(*file == 0)
@@ -1235,6 +1245,9 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						fsh[*file].handleFiles.file.z = unzOpen(pak->pakFilename);
 					
 						if(fsh[*file].handleFiles.file.z == NULL)
+							
+							Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 							Com_Error(ERR_FATAL, "Couldn't open %s", pak->pakFilename);
 					}
 					else
@@ -1250,6 +1263,8 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 					unzOpenCurrentFile(fsh[*file].handleFiles.file.z);
 					fsh[*file].zipFilePos = pakFile->pos;
 
+					Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+					
 					if(fs_debug->integer)
 					{
 						Sys_Print(va("^4FS_FOpenFileRead: %s (found in '%s')\n", filename, pak->pakFilename));
@@ -1262,8 +1277,9 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 						return 1;
 					}
 					if(file_info.uncompressed_size)
+					{
 						return file_info.uncompressed_size;
-
+					}
 					return 1;
 				}
 			
@@ -1283,7 +1299,8 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 		if (filep == NULL)
 		{
 			*file = 0;
-                        return -1;
+			Sys_LeaveCriticalSection(CRIT_FILESYSTEM);	
+			return -1;
 		}
 
 		Q_strncpyz(fsh[*file].name, filename, sizeof(fsh[*file].name));
@@ -1295,8 +1312,12 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 		}
 
 		fsh[*file].handleFiles.file.o = filep;
+
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 		return FS_fplength(filep);
 	}
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 
 	return -1;
 }
@@ -1316,25 +1337,36 @@ long FS_FOpenFileRead(const char *filename, fileHandle_t *file)
 	searchpath_t *search;
 	long len;
 
-	if(!fs_searchpaths)
-		Com_Error(ERR_FATAL, "Filesystem call made without initialization");
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
 
+	
+	if(!FS_Initialized())
+		Com_Error(ERR_FATAL, "Filesystem call made without initialization");
+	
 	for(search = fs_searchpaths; search; search = search->next)
 	{
 	        len = FS_FOpenFileReadDir(filename, search, file, 0, qfalse, 0);
 	
 	        if(file == NULL)
 	        {
-	                if(len > 0)
-	                        return len;
+				if(len > 0)
+				{
+					Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+					return len;
+				}
 	        }
 	        else
 	        {
-	                if(len >= 0 && *file)
-	                        return len;
+				if(len >= 0 && *file)
+				{
+					Sys_LeaveCriticalSection(CRIT_FILESYSTEM);					
+					return len;
+				}
 	        }
 	}
-	
+
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 #ifdef FS_MISSING
 	if(missingFiles)
 		fprintf(missingFiles, "%s\n", filename);
@@ -1583,7 +1615,7 @@ void FS_FreeFile( void *buffer ) {
 	if ( !buffer ) {
 		Com_Error( ERR_FATAL, "FS_FreeFile( NULL )" );
 	}
-	fs_loadStack --;
+	FS_LoadStackDec();
 
 	free( buffer );
 }
@@ -1601,8 +1633,8 @@ Properly handles line reads
 int FS_ReadLine( void *buffer, int len, fileHandle_t f ) {
 	char		*read;
 	char		*buf;
-
-	if ( !fs_searchpaths ) {
+	
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 	if ( !f ) {
@@ -1617,6 +1649,8 @@ int FS_ReadLine( void *buffer, int len, fileHandle_t f ) {
 	buf = buffer;
         *buf = 0;
 	read = fgets (buf, len, fsh[f].handleFiles.file.o);
+
+
 	if (read == NULL) {	//Error
 
 		if(feof(fsh[f].handleFiles.file.o)) return 0;
@@ -1639,13 +1673,18 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	fileHandle_t	f = 0;
 	mvabuf;
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
 
-	if ( !fs_searchpaths ) {
+
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
+
 	f = FS_HandleForFile();
 	if(f == 0){
+		
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 	FS_SetFilenameForHandle(f, filename);
@@ -1665,26 +1704,27 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
 	fsh[f].handleSync = qfalse;
 
-        if (!fsh[f].handleFiles.file.o){
-        // NOTE TTimo on non *nix systems, fs_homepath == fs_basepath, might want to avoid
-            if (Q_stricmp(fs_homepath->string,fs_basepath->string)){
-              // search basepath
-                FS_BuildOSPathForThread( fs_basepath->string, filename, "", ospath, 0 );
+	if (!fsh[f].handleFiles.file.o){
+	// NOTE TTimo on non *nix systems, fs_homepath == fs_basepath, might want to avoid
+		if (Q_stricmp(fs_homepath->string,fs_basepath->string)){
+		// search basepath
+			FS_BuildOSPathForThread( fs_basepath->string, filename, "", ospath, 0 );
 
-                ospath[strlen(ospath)-1] = '\0';
-                if ( fs_debug->integer ){
-                    Sys_Print(va("FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath ));
-                }
+            ospath[strlen(ospath)-1] = '\0';
+            if ( fs_debug->integer ){
+				Sys_Print(va("FS_SV_FOpenFileRead (fs_basepath): %s\n", ospath ));
+			}
 
-                fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
-                fsh[f].handleSync = qfalse;
+            fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
+            fsh[f].handleSync = qfalse;
 
-            }
-        }
+		}
+	}
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 
-        if ( !fsh[f].handleFiles.file.o ){
-            f = 0;
-        }
+	if ( !fsh[f].handleFiles.file.o ){
+		f = 0;
+	}
 
 	*fp = f;
 	if (f) {
@@ -1705,12 +1745,16 @@ fileHandle_t FS_SV_FOpenFileAppend( const char *filename ) {
 	fileHandle_t	f;
 	mvabuf;
 
-	if ( !fs_searchpaths ) {
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+
+	
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
 	f = FS_HandleForFile();
 	if(f == 0){
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 	FS_SetFilenameForHandle(f, filename);
@@ -1718,7 +1762,7 @@ fileHandle_t FS_SV_FOpenFileAppend( const char *filename ) {
 
 	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
 
-        FS_BuildOSPathForThread( fs_basepath->string, filename, "", ospath, 0 );
+	FS_BuildOSPathForThread( fs_basepath->string, filename, "", ospath, 0 );
 	ospath[strlen(ospath)-1] = '\0';
 
 	if ( fs_debug->integer ) {
@@ -1726,11 +1770,15 @@ fileHandle_t FS_SV_FOpenFileAppend( const char *filename ) {
 	}
 
 	if( FS_CreatePath( ospath ) ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 
 	fsh[f].handleFiles.file.o = fopen( ospath, "ab" );
 	fsh[f].handleSync = qfalse;
+
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 	if (!fsh[f].handleFiles.file.o) {
 		f = 0;
 	}
@@ -1753,7 +1801,7 @@ int FS_Read( void *buffer, int len, fileHandle_t f ) {
 	byte	*buf;
 	int		tries;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1797,7 +1845,7 @@ int FS_Read( void *buffer, int len, fileHandle_t f ) {
 
 
 int FS_Read2( void *buffer, int len, fileHandle_t f ) {
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1830,7 +1878,7 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 	int		tries;
 	FILE	*f;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -1886,6 +1934,8 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 	byte*			buf;
 	int			len;
 
+	
+	
 	if ( !qpath || !qpath[0] ) {
 		Com_Error( ERR_FATAL, "FS_ReadFile with empty name\n" );
 	}
@@ -1906,7 +1956,7 @@ int FS_ReadFile( const char *qpath, void **buffer ) {
 		return len;
 	}
 
-	fs_loadStack ++;
+	FS_LoadStackInc();
 
 	buf = malloc(len+1);
 	*buffer = buf;
@@ -1953,7 +2003,7 @@ int FS_SV_ReadFile( const char *qpath, void **buffer ) {
 		return len;
 	}
 
-	fs_loadStack ++;
+	FS_LoadStackInc();
 
 	buf = malloc(len+1);
 	*buffer = buf;
@@ -1979,7 +2029,7 @@ int FS_WriteFile( const char *qpath, const void *buffer, int size ) {
 	fileHandle_t f;
 	int len;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
@@ -2018,15 +2068,18 @@ static fileHandle_t FS_SV_FOpenFileWriteGeneric( const char *filename, const cha
 	mvabuf;
 
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 	}
 
 	FS_BuildOSPathForThread( basepath, filename, "", ospath, 0 );
 	FS_StripTrailingSeperator( ospath );
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+
 	f = FS_HandleForFile();
 	if(f == 0){
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 	FS_SetFilenameForHandle(f, filename);
@@ -2037,11 +2090,15 @@ static fileHandle_t FS_SV_FOpenFileWriteGeneric( const char *filename, const cha
 	}
 
 	if( FS_CreatePath( ospath ) ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 
 	fsh[f].handleFiles.file.o = fopen( ospath, "wb" );
 	fsh[f].handleSync = qfalse;
+
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 	if (!fsh[f].handleFiles.file.o) {
 		f = 0;
 	}
@@ -2066,7 +2123,7 @@ static int FS_SV_WriteFileGeneric( const char *qpath, const void *buffer, int si
 	fileHandle_t f;
 	int len;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 		return -1;
 	}
@@ -2129,7 +2186,7 @@ FS_Seek
 int FS_Seek( fileHandle_t f, long offset, int origin ) {
 	int		_origin;
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
 		return -1;
 	}
@@ -2230,9 +2287,12 @@ void FS_SV_HomeCopyFile( char *from, char *to ) {
 	if ( fs_debug->integer ) {
 		Sys_Print(va("FS_SVHomeCopyFile: %s --> %s\n", from_ospath, to_ospath ));
 	}
-
+	
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+	
 	f = fopen( from_ospath, "rb" );
 	if ( !f ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return;
 	}
 	fseek (f, 0, SEEK_END);
@@ -2247,17 +2307,21 @@ void FS_SV_HomeCopyFile( char *from, char *to ) {
 	fclose( f );
 
 	if( FS_CreatePath( to_ospath ) ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return;
 	}
 
 	f = fopen( to_ospath, "wb" );
 	if ( !f ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return;
 	}
 	if (fwrite( buf, 1, len, f ) != len)
 		Com_Error( ERR_FATAL, "Short write in FS_Copyfiles()\n" );
 	fclose( f );
 	free( buf );
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 }
 
 
@@ -2649,6 +2713,7 @@ void FS_Startup(const char* gameName)
   char* homePath;
   mvabuf;
 
+  Sys_EnterCriticalSection(CRIT_FILESYSTEM);
 
   Com_Printf("----- FS_Startup -----\n");
   fs_debug = Cvar_RegisterInt("fs_debug", 0, 0, 2, 0, "Enable file system debugging information");
@@ -2744,6 +2809,8 @@ void FS_Startup(const char* gameName)
   fs_gameDirVar->modified = 0;
   Com_Printf("----------------------\n");
   Com_Printf("%d files in iwd files\n", fs_packFiles);
+	
+  Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 }
 
 void FS_AddIwdFilesForGameDirectory(const char *path, const char *dir);
@@ -2769,6 +2836,8 @@ void FS_AddGameDirectory_Single(const char *path, const char *dir_nolocal, qbool
 		Q_strncpyz(dir, dir_nolocal, sizeof(dir));
 	}
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+
 	for (sp = fs_searchpaths ; sp ; sp = sp->next)
 	{
 		if ( sp->dir && !Q_stricmp(sp->dir->path, path) && !Q_stricmp(sp->dir->gamedir, dir) )
@@ -2782,6 +2851,8 @@ void FS_AddGameDirectory_Single(const char *path, const char *dir_nolocal, qbool
 			}
 			if ( sp->localized && index != sp->localized )
 				Com_PrintWarning( "WARNING: game folder %s/%s re-added as localized folder with different language\n", path, dir);
+
+			Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 			return;
 		}
 	}
@@ -2792,8 +2863,11 @@ void FS_AddGameDirectory_Single(const char *path, const char *dir_nolocal, qbool
       FS_BuildOSPathForThread(path, dir, "", ospath, 0);
       if(ospath[0])
           ospath[strlen(ospath) -1] = 0;
-      if ( !Sys_DirectoryHasContent(ospath) )
-        return;
+		if ( !Sys_DirectoryHasContent(ospath) )
+		{
+			Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+			return;
+		}
     }
     else
     {
@@ -2821,6 +2895,9 @@ void FS_AddGameDirectory_Single(const char *path, const char *dir_nolocal, qbool
     search->next = sp;
     prev->next = search;
     FS_AddIwdFilesForGameDirectory(path, dir);
+	
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 }
 
 
@@ -3243,6 +3320,8 @@ void FS_Shutdown( qboolean closemfp ) {
 	searchpath_t    *p, *next;
 	int i;
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+	
 	for ( i = 0; i < MAX_FILE_HANDLES; i++ ) {
 		if ( fsh[i].handleSync ) {
 			FS_FCloseFile( i );
@@ -3277,6 +3356,7 @@ void FS_Shutdown( qboolean closemfp ) {
 		fclose( missingFiles );
 	}
 #endif
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 }
 
 
@@ -3288,6 +3368,8 @@ FS_ClearPakReferences
 void FS_ClearPakReferences( int flags ) {
 	searchpath_t *search;
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+	
 	if ( !flags ) {
 		flags = -1;
 	}
@@ -3297,6 +3379,8 @@ void FS_ClearPakReferences( int flags ) {
 			search->pack->referenced &= ~flags;
 		}
 	}
+	
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 }
 
 
@@ -3308,6 +3392,8 @@ FS_Restart
 */
 void FS_Restart( int checksumFeed ) {
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+	
 	// free anything we currently have loaded
 	FS_Shutdown( qfalse );
 
@@ -3353,6 +3439,8 @@ void FS_Restart( int checksumFeed ) {
 
 	Q_strncpyz( lastValidBase, fs_basepath->string, sizeof( lastValidBase ) );
 	Q_strncpyz( lastValidGame, fs_gamedirvar->string, sizeof( lastValidGame ) );
+	
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 
 }
 
@@ -3370,6 +3458,7 @@ void FS_CopyFile( char *fromOSPath, char *toOSPath ) {
 	byte    *buf;
 	mvabuf;
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
 
 	if ( fs_debug->integer ) {
 		Sys_Print( va("^4copy %s to %s\n", fromOSPath, toOSPath ) );
@@ -3377,6 +3466,7 @@ void FS_CopyFile( char *fromOSPath, char *toOSPath ) {
 
 	f = fopen( fromOSPath, "rb" );
 	if ( !f ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return;
 	}
 	fseek( f, 0, SEEK_END );
@@ -3392,19 +3482,24 @@ void FS_CopyFile( char *fromOSPath, char *toOSPath ) {
 	fclose( f );
 
 	if ( FS_CreatePath( toOSPath ) ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return;
 	}
 
 	f = fopen( toOSPath, "wb" );
 	if ( !f ) {
 		free( buf );    //DAJ free as well
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return;
 	}
 	if ( fwrite( buf, 1, len, f ) != len ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		Com_Error( ERR_FATAL, "Short write in FS_Copyfiles()\n" );
 	}
 	fclose( f );
 	free( buf );
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 }
 
 /*
@@ -3419,12 +3514,15 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 	mvabuf;
 
 
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+
 	f = FS_HandleForFile();
 	if(f == 0){
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 	FS_SetFilenameForHandle(f, filename);
@@ -3437,6 +3535,7 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 	}
 
 	if ( FS_CreatePath( ospath ) ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 
@@ -3445,9 +3544,12 @@ fileHandle_t FS_FOpenFileWrite( const char *filename ) {
 	//Com_DPrintf( "writing to: %s\n", ospath );
 	fsh[f].handleFiles.file.o = fopen( ospath, "wb" );
 
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
 	Q_strncpyz( fsh[f].name, filename, sizeof( fsh[f].name ) );
 
 	fsh[f].handleSync = qfalse;
+
 	if ( !fsh[f].handleFiles.file.o ) {
 		f = 0;
 	}
@@ -3467,13 +3569,16 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	fileHandle_t f;
 	mvabuf;
 
+	Sys_EnterCriticalSection(CRIT_FILESYSTEM);
+
 	
-	if ( !fs_searchpaths ) {
+	if ( !FS_Initialized() ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
 	f = FS_HandleForFile();
 	if(f == 0){
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 	FS_SetFilenameForHandle(f, filename);
@@ -3491,11 +3596,16 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	}
 
 	if ( FS_CreatePath( ospath ) ) {
+		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
 	}
 
 	fsh[f].handleFiles.file.o = fopen( ospath, "ab" );
 	fsh[f].handleSync = qfalse;
+	
+	Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
+
+	
 	if ( !fsh[f].handleFiles.file.o ) {
 		f = 0;
 	}

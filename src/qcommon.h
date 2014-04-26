@@ -59,6 +59,8 @@ void Com_Quit_f( void );
 unsigned int Com_GetFrameTime(void);
 unsigned long long Com_GetUsecFrameTime(void);
 
+qboolean Com_InError();
+
 
 extern unsigned long long com_frameTime;
 extern unsigned long long com_uFrameTime;

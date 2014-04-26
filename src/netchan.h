@@ -55,25 +55,25 @@ typedef struct{
 typedef struct {
 	// sequencing variables
 	int			outgoingSequence;
-	netsrc_t		sock;
+	netsrc_t	sock;
 	int			dropped;			// between last packet and previous
 	int			incomingSequence;
 
 	//Remote address
-	netadr_t		remoteAddress;			// (0x10)
-	short			qport;				// qport value to write when transmitting (0x24)
+	netadr_t	remoteAddress;			// (0x10)
+	int			qport;				// qport value to write when transmitting (0x24)
 	// incoming fragment assembly buffer
 	int			fragmentSequence;
 	int			fragmentLength;	
-	byte			*fragmentBuffer; // (0x30)
+	byte		*fragmentBuffer; // Old: (0x30)
 	int			fragmentBufferSize;
 
 	// outgoing fragment buffer
 	// we need to space out the sending of large fragmented messages
-	qboolean		unsentFragments;
+	qboolean	unsentFragments;
 	int			unsentFragmentStart;
 	int			unsentLength;
-	byte			*unsentBuffer; //(0x44)
+	byte		*unsentBuffer; //Old: (0x44)
 	int			unsentBufferSize;
 } netchan_t;
 
