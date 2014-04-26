@@ -1165,7 +1165,8 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	//Set gravity, speed... to system default
 	Pmove_ExtendedInitForClient(client);
 
-	if(sv_autodemorecord->boolean && !client->demorecording){
+	if(sv_autodemorecord->boolean && !client->demorecording && (client->netchan.remoteAddress.type == NA_IP || client->netchan.remoteAddress.type == NA_IP6))
+	{
 		if(psvs.useuids){
 
 			if(client->uid > 0)
@@ -1177,7 +1178,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 		}
 	}
 
-	if(!client->enteredWorldForFirstTime){
+	if(!client->enteredWorldForFirstTime && (client->netchan.remoteAddress.type == NA_IP || client->netchan.remoteAddress.type == NA_IP6)){
 		if(psvs.useuids){
 			if(client->uid > 0){
 				SV_EnterLeaveLog("^5Client %s %s ^5entered this server in slot %d with uid %d", client->name, NET_AdrToString(&client->netchan.remoteAddress), clientNum, client->uid);
