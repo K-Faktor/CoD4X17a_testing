@@ -382,16 +382,19 @@ qboolean Sys_LoadImage( ){
     {
         return qfalse;
     }
-    if(Sys_MemoryProtectExec(BIN_SECT_PLT_START, BIN_SECT_PLT_LENGTH) == qfalse)
+	/* 4 bytes is gap between .plt end and .text start */
+    if(Sys_MemoryProtectExec(BIN_SECT_PLT_START, BIN_SECT_PLT_LENGTH + BIN_SECT_TEXT_LENGTH + 4) == qfalse)
     {
         FS_FreeFile(fileimage);
         return qfalse;
     }
+/*
     if(Sys_MemoryProtectExec(BIN_SECT_TEXT_START, BIN_SECT_TEXT_LENGTH) == qfalse)
     {
         FS_FreeFile(fileimage);
         return qfalse;
     }
+*/
     if(Sys_MemoryProtectReadonly(BIN_SECT_RODATA_START, BIN_SECT_RODATA_LENGTH) == qfalse)
     {
         FS_FreeFile(fileimage);

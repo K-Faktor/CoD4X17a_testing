@@ -549,10 +549,12 @@ void SV_SendClientMessages( void ) {
 	// send a message to each connected client
 	for ( i = 0, c = svs.clients ; i < sv_maxclients->integer ; i++, c++ ) {
 		if ( !c->state ) {
+			snapClients[i] = 0;		
 			continue; // not connected
 		}
 		
 		if ( svs.time < c->nextSnapshotTime ) {
+			snapClients[i] = 0;	
 			continue; // not time yet
 		}
 		
@@ -563,6 +565,7 @@ void SV_SendClientMessages( void ) {
 		if ( c->netchan.unsentFragments ) {
 			c->nextSnapshotTime = svs.time + SV_RateMsec( c, c->netchan.unsentLength - c->netchan.unsentFragmentStart );
 			SV_Netchan_TransmitNextFragment( c );
+			snapClients[i] = 0;	
 			continue;
 		}
 		

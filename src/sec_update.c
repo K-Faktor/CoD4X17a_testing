@@ -100,7 +100,6 @@ void Sec_Update( qboolean getbasefiles ){
     char baseurl[1024];
     char commandline[1024];
     char name1[256],name2[256];
-    int status;
     sec_file_t files, *currFile = &files;
     qboolean dlExec = qfalse;
     int len;
@@ -261,7 +260,7 @@ void Sec_Update( qboolean getbasefiles ){
 		Q_strcat(buff, sizeof(buff),".new");
 
 		if(curfileobj->code != 200){
-			Com_PrintError("Downloading has failed! Error code: %d. Update aborted.\n", status);
+			Com_PrintError("Downloading has failed! Error code: %d. Update aborted.\n", curfileobj->code);
 			FileDownloadFreeRequest(filetransferobj);
 			FileDownloadFreeRequest(curfileobj);
 			return;

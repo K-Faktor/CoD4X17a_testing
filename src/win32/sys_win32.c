@@ -26,6 +26,7 @@
 #include "../sys_main.h"
 #include "../sys_cod4defs.h"
 #include "sys_win32.h"
+#include "../sys_thread.h"
 
 #include <windows.h>
 #include <wincrypt.h>
@@ -167,14 +168,20 @@ void Sys_SleepSec(int seconds)
     Sleep(seconds);
 }
 
+int Sys_GetPageSize()
+{
+	SYSTEM_INFO SystemInfo;
+	GetSystemInfo( &SystemInfo );
+	
+	return SystemInfo.dwPageSize;
+}
 
 
 qboolean Sys_MemoryProtectWrite(void* startoffset, int len)
 {
-
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READWRITE, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_READWRITE, &oldProtect) == 0)
 	{
 	        Sys_ShowErrorDialog("Sys_MemoryProtectWrite");
             return qfalse;
@@ -188,7 +195,7 @@ qboolean Sys_MemoryProtectExec(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len, PAGE_EXECUTE_READ, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_EXECUTE_READ, &oldProtect) == 0)
 	{
             Sys_ShowErrorDialog("Sys_MemoryProtectExec");
             return qfalse;
@@ -202,7 +209,7 @@ qboolean Sys_MemoryProtectReadonly(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READONLY, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_READONLY, &oldProtect) == 0)
 	{
 	        Sys_ShowErrorDialog("Sys_MemoryProtectReadonly");
             return qfalse;
@@ -542,6 +549,7 @@ void Sys_PlatformInit( void )
 	void *allocptr = (void*)0x8040000;  /* Image base of cod4_lnxded-bin */ 
 	void *received_mem;
 	int commitsize;
+	int finalsize, delta, pagesize;
 	char errormsg[256];
 	
 	commitsize = 0;
@@ -556,7 +564,12 @@ void Sys_PlatformInit( void )
 	commitsize += 0x2c; /* Offset of .bss */
 	commitsize += 0xc182240; /* Size of .bss */
 	
-	received_mem = VirtualAlloc(allocptr, commitsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	pagesize = Sys_GetPageSize();
+	
+	delta = commitsize % pagesize;
+	finalsize = commitsize + (pagesize - delta) + pagesize;
+	
+	received_mem = VirtualAlloc(allocptr, finalsize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 	if(received_mem != allocptr)
 	{
 		Com_sprintf(errormsg, sizeof(errormsg), "Sys_PlatformInit: Allocate memory @ %p failed Received: %p", allocptr, received_mem);
@@ -605,18 +618,51 @@ void Sys_CloseLibrary(void* hModule)
 	FreeLibrary(hModule);
 }
 
+static CRITICAL_SECTION crit_sections[CRIT_SIZE];
+threadid_t mainthread;
 
-qboolean Sys_SpawnNewThread(void* (*ThreadMain)(void*))
+
+void Sys_InitializeCriticalSections( void )
 {
-	
+	int i;
+
+	for (i = 0; i < CRIT_SIZE; i++) {
+		InitializeCriticalSection( &crit_sections[i] );
+
+	}
+
+}
+
+void __cdecl Sys_ThreadMain( void )
+{
+	mainthread = GetCurrentThreadId();
+
+    Com_InitThreadData();
+}
+
+void __cdecl Sys_EnterCriticalSectionInternal(int section)
+{
+	EnterCriticalSection(&crit_sections[section]);
+}
+
+void __cdecl Sys_LeaveCriticalSectionInternal(int section)
+{
+	LeaveCriticalSection(&crit_sections[section]);
+}
+
+
+qboolean Sys_CreateNewThread(void* (*ThreadMain)(void*), threadid_t *tid, void* arg)
+{
+	char errMessageBuf[512];
 	DWORD lastError;
-	LPTSTR errMessageBuf[512];
+
+	
 	HANDLE thid = CreateThread(	NULL, // LPSECURITY_ATTRIBUTES lpsa,
 								0, // DWORD cbStack,
 								(LPTHREAD_START_ROUTINE)ThreadMain, // LPTHREAD_START_ROUTINE lpStartAddr,
-								0, // LPVOID lpvThreadParm,
+								arg, // LPVOID lpvThreadParm,
 								0, // DWORD fdwCreate,
-								NULL );
+								tid );
 	
 	if(thid == NULL)
 	{
@@ -624,7 +670,7 @@ qboolean Sys_SpawnNewThread(void* (*ThreadMain)(void*))
 		
 		if(lastError != 0)
 		{
-			FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, lastError, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), errMessageBuf, sizeof(errMessageBuf) -1, NULL);
+			FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, lastError, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), (LPSTR)errMessageBuf, sizeof(errMessageBuf) -1, NULL);
 			Com_PrintError("Failed to start thread with error: %s\n", errMessageBuf);
 		
 		}else{
@@ -633,8 +679,28 @@ qboolean Sys_SpawnNewThread(void* (*ThreadMain)(void*))
 		return qfalse;
 	}
 	return qtrue;
+}
+
+
+qboolean __cdecl Sys_IsMainThread( void )
+{	
+	return Sys_ThreadisSame(mainthread);
+}
+
+qboolean Sys_ThreadisSame(threadid_t threadid)
+{
+	threadid_t thread = GetCurrentThreadId();
+
+	return threadid == thread;
 	
 }
+
+void Sys_ExitThread(int code)
+{
+	ExitThread( code );
+
+}
+
 
 /*
 ==================
