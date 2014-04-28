@@ -735,23 +735,32 @@ void Sys_EventLoop(){
 	}
 }
 
-void Sys_WaitForErrorConfirmation()
+void* Sys_ErrorBoxThread(void* message)
+{
+	MessageBoxA(NULL, (char*)message, CLIENT_WINDOW_TITLE " - System Crash", MB_OK | MB_ICONERROR | MB_TOPMOST );
+	return NULL;
+}
+
+void Sys_WaitForErrorConfirmation(const char* error)
 {
 	MSG msg;
-
+	unsigned int maxwait;
+	threadid_t tid;
+	
 	CON_Show( 1, qtrue );
 
-	// wait for the user to quit
-	while ( 1 ) {
+	Sys_CreateNewThread(Sys_ErrorBoxThread, &tid, (void*)error);
+	
+	// wait for the user to quit or wait for max 60 seconds
+	maxwait = Sys_Milliseconds() + 60000;
+	do{
 		if ( !GetMessage( &msg, NULL, 0, 0 ) ) {
 			break;
 		}
 		TranslateMessage( &msg );
 		DispatchMessage( &msg );
-	}
+	}while( Sys_Milliseconds() < maxwait );
 
-
-	//MessageBoxA(NULL, message, CLIENT_WINDOW_TITLE " !System Error!", MB_OK | MB_ICONERROR);
 
 }
 
@@ -797,4 +806,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	}
 	
     return Sys_Main(sys_cmdline);
+}
+
+
+void  __attribute__ ((noreturn)) Sys_ExitForOS( int exitCode )
+{
+	ExitProcess( exitCode );
 }

@@ -971,6 +971,10 @@ __optimize3 void Com_Frame( void ) {
         if(setjmp(*abortframe)){
 			/* Invokes Com_Error if needed */
             Sys_EnterCriticalSection(CRIT_ERRORCHECK);
+			if(Com_InError() == qtrue)
+			{
+				Com_Error(0, "Error Cleanup");		
+			}
             Sys_LeaveCriticalSection(CRIT_ERRORCHECK);
         }
 	//
@@ -1112,6 +1116,10 @@ __optimize3 void Com_Frame( void ) {
 	
 	/* Invokes Com_Error if needed */
 	Sys_EnterCriticalSection(CRIT_ERRORCHECK);
+	if(Com_InError() == qtrue)
+	{
+		Com_Error(0, "Error Cleanup");		
+	}
 	Sys_LeaveCriticalSection(CRIT_ERRORCHECK);
 }
 
@@ -1294,6 +1302,7 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	static int	lastErrorTime;
 	static int	errorCount;
 	static int	lastErrorCode;
+	static qboolean mainThreadInError;
 	int		currentTime;
 	jmp_buf*	abortframe;
 	mvabuf;
@@ -1320,6 +1329,13 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 	/* Main thread can't be twice in this function at same time */
 	Sys_LeaveCriticalSection(CRIT_ERROR);
 
+	if(mainThreadInError == qtrue)
+	{
+		/* Com_Error() entered while shutting down. Now a fast shutdown! */
+		Sys_Error ("%s", com_errorMessage);
+		return;
+	}
+	mainThreadInError = qtrue;
 	
 	if(com_errorEntered == qfalse)
 	{
@@ -1358,12 +1374,14 @@ void QDECL Com_Error( int code, const char *fmt, ... ) {
 		// make sure we can get at our local stuff
 		/*FS_PureServerSetLoadedPaks("", "");*/
 		com_errorEntered = qfalse;
+		mainThreadInError = qfalse;
 		longjmp(*abortframe, -1);
 	} else if (code == ERR_DROP) {
 		Com_Printf ("********************\nERROR: %s\n********************\n", com_errorMessage);
 		SV_Shutdown (va("Server crashed: %s",  com_errorMessage));
 		/*FS_PureServerSetLoadedPaks("", "");*/
 		com_errorEntered = qfalse;
+		mainThreadInError = qfalse;
 		longjmp (*abortframe, -1);
 	} else {
 		SV_Shutdown(va("Server fatal crashed: %s", com_errorMessage));

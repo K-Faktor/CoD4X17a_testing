@@ -74,11 +74,11 @@ void Sys_EnterCriticalSection(int section)
 		Sys_Print(va("^6Sys_EnterCriticalSection for Thread: %d Section: %d Depth: %d\n", Sys_GetCurrentThreadId(), section, mutex_depth[section]) );
 	mutex_depth[section] ++;
 #endif	
-	if(Com_InError() && section != CRIT_ERROR && Sys_IsMainThread() == qtrue)
+/*	if(Com_InError() && section != CRIT_ERROR && Sys_IsMainThread() == qtrue)
 	{
 		Com_Error(0, "Error Cleanup");		
 	}
-	
+*/	
 	Sys_EnterCriticalSectionInternal(section);
 	
 #ifdef THREAD_DEBUG

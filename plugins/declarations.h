@@ -53,11 +53,11 @@ typedef enum {
 } netadrtype_t;
 
 typedef struct {
-	byte	type;
-	byte	scope_id;
+	netadrtype_t	type;
+	int				scope_id;
 	unsigned short	port;
-	short sock;
-        union{
+	int				sock;	//Socket FD. 0 = any socket
+    union{
 	    byte	ip[4];
 	    byte	ipx[10];
 	    byte	ip6[16];
@@ -115,7 +115,6 @@ typedef struct{
 	};
 } cvar_t;
 
-//defines Cvarflags
 #define	CVAR_ARCHIVE		1	// set to cause it to be saved to vars.rc
 								// used for system variables, not for player
 								// specific configurations

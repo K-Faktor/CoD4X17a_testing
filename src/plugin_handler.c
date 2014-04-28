@@ -185,6 +185,7 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
     char* realpath;
 	char filepathbuf[MAX_OSPATH];
     void *lib_handle;
+
     pluginInfo_t info;
 
     if(!pluginFunctions.enabled){
@@ -275,7 +276,9 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
             pluginFunctions.hasControl = i;
             (*pluginFunctions.plugins[i].OnInfoRequest)(&info);
             pluginFunctions.hasControl = PLUGIN_UNKNOWN;
-            if(info.handlerVersion.major != PLUGIN_HANDLER_VERSION_MAJOR || info.handlerVersion.minor > PLUGIN_HANDLER_VERSION_MINOR || (info.handlerVersion.minor - PLUGIN_HANDLER_VERSION_MINOR) > 100){
+			
+            if(info.handlerVersion.major != PLUGIN_HANDLER_VERSION_MAJOR || (info.handlerVersion.minor - info.handlerVersion.minor %100) != (PLUGIN_HANDLER_VERSION_MINOR - PLUGIN_HANDLER_VERSION_MINOR %100))
+			{
                 Com_PrintError("^1ERROR:^7 This plugin might not be compatible with this server version! Requested plugin handler version: %d.%d, server's plugin handler version: %d.%d. Unloading the plugin...\n",info.handlerVersion.major,info.handlerVersion.minor, PLUGIN_HANDLER_VERSION_MAJOR,PLUGIN_HANDLER_VERSION_MINOR);
                 PHandler_Unload(i);
                 return;

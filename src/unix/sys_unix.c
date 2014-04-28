@@ -541,7 +541,7 @@ void Sys_EventLoop()
 
 }
 
-void Sys_WaitForErrorConfirmation()
+void Sys_WaitForErrorConfirmation(const char* error)
 {
 
 }
@@ -661,4 +661,9 @@ void Sys_ExitThread(int code)
 {
 	pthread_exit(&code);
 
+}
+
+void  __attribute__ ((noreturn)) Sys_ExitForOS( int exitCode )
+{
+	exit(exitCode);
 }
