@@ -243,7 +243,7 @@ char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets call
     int i;
 
 	
-    for(this = &ipBans[0], i = 0; i < 1024; this++, i++){
+    for(this = &ipBans[0], i = 0; i < MAX_IPBANS; this++, i++){
 
         if(NET_CompareBaseAdr(netadr, &this->remote)){
 
@@ -299,7 +299,7 @@ void SV_PlayerAddBanByip(netadr_t *remote, char *reason, int uid, char* guid, in
     if(!ipbantime || ipbantime->integer == 0)
         return;
 
-    for(list = &ipBans[0], i = 0; i < 1024; list++, i++){	//At first check whether we have already an entry for this player
+    for(list = &ipBans[0], i = 0; i < MAX_IPBANS; list++, i++){	//At first check whether we have already an entry for this player
         if(NET_CompareBaseAdr(remote, &list->remote)){
             break;
         }
@@ -309,12 +309,12 @@ void SV_PlayerAddBanByip(netadr_t *remote, char *reason, int uid, char* guid, in
 	}
     }
 
-    if(i == 1024){
+    if(i == MAX_IPBANS){
 	 list = &ipBans[oldest];
     }
     list->remote = *remote;
 
-    Q_strncpyz(list->banmsg, reason, 128);
+    Q_strncpyz(list->banmsg, reason, sizeof(list->banmsg));
 
     if(guid && strlen(guid) == 32)
         guid += 24;
@@ -349,7 +349,7 @@ void SV_RemoveBanByip(netadr_t *remote, int uid, char* guid)
     if(uid > 0)
     {
 
-        for(thisipban = ipBans, i = 0; i < 1024; thisipban++, i++)
+        for(thisipban = ipBans, i = 0; i < MAX_IPBANS; thisipban++, i++)
         {
             if(uid == thisipban->uid)
             {
@@ -365,7 +365,7 @@ void SV_RemoveBanByip(netadr_t *remote, int uid, char* guid)
     if(guid && strlen(guid) == 8)
     {
 
-        for(thisipban = ipBans, i = 0; i < 1024; thisipban++, i++)
+        for(thisipban = ipBans, i = 0; i < MAX_IPBANS; thisipban++, i++)
         {
             if(!Q_stricmp(guid, thisipban->guid))
             {
@@ -378,7 +378,7 @@ void SV_RemoveBanByip(netadr_t *remote, int uid, char* guid)
 
     if(remote != NULL)
     {
-        for(thisipban = ipBans, i = 0; i < 1024; thisipban++, i++)
+        for(thisipban = ipBans, i = 0; i < MAX_IPBANS; thisipban++, i++)
         {
             if(NET_CompareBaseAdr(remote, &thisipban->remote))
             {
