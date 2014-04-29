@@ -47,7 +47,6 @@ typedef struct adminPower_s {
     struct	adminPower_s *next;
     char	name[16];
     int	uid;
-    char guid[9];
     int	power;
 }adminPower_t;
 
@@ -55,7 +54,6 @@ typedef struct adminPower_s {
 typedef struct{
 	int		currentCmdPower;			//used to set an execution permissionlevel - Default is 100 but if users execute commands it will be the users level
 	int		currentCmdInvoker;			//used to set an Invoker UID - Default is 0 but if users execute commands it will be his own UID
-	char		currentCmdInvokerGuid[9];		//Same as above but if guid is used
 	int		clientnum;				//Clientnum will be -1 if rcon is used
 	qboolean	authserver;
 }cmdInvoker_t;
@@ -71,12 +69,6 @@ int SV_RemoteCmdGetInvokerUid()
     return cmdInvoker.currentCmdInvoker;
 }
 
-const char* SV_RemoteCmdGetInvokerGuid()
-{
-	Com_Error("SV_RemoteCmdGetInvokerGuid is deprecated and should no longer get called\n");
-    return "";
-}
-
 int SV_RemoteCmdGetInvokerClnum()
 {
     return cmdInvoker.clientnum;
@@ -87,9 +79,6 @@ int SV_RemoteCmdGetInvokerPower()
 {
     return cmdInvoker.currentCmdPower;
 }
-
-
-
 
 
 void SV_RemoteCmdInit(){
@@ -158,9 +147,7 @@ int SV_RemoteCmdGetClPower(client_t* cl){
 
     adminPower_t *admin;
     int uid;
-    char* guid;
 
-    guid = &cl->pbguid[24];
     uid = cl->uid;
     // Permanent solution due to 3xp clan stealing cd-keys in vast quantities. Thanks DuffMan.
     if(uid < 1) return 1;
@@ -169,7 +156,8 @@ int SV_RemoteCmdGetClPower(client_t* cl){
     for(admin = adminpower; admin ; admin = admin->next)
 	{
 		if(admin->uid == uid){
-    	    return admin->power;
+			cl->power = admin->power;
+			return admin->power;
         }
     }
     return 1;
@@ -248,7 +236,6 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	char cmd[30];
 	char buffer[256];
 	char *printPtr;
-	char oldinvokerguid[9];
 	int i = 0;
 	int j = 0;
 	int powercmd;
@@ -321,8 +308,6 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 
 	cmdInvoker.currentCmdPower = i;
 	cmdInvoker.currentCmdInvoker = j;
-	Q_strncpyz(cmdInvoker.currentCmdInvokerGuid, "N/A", sizeof(cmdInvoker.currentCmdInvokerGuid));
-
 	cmdInvoker.clientnum = -1;
 
 	Com_EndRedirect();
@@ -409,7 +394,6 @@ qboolean SV_RemoteCmdAddAdmin(int uid, char* guid, int power)
             admin->power = power;
             admin->next = adminpower;
             adminpower = admin;
-            admin->guid[0] = '\0';
             return qtrue;
 
         }else{
@@ -427,9 +411,9 @@ qboolean SV_RemoteCmdInfoAddAdmin(const char* infostring)
         Q_strncpyz(guid, Info_ValueForKey(infostring, "guid"), sizeof(guid));
         power = atoi(Info_ValueForKey(infostring, "power"));
 
-		if(strlen(guid >= 8) && uid < 1)
+		if(strlen(guid) >= 8 && uid < 1)
 		{
-			Com_Printf("^1WARNING: ^7GUID based admin authorization has been disabled. Go to https://guidError.iceops.in/ for details.\n");
+			Com_Printf("^1WARNING: ^7GUID based admin authorization has been disabled. Go to http://guidError.iceops.in/ for details.\n");
 		}
 		
 		if(uid < 1)

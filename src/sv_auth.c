@@ -77,21 +77,9 @@ int Auth_Authorize(const char *login, const char *password){
     if(Q_strncmp(user->sha256, sha256, 128))
 	return -1;
 
-    Com_Printf("Admin Authorized! UID: %d, name: %s, power: %d\n", user->uid, user->username,user->power);
     return id;
 }
 
-int Auth_GetPower(int uid){
-    int i;
-    authData_admin_t *user;
-    int power = AUTH_DEFAULT_POWER; // 1
-    
-    for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++){
-	if(*user->username && user->uid == uid)
-	    power = user->power;
-    }
-    return power;
-}
 
 int Auth_GetUID(char *name){
     int i;
@@ -185,7 +173,8 @@ void Auth_SetAdmin_f( void ){
 	Q_strncpyz(free->username, username, sizeof(free->username));
 	Q_strncpyz(free->sha256, sha256, sizeof(free->sha256));
 	Q_strncpyz(free->salt, (char*)salt, sizeof(free->salt));
-	free->power = power;
+	//free->power = power; Instead:
+	SV_RemoteCmdSetAdmin(uid, NULL, power);
 	free->uid = uid;
 
 	NV_ProcessEnd();
@@ -228,7 +217,7 @@ void Auth_ListAdmins_f( void ){
 	Com_Printf("------- Admins: -------\n");
 	for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++){
 		if(*user->username)
-			Com_Printf("  %2d:   Name: %s, Power: %d, UID: @%d\n", i+1, user->username, user->power,user->uid);
+			Com_Printf("  %2d:   Name: %s, Power: %d, UID: @%d\n", i+1, user->username, SV_RemoteCmdGetClPowerByUID( user->uid ), user->uid);
 	}
 	Com_Printf("---------------------------------\n");
 }
@@ -328,7 +317,7 @@ qboolean Auth_AddAdminToList(const char* username, const char* password, const c
 	authData_admin_t* free = NULL;
 	int i;
 
-	if(!username || !*username || !password || strlen(password) < 6 || power < 1 || power > 100 || !salt || strlen(salt) != 64)
+	if(!username || !*username || !password || strlen(password) < 6 /* || power < 1 || power > 100 Nope! */ || !salt || strlen(salt) != 64)
 		return qfalse;
 
 	for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++){
@@ -348,10 +337,16 @@ qboolean Auth_AddAdminToList(const char* username, const char* password, const c
 	Q_strncpyz(free->username, username, sizeof(free->username));
 	Q_strncpyz(free->sha256, password, sizeof(free->sha256));
 	Q_strncpyz(free->salt, salt, sizeof(free->salt));
-	free->power = power;
 	free->uid = uid;
 	if(uid > auth_admins.maxUID)
 	    auth_admins.maxUID = uid;
+	
+	if(power < 1 || power > 100)
+		return qtrue;
+	/* power was found! add him (backward compatibility) */
+	NV_ProcessBegin();
+	SV_RemoteCmdSetAdmin(uid, NULL, power);
+	NV_ProcessEnd();
 	return qtrue;
 }
 
@@ -380,9 +375,11 @@ void Auth_Login_f(){
 	SV_DropClient(invoker,"Incorrect login credentials.\n");
 	return;
     }
+
     invoker->uid = auth_admins.admins[id].uid;
-    invoker->power = auth_admins.admins[id].power;
-    Com_Printf("^2Successfully authorized.\n");
+    invoker->power = SV_RemoteCmdGetClPower(invoker);
+    Com_Printf("^2Successfully authorized. UID: %d, name: %s, power: %d\n",
+			   auth_admins.admins[id].uid, auth_admins.admins[id].username, invoker->power);
 }
 
 
@@ -424,7 +421,7 @@ void Auth_WriteAdminConfig(char* buffer, int size)
 		continue;
 
         Info_SetValueForKey(infostring, "type", "authAdmin");
-        Info_SetValueForKey(infostring, "power", va("%i", admin->power));
+//        Info_SetValueForKey(infostring, "power", va("%i", admin->power)); We don't write it anymore. It goes now to "admin"
         Info_SetValueForKey(infostring, "uid", va("%i", admin->uid));
         Info_SetValueForKey(infostring, "password", admin->sha256);
         Info_SetValueForKey(infostring, "salt", admin->salt);

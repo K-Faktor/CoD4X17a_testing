@@ -36,7 +36,7 @@ typedef struct{
 	char username[32];
 	char salt[129];
 	char sha256[65];
-	int power;
+	//int power; Stored inside the adminPower_t object
 	int uid;
 }authData_admin_t; // size: 32 + 129 + 65 = 289 B
 

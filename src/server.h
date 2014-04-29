@@ -705,7 +705,6 @@ qboolean SV_RemoteCmdInfoAddAdmin(const char* infostring);
 void SV_RemoteCmdWriteAdminConfig(char* buffer, int size);
 void QDECL SV_PrintAdministrativeLog( const char *fmt, ... );
 int SV_RemoteCmdGetInvokerUid( void );
-const char* SV_RemoteCmdGetInvokerGuid( void );
 int SV_RemoteCmdGetInvokerClnum( void );
 int SV_RemoteCmdGetInvokerPower( void );
 void SV_RemoteCmdSetAdmin(int uid, char* guid, int power);
