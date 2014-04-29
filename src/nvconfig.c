@@ -75,16 +75,13 @@ qboolean NV_ParseConfigLine(char* line, int linenumber){
         return qtrue;
 
     }else if(!Q_stricmp(Info_ValueForKey(line, "type") , "admin")){
-	Com_Printf("^1WARNING: ^7GUID based admin authorization has been disabled. Go to https://guidError.iceops.in/ for details.\n");
-	return qfalse;
-	/*
+
         if(!SV_RemoteCmdInfoAddAdmin( line ))
         {
             Com_Printf("Error at line: %d\n", linenumber);
             return qfalse;
         }
         return qtrue;
-        */
 
     }else{
         Com_Printf("Error: unknown type (line: %d)\n", linenumber);

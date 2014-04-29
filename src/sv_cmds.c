@@ -647,41 +647,37 @@ static void Cmd_BanPlayer_f() {
     if ( Cmd_Argc() < 3) {
         if(Q_stricmp(Cmd_Argv(0), "banUser") || Q_stricmp(Cmd_Argv(0), "banClient")){
             if(Cmd_Argc() < 2){
-                if(psvs.useuids)
-                    Com_Printf( "Usage: banUser <online-playername | online-playerslot | @uid>\n" );
-                else
-                    Com_Printf( "Usage: banUser <online-playername | online-playerslot | guid>\n" );
-
+                Com_Printf( "Usage: banUser <user>\n" );
+				Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
+				Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
+				Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
                 return;
             }
 
         }else{
-            if(psvs.useuids)
-                Com_Printf( "Usage: permban <online-playername | online-playerslot | @uid> <Reason for this ban (max 126 chars)>\n" );
-            else
-                Com_Printf( "Usage: permban <online-playername | online-playerslot | guid> <Reason for this ban (max 126 chars)>\n" );
-
+            Com_Printf( "Usage: permban <user> <Reason for this ban (max 126 chars)>\n" );
+			Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
+			Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
+			Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
             return;
         }
     }
 
 
+    guid = SV_IsGUID(Cmd_Argv(1));
 
-    if(!psvs.useuids){
-
-        guid = SV_IsGUID(Cmd_Argv(1));
-
-        if(!guid)
-        {
-            cl = SV_GetPlayerByHandle();
-            if(!cl.cl){
-                Com_Printf("Error: This player can not be banned, no such player\n");
-                return;
-            }else{
-                guid = &cl.cl->pbguid[24];
-            }
+    if(!guid)
+    {
+        cl = SV_GetPlayerByHandle();
+		if(cl.uid > 0){
+        if(!cl.cl){
+            Com_Printf("Error: This player can not be banned, no such player\n");
+            return;
+        }else{
+            guid = &cl.cl->pbguid[24];
         }
-
+    }
+/*
     }else{
         cl = SV_GetPlayerByHandle();
         if(!cl.uid){
@@ -703,7 +699,7 @@ static void Cmd_BanPlayer_f() {
             }
         }
     }
-
+*/
 
     banreason[0] = 0;
     if ( Cmd_Argc() > 2) {
@@ -728,25 +724,23 @@ static void Cmd_BanPlayer_f() {
             }*/
 
             //Messages and kick
-            if(psvs.useuids){
+            if(cl.uid > 0){
                 Com_Printf( "Banrecord added for player: %s uid: %i\n", cl.cl->name, cl.uid);
                 SV_PrintAdministrativeLog( "banned player: %s uid: %i with the following reason: %s", cl.cl->name, cl.uid, banreason);
                 Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour ban will %s expire\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
                     "never", cl.uid, SV_RemoteCmdGetInvokerUid(), banreason);
-                SV_DropClient(cl.cl, dropmsg);
-
-            }else{
-                Com_Printf( "Banrecord added for player: %s guid: %s\n", cl.cl->name, cl.cl->pbguid);
+			}else{
+				Com_Printf( "Banrecord added for player: %s guid: %s\n", cl.cl->name, cl.cl->pbguid);
                 SV_PrintAdministrativeLog( "banned player: %s guid: %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, banreason);
-                Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour GUID is: %s    Banning admin GUID is: %s\nReason for this ban:\n%s",
-                    cl.cl->pbguid, SV_RemoteCmdGetInvokerGuid(), banreason);
-                SV_DropClient(cl.cl, dropmsg);
-
-                if(cl.cl->authentication < 1)
-                    SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, banreason, 0, cl.cl->pbguid, 0, 0x7FFFFFFF);
-
+                Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
+                    cl.cl->pbguid, SV_RemoteCmdGetInvokerUid(), banreason);			
             }
+            SV_DropClient(cl.cl, dropmsg);
 
+            if(cl.cl->authentication < 1)
+                SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, banreason, 0, cl.cl->pbguid, 0, 0x7FFFFFFF);
+
+			SV_DropClient(cl.cl, dropmsg);
         }else{
             //Banning
             SV_AddBan(cl.uid, SV_RemoteCmdGetInvokerUid(), guid, "N/A", (time_t)-1, banreason);
@@ -756,7 +750,7 @@ static void Cmd_BanPlayer_f() {
             }
 */
             //Messages
-            if(psvs.useuids){
+            if(cl.uid > 0){
                 Com_Printf( "Banrecord added for uid: %i\n", cl.uid);
                 SV_PrintAdministrativeLog( "banned player uid: %i with the following reason: %s", cl.uid, banreason);
             }else{
@@ -1727,42 +1721,16 @@ static void SV_SetAdmin_f() {
     power = atoi(Cmd_Argv(2));
 
     if ( Cmd_Argc() != 3 || power < 1 || power > 100) {
-        if(SV_UseUids())
-            Com_Printf( "Usage: setAdmin <user (online-playername | online-playerslot | uid @number)> <power ([1,100])>\n" );
-        else
-            Com_Printf( "Usage: setAdmin <user (online-playername | online-playerslot | guid )> <power ([1,100])>\n" );
+        Com_Printf( "Usage: setAdmin <user> <power>\n" );
+        Com_Printf( "Where user is one of the following: online-playername | online-playerslot | uid\n" );
+		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
+		Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
+        Com_Printf( "Note: Usage of GUIDs is deprecated for security reasons. Use authsetadmin instead!\n" );
         return;
     }
 
-    if(SV_UseUids())
-    {
-
-        uid = SV_GetPlayerByHandle().uid;
-
-        SV_RemoteCmdSetAdmin(uid, guid, power);
-
-    }else{
-
-        guid = SV_IsGUID(Cmd_Argv(1));
-
-        if(!guid)
-        {
-            cl = SV_GetPlayerByHandle();
-            if(!cl.cl){
-                Com_Printf("Error: No such player\n");
-                return;
-            }else{
-                if(cl.cl->authentication != 1){
-                        Com_PrintError("Bad CD-KEY / Cracked server\n");
-                        return;
-                }
-                guid = cl.cl->pbguid;
-            }
-        }
-
-        SV_RemoteCmdSetAdmin(uid, guid, power);
-    }
-
+    uid = SV_GetPlayerByHandle().uid;
+    SV_RemoteCmdSetAdmin(uid, guid, power);
 }
 
 
