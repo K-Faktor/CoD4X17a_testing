@@ -41,7 +41,6 @@ Source Rcon facility
 
 typedef struct{
 	netadr_t remote;
-	int socketfd;
 	int lastpacketid;
 	qboolean streamlog;
 	qboolean streamchat;

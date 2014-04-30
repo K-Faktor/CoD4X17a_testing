@@ -369,7 +369,7 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 	MSG_WriteLong(&sendmsg, 0);
 	MSG_WriteLong(&sendmsg, SERVERDATA_RESPONSE_VALUE);
 	MSG_WriteShort(&sendmsg, 0);
-	if(NET_SendData(socketfd, &sendmsg))
+	if(NET_SendData(from->sock, &sendmsg) < 1)
 	{
 		return TCP_AUTHBAD;
 	}
@@ -423,7 +423,6 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 	user->remote = *from;
 	user->rconPower = login->power;
 	Q_strncpyz(user->rconUsername, login->username, sizeof(user->rconUsername));
-	user->socketfd = socketfd;
 	user->streamchat = 0;
 	user->streamlog = 0;
 	user->lastpacketid = packetid;
@@ -432,7 +431,7 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd
 	MSG_WriteLong(&sendmsg, user->lastpacketid);
 	MSG_WriteLong(&sendmsg, SERVERDATA_AUTH_RESPONSE);
 	MSG_WriteShort(&sendmsg, 0);
-	if(NET_SendData(socketfd, &sendmsg))
+	if(NET_SendData(from->sock, &sendmsg) < 1)
 	{
 		return TCP_AUTHBAD;
 	}
@@ -451,7 +450,7 @@ badrcon:
 	MSG_WriteLong(&sendmsg, -1);
 	MSG_WriteLong(&sendmsg, SERVERDATA_AUTH_RESPONSE);
 	MSG_WriteShort(&sendmsg, 0);
-	NET_SendData(socketfd, &sendmsg);
+	NET_SendData(from->sock, &sendmsg);
 	return TCP_AUTHBAD;
 
 }
@@ -514,7 +513,7 @@ void HL2Rcon_SourceRconSendDataToEachClient( const byte* data, int msglen, int t
 			*updatelen = msg.cursize - 4;
 			msgbuild = qtrue;
 		}
-		NET_SendData(user->socketfd, &msg);
+		NET_SendData(user->remote.sock, &msg);
 	}
 }
 
@@ -569,7 +568,7 @@ void HL2Rcon_SourceRconSendChatToEachClient( const char *text, rconUser_t *self,
 		updatelen = (int32_t*)msg.data;
 		*updatelen = msg.cursize - 4;
 
-		NET_SendData(user->socketfd, &msg);
+		NET_SendData(user->remote.sock, &msg);
 	}
 }
 
@@ -599,7 +598,7 @@ void HL2Rcon_SourceRconFlushRedirect(char* outputbuf, qboolean lastcommand){
 	updatelen = (int32_t*)msg.data;
 	*updatelen = msg.cursize - 4;
 
-	NET_SendData(user->socketfd, &msg);
+	NET_SendData(user->remote.sock, &msg);
 }
 
 
