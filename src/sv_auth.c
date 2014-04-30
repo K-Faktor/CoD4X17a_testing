@@ -344,9 +344,7 @@ qboolean Auth_AddAdminToList(const char* username, const char* password, const c
 	if(power < 1 || power > 100)
 		return qtrue;
 	/* power was found! add him (backward compatibility) */
-	NV_ProcessBegin();
 	SV_RemoteCmdSetAdmin(uid, NULL, power);
-	NV_ProcessEnd();
 	return qtrue;
 }
 
