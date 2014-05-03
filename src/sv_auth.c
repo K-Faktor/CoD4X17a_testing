@@ -109,7 +109,10 @@ void Auth_SetAdmin_f( void ){
 
 
 	if(Cmd_Argc() != 4){
-		Com_Printf("Usage: %s <username, password, power>\n",Cmd_Argv(0));
+		Com_Printf("Usage: %s <username> <password> <power>\n", Cmd_Argv(0));
+		Com_Printf( "Where username is loginname for this user\n" );
+		Com_Printf( "Where password is the initial 6 characters long or longer password for this user which should get changed by the user on first login\n" );		
+		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
 		return;
 	}
 
@@ -118,7 +121,10 @@ void Auth_SetAdmin_f( void ){
 	power = atoi(Cmd_Argv(3));
 	
 	if(!username || !*username || !password || strlen(password) < 6 || power < 1 || power > 100){
-		Com_Printf("Usage: %s <username, password (at least 6 characters), power (and integer between 1 and 100)>\n",Cmd_Argv(0));
+		Com_Printf("Usage: %s <username> <password> <power>\n", Cmd_Argv(0));
+		Com_Printf( "Where username is loginname for this user\n" );
+		Com_Printf( "Where password is the initial 6 characters long or longer password for this user which should get changed by the user on first login\n" );		
+		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
 		return;
 	}
 
@@ -171,12 +177,16 @@ void Auth_SetAdmin_f( void ){
 	sha256 = Com_SHA256(va("%s.%s", password, salt));
 
 	Q_strncpyz(free->username, username, sizeof(free->username));
+	
+	Com_Printf("Debug: 1:%s 2:%s\n", username, free->username);
+	
 	Q_strncpyz(free->sha256, sha256, sizeof(free->sha256));
 	Q_strncpyz(free->salt, (char*)salt, sizeof(free->salt));
 	//free->power = power; Instead:
 	SV_RemoteCmdSetAdmin(uid, NULL, power);
+	
 	free->uid = uid;
-
+	Com_Printf("Registered user with Name: %s Power: %d UID: %d\n", free->username, power, uid);
 	NV_ProcessEnd();
 }
 

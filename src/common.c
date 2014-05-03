@@ -966,17 +966,17 @@ __optimize3 void Com_Frame( void ) {
 	static unsigned int		com_frameNumber;
 
 
-        jmp_buf* abortframe = (jmp_buf*)Sys_GetValue(2);
+	jmp_buf* abortframe = (jmp_buf*)Sys_GetValue(2);
 
-        if(setjmp(*abortframe)){
-			/* Invokes Com_Error if needed */
-            Sys_EnterCriticalSection(CRIT_ERRORCHECK);
-			if(Com_InError() == qtrue)
-			{
-				Com_Error(0, "Error Cleanup");		
-			}
-            Sys_LeaveCriticalSection(CRIT_ERRORCHECK);
-        }
+	if(setjmp(*abortframe)){
+		/* Invokes Com_Error if needed */
+		Sys_EnterCriticalSection(CRIT_ERRORCHECK);
+		if(Com_InError() == qtrue)
+		{
+			Com_Error(0, "Error Cleanup");		
+		}
+		Sys_LeaveCriticalSection(CRIT_ERRORCHECK);
+	}
 	//
 	// main event loop
 	//

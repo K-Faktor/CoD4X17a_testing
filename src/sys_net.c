@@ -2105,7 +2105,7 @@ void NET_RegisterDefaultCommunicationSocket(netadr_t *adr){
 
 
 	if(socketadr != NULL && socketadr->type == NA_IP){
-		
+		/* Ignore localhost */
 		NET_StringToAdr("127.0.0.1", &test, NA_IP);
 
 		if(NET_CompareBaseAdr(socketadr, &test))

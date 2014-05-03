@@ -678,7 +678,7 @@ static void Cmd_BanPlayer_f() {
 		
 gothandle:
 		
-	if(strlen(cl.cl->pbguid) == 32)
+	if(cl.cl && strlen(cl.cl->pbguid) == 32)
 	{
 		guid = &cl.cl->pbguid[24];
 	}
@@ -834,7 +834,7 @@ gothandle:
 	
 	/* Verify the players ID and drop/ipban if needed */
 	
-	if(strlen(cl.cl->pbguid) == 32)
+	if(cl.cl && strlen(cl.cl->pbguid) == 32)
 	{
 		guid = &cl.cl->pbguid[24];
 	}
@@ -1690,7 +1690,10 @@ static void SV_SetAdmin_f() {
     }
 
     uid = SV_GetPlayerByHandle().uid;
+	
+	NV_ProcessBegin();
     SV_RemoteCmdSetAdmin(uid, guid, power);
+	NV_ProcessEnd();
 }
 
 

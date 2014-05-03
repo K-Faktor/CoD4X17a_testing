@@ -975,7 +975,79 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 	
 }
 
+/*
+ =====================================================================
+							HTTP-Server
+ =====================================================================
+*/
+#if 0
+void NET_TCPAddEventType(qboolean (*tcpevent)(netadr_t* from, msg_t* msg, int socketfd, int connectionId),
+			 tcpclientstate_t (*tcpauthevent)(netadr_t* from, msg_t* msg, int socketfd, int *connectionId),
+					void (*tcpconncloseevent)(netadr_t* from, int socketfd, int connectionId),
+			int serviceId);
 
+
+qboolean HTTPServer_Event(netadr_t* from, msg_t* msg, int socketfd, int connectionId)
+{
+	ftRequest_t* request = (ftRequest_t*)connectionId;
+
+	/* Is header complete ? */
+	
+	
+	
+	
+	
+	
+}
+
+/* Detecting the clientside protocol and process the 1st chunk of data if it is a http client */
+tcpclientstate_t HTTPServer_AuthEvent(netadr_t* from, msg_t* msg, int socketfd, int *connectionId)
+{
+	
+	ftRequest_t* request;
+	*connectionId = 0;
+	
+	char protocol[MAX_STRING_CHARS];
+	char* line;
+	
+	MSG_BeginReading(msg);
+	
+	line = MSG_ReadStringLine(msg, protocol, sizeof(protocol));
+	if (line != NULL) {
+		if(Q_stricmpn(line, "HTTP/1.0", 8) && Q_stricmpn(line, "HTTP/1.1",8))
+		{
+			/* Is not a HTTP client */
+			return TCP_AUTHNOTME;
+		}
+	}
+	
+	request = FT_CreateRequest("", "");
+	
+	if(request == NULL)
+		return TCP_AUTHBAD;
+	
+	*connectionId = (int)request;
+
+	
+	if (HTTPServer_Event(from, msg, socketfd, *connectionId) == qtrue)
+	{
+		return TCP_AUTHBAD;
+	}	
+
+	return TCP_AUTHSUCCESSFULL;
+}
+
+
+
+void HTTPServer_Init()
+{
+	/* Register the events */
+	NET_TCPAddEventType( HTTPServer_Event, HTTPServer_AuthEvent, HTTPServer_Disconnect, 'h''t''t''p');
+
+	
+	
+}
+#endif
 /*
  =====================================================================
  User called File-Transfer functions intended to use in external files

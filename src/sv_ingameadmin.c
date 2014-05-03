@@ -478,7 +478,7 @@ void QDECL SV_PrintAdministrativeLog( const char *fmt, ... ) {
 
 /*
 ============
-Cmd_RemoteSetAdmin_f
+Cmd_RemoteSetAdmin
 ============
 */
 
@@ -493,7 +493,6 @@ void SV_RemoteCmdSetAdmin(int uid, char* guid, int power)
         return;
     }
 
-    NV_ProcessBegin();
 
     for(admin = adminpower ; admin ; admin = admin->next){
             if(admin->uid == uid){
@@ -503,7 +502,6 @@ void SV_RemoteCmdSetAdmin(int uid, char* guid, int power)
                     Com_Printf( "Admin power changed for: uid: %i to level: %i\n", uid, power);
                     SV_PrintAdministrativeLog( "changed power of admin with uid: %i to new power: %i", uid, power);
                 }
-                NV_ProcessEnd();
                 return;
             }
     }
@@ -518,7 +516,6 @@ void SV_RemoteCmdSetAdmin(int uid, char* guid, int power)
             SV_PrintAdministrativeLog( "added a new admin with uid: %i and power: %i", uid, power);
     }
 
-    NV_ProcessEnd();
 }
 
 
