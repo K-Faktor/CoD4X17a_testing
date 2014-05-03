@@ -279,13 +279,13 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
 			
             if(info.handlerVersion.major != PLUGIN_HANDLER_VERSION_MAJOR || (info.handlerVersion.minor - info.handlerVersion.minor %100) != (PLUGIN_HANDLER_VERSION_MINOR - PLUGIN_HANDLER_VERSION_MINOR %100))
 			{
-                Com_PrintError("^7This plugin might not be compatible with this server version! Requested plugin handler version: %d.%d, server's plugin handler version: %d.%d. Unloading the plugin...\n",info.handlerVersion.major,info.handlerVersion.minor, PLUGIN_HANDLER_VERSION_MAJOR,PLUGIN_HANDLER_VERSION_MINOR);
+                Com_PrintError("This plugin might not be compatible with this server version! Requested plugin handler version: %d.%d, server's plugin handler version: %d.%d. Unloading the plugin...\n",info.handlerVersion.major,info.handlerVersion.minor, PLUGIN_HANDLER_VERSION_MAJOR,PLUGIN_HANDLER_VERSION_MINOR);
                 PHandler_Unload(i);
                 return;
             }
         }
         else{
-            Com_Printf("^7function OnInfoRequest not found in the plugin file. Unloading...\n");
+            Com_PrintError("function OnInfoRequest not found in the plugin file. Unloading...\n");
             PHandler_Unload(i);
             return;
 
