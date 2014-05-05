@@ -171,7 +171,7 @@ __cdecl void Cmd_CallVote_f( gentity_t *ent ) {
 
 		if( !(g_voteFlags & VOTEFLAGS_ANYMAP) ){
 			if(!strstr(SV_GetMapRotation(), va("map %s",arg3))){
-				SV_GameSendServerCommand( ent - g_entities, 0, va("%c \"Voting for map %s is disabled on this server\"\0", 0x65));
+				SV_GameSendServerCommand( ent - g_entities, 0, va("%c \"Voting for map %s is disabled on this server\"\0", 0x65, arg3));
 				return;
 			}
 		}
