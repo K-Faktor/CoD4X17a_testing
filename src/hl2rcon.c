@@ -809,7 +809,7 @@ void HL2Rcon_EventLevelStart()
 
 void HL2Rcon_EventClientEnterTeam(int cid, int team){
 
-    byte data[2];
+    byte data[4];
 
     data[0] = RCONEVENT_PLAYERENTERTEAM;
     data[1] = cid;

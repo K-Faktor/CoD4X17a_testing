@@ -2719,7 +2719,7 @@ int NET_TcpClientConnect( const char *remoteAdr ) {
 
 				socklen_t so_len = sizeof(err);
 
-				if(getsockopt(newsocket, SOL_SOCKET, SO_ERROR, (char*) &err, &so_len) == 0);
+				if(getsockopt(newsocket, SOL_SOCKET, SO_ERROR, (char*) &err, &so_len) == 0)
 				{
 					return newsocket;
 				}
@@ -2831,7 +2831,7 @@ __optimize3 __regparm1 qboolean NET_Sleep(unsigned int usec)
 	qboolean netabort = qfalse; //This will be true if we had to process more than 666 packets on one single interface
 				  //Usually this marks an ongoing floodattack onto this CoD4 server
 
-	if(usec < 0 || usec > 999999)
+	if( usec > 999999 )
 		usec = 0;
 
 	FD_ZERO(&fdr);

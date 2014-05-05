@@ -1415,19 +1415,19 @@ before Sys_Quit or Sys_Error
 
 __cdecl void SV_Shutdown( const char *finalmsg ) {
 
-	qboolean var_01;
-
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
 
 	Com_Printf( "----- Server Shutdown -----\n" );
 	Com_Printf( "\nWith the reason: %s\n", finalmsg );
-        if(SEH_StringEd_GetString(finalmsg)){
-            var_01 = qtrue;
-        }
+	if(SEH_StringEd_GetString(finalmsg)){
+		SV_FinalMessage( finalmsg, qtrue );
+	}else {
+		SV_FinalMessage( finalmsg, qfalse );
+	}
 
-	SV_FinalMessage( finalmsg, var_01 );
+
 
 //	SV_RemoveOperatorCommands();
 	SV_MasterShutdown();
