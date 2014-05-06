@@ -234,7 +234,7 @@ void FS_RemoveOSPath(const char *);
 qboolean FS_FileExistsOSPath( const char *ospath );
 void FS_RenameOSPath( const char *from_ospath, const char *to_ospath );
 qboolean FS_SetPermissionsExec(const char* ospath);
-
+__regparm3 void DB_BuildOSPath(const char *filename, int ffdir, int len, char *buff);
 
 #endif
 

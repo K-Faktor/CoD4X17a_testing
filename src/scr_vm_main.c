@@ -605,7 +605,19 @@ void GScr_LoadGameTypeScript(void){
 
     Com_sprintf(gametype_path, sizeof(gametype_path), "maps/mp/gametypes/%s", sv_g_gametype->string);
 
-    g_scr_data.gametype = GScr_LoadScriptAndLabel(gametype_path, "main", 1);
+    /* Don't raise a fatal error when we couldn't find this gametype script */
+    g_scr_data.gametype = GScr_LoadScriptAndLabel(gametype_path, "main", 0);
+    if(g_scr_data.gametype == 0)
+    {
+        Com_PrintError("Could not find script: %s\n", gametype_path);
+        Com_Printf("The gametype %s is not available! Will load gametype dm\n", sv_g_gametype->string);
+
+        Cvar_SetString(sv_g_gametype, "dm");
+        Com_sprintf(gametype_path, sizeof(gametype_path), "maps/mp/gametypes/%s", sv_g_gametype->string);
+        /* If we can not find gametype dm a fatal error gets raised */
+        g_scr_data.gametype = GScr_LoadScriptAndLabel(gametype_path, "main", 1);
+    }
+
     g_scr_data.startgametype = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_StartGameType", 1);
     g_scr_data.playerconnect = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerConnect", 1);
     g_scr_data.playerdisconnect = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerDisconnect", 1);

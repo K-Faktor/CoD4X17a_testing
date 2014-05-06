@@ -3679,3 +3679,44 @@ qboolean FS_SetPermissionsExec(const char* ospath)
 {
 	return Sys_SetPermissionsExec( ospath );
 }
+
+//void DB_BuildOSPath(const char *filename<eax>, int ffdir<edx>, int len<ecx>, char *buff)
+__regparm3 void DB_BuildOSPath(const char *filename, int ffdir, int len, char *buff)
+{
+    const char *languagestr;
+    char *mapstrend;
+    char mapname[MAX_QPATH];
+    char ospath[MAX_OSPATH];
+
+    switch(ffdir)
+    {
+        case 0:
+            languagestr = SEH_GetLanguageName( SEH_GetCurrentLanguage() );
+            if ( !languagestr )
+            {
+                languagestr = "english";
+            }
+
+            Com_sprintf(ospath, sizeof(ospath), "zone/%s/%s.ff", languagestr, filename);
+            FS_SV_GetFilepath( ospath, buff, len );
+            return;
+
+        case 1:
+
+            Com_sprintf(ospath, sizeof(ospath), "%s/%s.ff", fs_gamedirvar->string, filename);
+            FS_SV_GetFilepath( ospath, buff, len );
+            return;
+
+        case 2:
+
+            Q_strncpyz(mapname, filename, sizeof(mapname));
+            mapstrend = strstr(mapname, "_load");
+            if ( mapstrend )
+            {
+                mapstrend[0] = '\0';
+            }
+            Com_sprintf(ospath, sizeof(ospath), "%s/%s/%s.ff", "usermaps", mapname, filename);
+            FS_SV_GetFilepath( ospath, buff, len );
+            return;
+    }
+}

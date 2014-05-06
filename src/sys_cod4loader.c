@@ -237,6 +237,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x817a392, SV_WriteSnapshotToClient);
 	SetJump(0x8178da2, SV_Netchan_TransmitNextFragment);
 	SetJump(0x81d76ca, FS_GetBasepath); //Prior: GetCurrentWorkingDir
+	SetJump(0x8203f72, DB_BuildOSPath);
 	SetJump(0x808b764, ClientScr_SetSessionTeam);
 	SetJump(0x80b43c4, G_LogPrintf);
 	SetJump(0x80a8068, ClientUserinfoChanged);
@@ -300,6 +301,9 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	FS_PatchFileHandleData();
 	Com_PatchError();
 	Cvar_PatchModifiedFlags();
+	/* Override the unknown gametype -> defaulting to dm bug */
+	*(byte*)0x817c7bc = 0xeb;
+
 }
 
 

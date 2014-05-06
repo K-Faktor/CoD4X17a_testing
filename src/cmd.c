@@ -687,10 +687,10 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 
 		while ( 1 ) {
 			// skip whitespace
-			while ( *text && *text <= ' ' ) {
+			while ( *text != '\0' && (byte)*text <= ' ' ) {
 				text++;
 			}
-			if ( !*text ) {
+			if ( *text == '\0' ) {
 				return;			// all tokens parsed
 			}
 
@@ -704,7 +704,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 				while ( *text && ( text[0] != '*' || text[1] != '/' ) ) {
 					text++;
 				}
-				if ( !*text ) {
+				if ( *text == '\0') {
 					return;		// all tokens parsed
 				}
 				text += 2;
@@ -718,7 +718,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 		if ( !ignoreQuotes && *text == '"' ) {
 			param->cmd_argv[param->cmd_argc] = textOut;
 			text++;
-			while ( *text && *text != '"' && param->availableBuf > 1) {
+			while ( *text != '\0' && *text != '"' && param->availableBuf > 1) {
 				*textOut++ = *text++;
 				--param->availableBuf;
 			}
@@ -731,7 +731,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 			}
 			param->cmd_argc++;
 			param->cmd_argv[param->cmd_argc] = textOut;
-			if ( !*text ) {
+			if ( *text == '\0') {
 				return;		// all tokens parsed
 			}
 			text++;
@@ -743,7 +743,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 
 
 		// skip until whitespace, quote, or command
-		while ( *text > ' ' && param->availableBuf > 1) {
+		while ( (byte)*text > ' ' && param->availableBuf > 1) {
 			if ( !ignoreQuotes && text[0] == '"' ) {
 				break;
 			}
@@ -773,7 +773,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 		param->cmd_argc++;
 		param->cmd_argv[param->cmd_argc] = textOut;
 
-		if ( !*text ) {
+		if ( *text == '\0') {
 			return;		// all tokens parsed
 		}
 	}
