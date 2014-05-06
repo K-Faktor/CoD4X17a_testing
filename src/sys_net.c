@@ -2514,9 +2514,10 @@ __optimize3 __regparm3 qboolean NET_TcpServerConnectRequest(netadr_t* net_from, 
 
 	struct sockaddr_storage from;
 	socklen_t	fromlen;
-	int		err;
+	int		conerr;
 	net_from->sock = INVALID_SOCKET;
 	int socket;
+	ioctlarg_t	_true = 1;
 	
 	if(tcp_socket != INVALID_SOCKET && FD_ISSET(tcp_socket, fdr))
 	{
@@ -2525,15 +2526,21 @@ __optimize3 __regparm3 qboolean NET_TcpServerConnectRequest(netadr_t* net_from, 
 		socket = accept(tcp_socket, (struct sockaddr *) &from, &fromlen);
 		if (socket == SOCKET_ERROR)
 		{
-			err = socketError;
+			conerr = socketError;
 
-			if( err != EAGAIN && err != ECONNRESET )
+			if( conerr != EAGAIN && conerr != ECONNRESET )
 				Com_PrintWarning( "NET_TcpServerConnectRequest: %s\n", NET_ErrorString() );
 
 			return qfalse;
 		}
 		else
 		{
+			if( ioctlsocket( socket, FIONBIO, &_true ) == SOCKET_ERROR ) {
+				Com_PrintWarning( "NET_TcpServerConnectRequest: ioctl FIONBIO: %s\n", NET_ErrorString() );
+				conerr = socketError;
+				closesocket( socket );
+				return qfalse;
+			}
 			SockadrToNetadr( (struct sockaddr *) &from, net_from, qtrue, socket);
 			return qtrue;
 		}
@@ -2546,15 +2553,21 @@ __optimize3 __regparm3 qboolean NET_TcpServerConnectRequest(netadr_t* net_from, 
 		
 		if (socket == SOCKET_ERROR)
 		{
-			err = socketError;
+			conerr = socketError;
 
-			if( err != EAGAIN && err != ECONNRESET )
+			if( conerr != EAGAIN && conerr != ECONNRESET )
 				Com_PrintWarning( "NET_TcpServerConnectRequest: %s\n", NET_ErrorString() );
 
 			return qfalse;
 		}
 		else
 		{
+			if( ioctlsocket( socket, FIONBIO, &_true ) == SOCKET_ERROR ) {
+				Com_PrintWarning( "NET_TcpServerConnectRequest: ioctl FIONBIO: %s\n", NET_ErrorString() );
+				conerr = socketError;
+				closesocket( socket );
+				return qfalse;
+			}
 			SockadrToNetadr((struct sockaddr *) &from, net_from, qtrue, socket);
 			return qtrue;
 		}
