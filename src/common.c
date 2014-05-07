@@ -762,7 +762,6 @@ void Com_Init(char* commandLine){
     Com_InitEventQueue();
 
     Com_ParseCommandLine(commandLine);
-
     Com_StartupVariable(NULL);
 
     Com_InitCvars();

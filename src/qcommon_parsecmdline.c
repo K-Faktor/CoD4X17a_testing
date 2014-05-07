@@ -164,16 +164,25 @@ void Com_ParseCommandLine( char *commandLine ) {
 			if(*line == '\"')
 				numQuotes++;
 
+			if(*line != '\0')
+			{
+				line ++;
+			}
+
 			while (*line != '\"' && *line != '\0')
 			{
 				line ++;
 			}
-			if(*line == '\"' && ( *(line +1) != ' ' || *(line +1) != '\0' ) )
+			if(*line == '\"' && *(line +1) != ' ' && *(line +1) != '\0'  )
 				break;
 			
 			if(*line == '\"')
 				numQuotes++;
-		
+
+			if(*line != '\0')
+			{
+				line ++;
+			}
 		}
 		
 		/* if we have bad quotes or an odd number of quotes we replace them all with ' ' */
