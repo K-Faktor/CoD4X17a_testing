@@ -114,26 +114,84 @@ Break it up into multiple console lines
 ==================
 */
 void Com_ParseCommandLine( char *commandLine ) {
-    int inq = 0;
+
     com_consoleLines[0] = commandLine;
     com_numConsoleLines = 1;
+	char* line;
+	int numQuotes, i;
 
     while ( *commandLine ) {
-        if (*commandLine == '"') {
-            inq = !inq;
-        }
-        // look for a + seperating character
+		
+		// look for a + seperating character
         // if commandLine came from a file, we might have real line seperators
-        if ( (*commandLine == '+' && !inq) || *commandLine == '\n'  || *commandLine == '\r' ) {
+        if ( (*commandLine == '+') || *commandLine == '\n'  || *commandLine == '\r' ) {
             if ( com_numConsoleLines == MAX_CONSOLE_LINES ) {
                 return;
             }
-            com_consoleLines[com_numConsoleLines] = commandLine + 1;
-            com_numConsoleLines = (com_numConsoleLines)+1;
+			if(*(commandLine +1) != '\n')
+			{
+				com_consoleLines[com_numConsoleLines] = commandLine + 1;
+				com_numConsoleLines = (com_numConsoleLines)+1;
+			}
             *commandLine = 0;
         }
         commandLine++;
     }
+	
+	for (i = 0; i < com_numConsoleLines; i++)
+	{
+		line = com_consoleLines[i];
+		/* Remove trailling spaces and / or bad quotes */
+		while ( (*line == ' ' || *line == '\"') && *line != '\0') {
+			line++;
+		}
+		
+		memmove(com_consoleLines[i], line, strlen(line) +1);
+
+		numQuotes = 0;
+
+		/* Now verify quotes */
+		while (*line)
+		{
+
+			while (*line != '\"' && *line != '\0')
+			{
+				line ++;
+			}
+			if(*line == '\"' && *(line -1) != ' ')
+				break;
+			
+			if(*line == '\"')
+				numQuotes++;
+
+			while (*line != '\"' && *line != '\0')
+			{
+				line ++;
+			}
+			if(*line == '\"' && ( *(line +1) != ' ' || *(line +1) != '\0' ) )
+				break;
+			
+			if(*line == '\"')
+				numQuotes++;
+		
+		}
+		
+		/* if we have bad quotes or an odd number of quotes we replace them all with ' ' */
+		if(*line != '\0' || numQuotes & 1)
+		{
+			line = com_consoleLines[i];
+			while (*line != '\0')
+			{
+				if(*line == '\"')
+				{
+					*line = ' ';
+					
+				}
+				line++;
+			}
+		}
+		
+	}
 }
 
 

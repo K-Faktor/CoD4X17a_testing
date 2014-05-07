@@ -990,9 +990,44 @@ void NET_TCPAddEventType(qboolean (*tcpevent)(netadr_t* from, msg_t* msg, int so
 qboolean HTTPServer_Event(netadr_t* from, msg_t* msg, int socketfd, int connectionId)
 {
 	ftRequest_t* request = (ftRequest_t*)connectionId;
-
-	/* Is header complete ? */
+	byte* newbuf;
+	int newsize;
+	qboolean gotheader;
 	
+	if (request->recvmsg.maxsize - request->recvmsg.cursize < msg->cursize) 
+	{
+		newsize = 2 * request->recvmsg.maxsize + msg->cursize;
+		
+		newbuf = Z_Malloc(newsize);
+		if(newbuf == NULL)
+		{
+			return qtrue;
+		}
+		
+		Com_Memcpy(newbuf, request->recvmsg.data, request->recvmsg.cursize);
+		
+		Z_Free(request->recvmsg.data);
+		request->recvmsg.data = newbuf;
+		request->recvmsg.maxsize = newsize;
+
+	}
+	
+	Com_Memcpy(request->recvmsg.data[request->recvmsg.cursize], msg->data, msg->cursize);
+	
+	/* Is header complete ? */
+	gotheader = qfalse;
+	while ((line = MSG_ReadStringLine(&request->recvmsg, stringlinebuf, sizeof(stringlinebuf))) && line[0] != '\0' )
+	{
+		if(line[0] == '\r')
+		{
+			gotheader = qtrue;
+			break;
+		}
+	}
+	if(gotheader == qfalse)
+	{
+		return 0;
+	}
 	
 	
 	
@@ -1038,6 +1073,16 @@ tcpclientstate_t HTTPServer_AuthEvent(netadr_t* from, msg_t* msg, int socketfd, 
 }
 
 
+void HTTPServer_Disconnect(netadr_t* from, int socketfd, int connectionId)
+{
+	ftRequest_t* request;
+	if(connectionId)
+	{
+		ftRequest_t* request = (ftRequest_t*)connectionId;
+		FT_FreeRequest(request);
+
+	}
+}
 
 void HTTPServer_Init()
 {
