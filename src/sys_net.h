@@ -43,6 +43,8 @@ NET
 #define NET_DISABLEMCAST        0x08
 #define	PORT_ANY		-1
 
+#define SOCKET_DEBUG
+
 typedef enum {
 	NA_BAD = 0,					// an address lookup failed
 	NA_BOT = 0,
