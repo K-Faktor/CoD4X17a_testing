@@ -1119,29 +1119,28 @@ static void Cmd_ExecuteTranslatedCommand_f(){
                 cmdstring += 4;
             }else if(!Q_strncmp(cmdstring, "$arg", 4)){
                 if(!*Cmd_Argv(i)){
-		    cmdstring += 4;
-		    if(*cmdstring == ':' && *(cmdstring + 1) != ' '){ // Default argument in place!
-		        ++cmdstring; // Just advance the pointer and read in the argument as any other part of the string
-		    if(strchr(Cmd_Argv(i), ';') || strchr(Cmd_Argv(i), '\n')){
-		        return;
-		    }
-		    }else{
-		        Com_Printf("Not enough arguments to this command\n");
-		        return;
-		    }
+                    cmdstring += 4;
+                    if(*cmdstring == ':' && *(cmdstring + 1) != ' '){ // Default argument in place!
+                        ++cmdstring; // Just advance the pointer and read in the argument as any other part of the string
+                        if(strchr(Cmd_Argv(i), ';') || strchr(Cmd_Argv(i), '\n')){
+                            return;
+                        }
+                    }else{
+                        Com_Printf("Not enough arguments to this command\n");
+                        return;
+                    }
                 } else{
                     cmdstring += 4;
                     if(*cmdstring == ':') // Skip default arg (if any)
                         while(*cmdstring != ' ' && *cmdstring != ';' && *cmdstring) ++cmdstring;
                 	
-		    if(strchr(Cmd_Argv(i), ';') || strchr(Cmd_Argv(i), '\n')){
-		        return;
-		    }
-		    Com_sprintf(tmp, sizeof(outstr) - (tmp - outstr), "%s", Cmd_Argv(i));
-		    cmdstring += 4;
-		    tmp += strlen(tmp);
-		    i++;
-		}
+                    if(strchr(Cmd_Argv(i), ';') || strchr(Cmd_Argv(i), '\n')){
+                        return;
+                    }
+                    Com_sprintf(tmp, sizeof(outstr) - (tmp - outstr), "%s", Cmd_Argv(i));
+                    tmp += strlen(tmp);
+                   i++;
+                }
             }
         }
 
