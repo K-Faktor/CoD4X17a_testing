@@ -1122,7 +1122,9 @@ static void Cmd_ExecuteTranslatedCommand_f(){
 		    cmdstring += 4;
 		    if(*cmdstring == ':' && *(cmdstring + 1) != ' '){ // Default argument in place!
 		        ++cmdstring; // Just advance the pointer and read in the argument as any other part of the string
-				
+		    if(strchr(Cmd_Argv(i), ';') || strchr(Cmd_Argv(i), '\n')){
+		        return;
+		    }
 		    }else{
 		        Com_Printf("Not enough arguments to this command\n");
 		        return;
