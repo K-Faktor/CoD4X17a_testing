@@ -1124,7 +1124,7 @@ static void Cmd_ExecuteTranslatedCommand_f(){
 		        ++cmdstring; // Just advance the pointer and read in the argument as any other part of the string
 				
 		    }else{
-		        Com_Printf("Not enought arguments to this command\n");
+		        Com_Printf("Not enough arguments to this command\n");
 		        return;
 		    }
                 } else{
