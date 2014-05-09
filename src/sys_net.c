@@ -886,7 +886,6 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 			ret = sendto( to->sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 		
 #ifdef SOCKET_DEBUG
-		int ret;
 		int err2;
 						
 		err2 = socketError;
@@ -913,7 +912,6 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 				ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 			
 #ifdef SOCKET_DEBUG
-			int ret;
 			int err2;
 			
 			err2 = socketError;
