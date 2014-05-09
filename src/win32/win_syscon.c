@@ -22,6 +22,7 @@
 #include "../q_shared.h"
 #include "../sys_main.h"
 #include "../qcommon.h"
+#include "../cmd.h"
 #include "../sys_cod4defs.h"
 #include "sys_win32.h"
 
@@ -101,7 +102,7 @@ typedef struct
 static WinConData s_wcd;
 
 static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) {
-	char *cmdString;
+
 	static qboolean s_timePolarity;
 	int cx, cy;
 	float sx, sy;
@@ -154,8 +155,7 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		break;
 
 	case WM_CLOSE:
-			cmdString =  "quit";
-			Com_QueueEvent( 0, SE_CONSOLE, 0, 0, strlen( cmdString ) + 1, cmdString );
+			Cbuf_AddText("quit");
 
 		return 0;
 	case WM_CTLCOLORSTATIC:
@@ -196,8 +196,8 @@ static LONG WINAPI ConWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				PostQuitMessage( 0 );
 			} else
 			{
-				cmdString = "quit";
-				Com_QueueEvent( 0, SE_CONSOLE, 0, 0, strlen( cmdString ) + 1, cmdString );
+				Cbuf_AddText("quit");
+
 			}
 		} else if ( wParam == CLEAR_ID )   {
 			SendMessage( s_wcd.hwndBuffer, EM_SETSEL, 0, -1 );

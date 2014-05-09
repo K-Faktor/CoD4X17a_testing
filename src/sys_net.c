@@ -886,18 +886,17 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 			ret = sendto( to->sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 		
 #ifdef SOCKET_DEBUG
-		int err2;
-						
-		err2 = socketError;
+			int err2;
 			
-		if(ret == SOCKET_ERROR && err2 != EAGAIN)
-		{
-			Com_PrintError( "Sys_SendPacket: socket %d failed with: %s\n", to->sock,  NET_ErrorString() );
-				
-		}
-
+			if(ret == SOCKET_ERROR)
+			{
+				err2 = socketError;
+				if(err2 != EAGAIN)
+				{
+					Com_PrintError( "Sys_SendPacket: socket %d failed with: %s\n", to->sock,  NET_ErrorString() );
+				}
+			}
 #endif
-		
 		
 	}else{//Send this packet to any available socket
 
@@ -914,14 +913,15 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 #ifdef SOCKET_DEBUG
 			int err2;
 			
-			err2 = socketError;
-			
-			if(ret == SOCKET_ERROR && err2 != EAGAIN)
+			if(ret == SOCKET_ERROR)
 			{
-				Com_PrintError( "Sys_SendPacket: socket %d failed with: %s\n", ip_socket[i].sock,  NET_ErrorString() );
+				err2 = socketError;
+				if(err2 != EAGAIN)
+				{
+					Com_PrintError( "Sys_SendPacket: socket %d failed with: %s\n", ip_socket[i].sock,  NET_ErrorString() );
 				
+				}
 			}
-			
 #endif
 			
 			
