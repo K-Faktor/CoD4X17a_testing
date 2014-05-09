@@ -420,6 +420,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	denied = SV_PlayerBannedByip(from, buf, sizeof(buf));
 	if(denied){
             NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied);
+		Com_Printf("Rejecting a connection from a banned network address: %s\n", NET_AdrToString(from));
 	    Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
 	    return;
 	}
@@ -601,12 +602,13 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 
         if(denied){
                 NET_OutOfBandPrint( NS_SERVER, from, "error\n%s", denied);
-		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
+				Com_Printf("Rejecting a connection from a banned GUID/UID\n");
+				Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
                 svse.connectqueue[i].lasttime = 0;
                 svse.connectqueue[i].firsttime = 0;
                 svse.connectqueue[i].challengeslot = 0;
-		svse.connectqueue[i].attempts = 0;
-		return;
+				svse.connectqueue[i].attempts = 0;
+				return;
         }
 
 #ifdef PUNKBUSTER

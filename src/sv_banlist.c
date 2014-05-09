@@ -286,7 +286,7 @@ void SV_PlayerAddBanByip(netadr_t *remote, char *reason, int uid, char* guid, in
     ipBanList_t *list;
     int i;
     int oldest =	0;
-    unsigned int oldestTime = 0;
+    unsigned int oldestTime = 0xFFFFFFFF;
     int duration;
 
     if(!remote)
@@ -303,10 +303,10 @@ void SV_PlayerAddBanByip(netadr_t *remote, char *reason, int uid, char* guid, in
         if(NET_CompareBaseAdr(remote, &list->remote)){
             break;
         }
-	if (list->systime < oldestTime) {
-		oldestTime = list->systime;
-		oldest = i;
-	}
+		if (list->systime < oldestTime) {
+			oldestTime = list->systime;
+			oldest = i;
+		}
     }
 
     if(i == MAX_IPBANS){
