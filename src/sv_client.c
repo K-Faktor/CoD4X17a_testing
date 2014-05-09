@@ -833,6 +833,9 @@ void SV_UserinfoChanged( client_t *cl ) {
 	cl->wwwDownload = qfalse;
 	if(Info_ValueForKey(cl->userinfo, "cl_wwwDownload"))
 		cl->wwwDownload = qtrue;
+		
+	PHandler_Event(PLUGINS_ONCLIENTUSERINFOCHANGED, cl);
+
 }
 
 
@@ -913,7 +916,7 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 		drop->state = CS_ZOMBIE;        // become free in a few seconds
 
 		HL2Rcon_EventClientLeave(clientnum);
-		PHandler_Event(PLUGINS_ONPLAYERDC,(void*)drop);	// Plugin event
+		PHandler_Event(PLUGINS_ONPLAYERDC, drop, reason);	// Plugin event
 		return;
 	}
 
@@ -1120,6 +1123,8 @@ __optimize3 __regparm3 void SV_UserMove( client_t *cl, msg_t *msg, qboolean delt
 		cl->clFrames++;
 
 		SV_ClientThink( cl, &cmds[ i ] );
+	
+		PHandler_Event(PLUGINS_ONCLIENTMOVECOMMAND, cl, &cmds[ i ]);
 
 		if(cl->demorecording && !cl->demowaiting)
 			SV_WriteDemoArchive(cl);

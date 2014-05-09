@@ -498,3 +498,11 @@ P_P_F const char* Plugin_Cvar_GetString(void *cvar)
 
     return var->string;
 }
+
+P_P_F void Plugin_DropClient( unsigned int clientnum, const char *reason )
+{
+    if(clientnum > sv_maxclients->integer)
+		return;
+
+	SV_DropClient(&svs.clients[clientnum], reason);
+}

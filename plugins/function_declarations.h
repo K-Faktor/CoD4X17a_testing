@@ -109,7 +109,9 @@
     __cdecl int Plugin_GetLevelTime();                                       // Self explanatory
     __cdecl int Plugin_GetServerTime();                                      // Self explanatory
 
-
+	//
+	
+	__cdecl void Plugin_DropClient( int clientnum, const char *reason );
     //  -- TCP Connection functions --
 
     __cdecl qboolean Plugin_TcpConnect(int connection, const char* remote);      // Open a new TCP connection
@@ -126,7 +128,6 @@
     __cdecl unsigned int Plugin_GetPlayerUID(unsigned int clientslot);               // Get player's UID
     __cdecl const char* Plugin_GetPlayerGUID(unsigned int clientslot);               // Get player's GUID
     __cdecl void Plugin_SetPlayerGUID(unsigned int clientslot, const char* guid);    // Set player's GUID
-    __cdecl void Plugin_SetPlayerNoPB(unsigned int clientslot);                      // Turn off PunkBuster for a player
     __cdecl int Plugin_DoesServerUseUids(void);                                      // Self explanatory
     __cdecl void Plugin_SetServerToUseUids(int useuids);                             // Self explanatory
 
