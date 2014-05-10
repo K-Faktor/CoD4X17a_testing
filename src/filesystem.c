@@ -2663,6 +2663,45 @@ qboolean SEH_GetLanguageIndexForName(const char* language, int *langindex)
     return qfalse;
 }
 
+/*
+=================
+FS_ShutdownSearchpath
+
+Shuts down and clears a single searchpath only
+=================
+*/
+
+void FS_ShutdownSearchpath(searchpath_t *clear)
+{
+	searchpath_t    **back, *p;
+	
+	back = &fs_searchpaths;
+	while ( 1 )
+	{	
+		p = *back;
+		if( p == NULL )
+		{
+			return;
+		}
+		if(p == clear)
+		{
+			*back = p->next;
+			if ( p->pack ) {
+				unzClose( p->pack->handle );
+				Z_Free( p->pack->buildBuffer );
+				Z_Free( p->pack );
+			}
+			if ( p->dir ) {
+				Z_Free( p->dir );
+			}
+			Z_Free( p );
+			return;
+		}
+		back = &p->next;
+	}
+}
+
+
 
 void FS_DisplayPath( void ) {
 	searchpath_t    *s;
@@ -3035,7 +3074,15 @@ void FS_AddIwdFilesForGameDirectory(const char *path, const char *dir)
 		{
 			continue;
 		}
-
+		/* Shutdown already loaded pak files with same name to circumvent conflicts */
+		for(sp = fs_searchpaths; sp != NULL; sp = sp->next)
+		{
+			if(sp->pack != NULL && !Q_stricmp(sp->pack->pakBasename, pak->pakBasename))
+			{
+				FS_ShutdownSearchpath(sp);
+			}			
+		}
+		
 		Q_strncpyz(pak->pakGamename, dir, sizeof(pak->pakGamename));
 		
 		search = (searchpath_t *)Z_Malloc(sizeof(searchpath_t));
@@ -3308,6 +3355,8 @@ void FS_PatchFileHandleData()
 	*(int**)0x818BBCE = &fs_loadStack;
 
 }
+
+
 
 /*
 ================

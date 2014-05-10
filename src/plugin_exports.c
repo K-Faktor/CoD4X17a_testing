@@ -506,3 +506,77 @@ P_P_F void Plugin_DropClient( unsigned int clientnum, const char *reason )
 
 	SV_DropClient(&svs.clients[clientnum], reason);
 }
+
+
+
+P_P_F void Plugin_BanClient( unsigned int clientnum, int duration, int invokerid, char *banreason )
+{
+    
+	client_t *cl;
+	char* guid;
+	time_t expire;
+	char* temp;
+    time_t aclock;
+	char endtime[32];
+    char dropmsg[MAX_STRING_CHARS];
+
+	if(clientnum > sv_maxclients->integer)
+		return;
+	
+	cl = &svs.clients[clientnum];
+
+	time(&aclock);
+	
+	if(duration == -1)
+	{
+		expire = duration;
+		Q_strncpyz(endtime, "never", sizeof(endtime));
+	}
+	else
+	{
+		expire = (aclock+(time_t)(duration*60));
+		temp = ctime(&expire);
+		temp[strlen(temp)-1] = 0;
+		Q_strncpyz(endtime, temp, sizeof(endtime));
+	
+	}
+	
+	if(strlen(cl->pbguid) == 32)
+	{
+		guid = &cl->pbguid[24];
+	}
+	else if(cl->uid < 1)
+	{
+		Com_Printf("Error: This player has no valid ID and got banned by IP only\n");
+		SV_DropClient(cl, "Invalid ID\n");
+		SV_PlayerAddBanByip(&cl->netchan.remoteAddress, "INVALID USER", 0, "INVALID", 0, expire);
+		return;
+	}
+	
+	if(banreason == NULL)
+	{
+		banreason = "N/A";
+	}
+	
+	SV_AddBan(cl->uid, invokerid, guid, cl->name, expire, banreason);
+
+	if( cl->uid > 0 )
+	{
+		Com_Printf( "Banrecord added for player: %s uid: %i\n", cl->name, cl->uid);
+		SV_PrintAdministrativeLog( "Banned player: %s uid: %i until %s with the following reason: %s", cl->name, cl->uid, endtime, banreason);
+		Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a ban onto this gameserver\nYour ban will expire on: %s\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
+			endtime, cl->uid, invokerid, banreason);
+
+	}else{
+		Com_Printf( "Banrecord added for player: %s guid: %s\n", cl->name, cl->pbguid);
+		SV_PrintAdministrativeLog( "Banned player: %s guid: %s until %s with the following reason: %s", cl->name, cl->pbguid, endtime, banreason);
+		Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a ban onto this gameserver\nYour ban will expire on: %s\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
+			endtime, cl->pbguid, invokerid, banreason);
+
+		if(cl->authentication < 1)
+		{
+			SV_PlayerAddBanByip(&cl->netchan.remoteAddress, banreason, 0, cl->pbguid, 0, expire);
+		}
+	}
+	SV_DropClient(cl, dropmsg);
+}

@@ -45,7 +45,7 @@
 #define NETCHAN_FRAGMENTBUFFER_SIZE 0x800
 
 #define CLIENT_BASE_ADDR 0x90b4f8C
-#define clientbase (client_t*)CLIENT_BASE_ADDR  //e.g. clientbase[i].username
+#define clientbase ((client_t*)CLIENT_BASE_ADDR)  //e.g. clientbase[i].username
 
 //Types and structs
 typedef int	fileHandle_t;

@@ -109,9 +109,11 @@
     __cdecl int Plugin_GetLevelTime();                                       // Self explanatory
     __cdecl int Plugin_GetServerTime();                                      // Self explanatory
 
-	//
+	//	-- Functions for clients --
 	
-	__cdecl void Plugin_DropClient( int clientnum, const char *reason );
+	__cdecl void Plugin_DropClient( int clientnum, const char *reason );	// Kicks the client from server
+	__cdecl void Plugin_BanClient( unsigned int clientnum, int seconds, int invokerid, char *reason ); //Bans the client for seconds from server. Seconds can be "-1" to create a permanent ban. invokerid can be 0 or the numeric uid. banreason can be NULL or a valid char* pointer.
+
     //  -- TCP Connection functions --
 
     __cdecl qboolean Plugin_TcpConnect(int connection, const char* remote);      // Open a new TCP connection
