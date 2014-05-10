@@ -3075,12 +3075,14 @@ void FS_AddIwdFilesForGameDirectory(const char *path, const char *dir)
 			continue;
 		}
 		/* Shutdown already loaded pak files with same name to circumvent conflicts */
+
 		for(sp = fs_searchpaths; sp != NULL; sp = sp->next)
 		{
 			if(sp->pack != NULL && !Q_stricmp(sp->pack->pakBasename, pak->pakBasename))
 			{
 				FS_ShutdownSearchpath(sp);
-			}			
+				break; //Break out - sp is now invalid
+			}	
 		}
 		
 		Q_strncpyz(pak->pakGamename, dir, sizeof(pak->pakGamename));
