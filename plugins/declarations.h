@@ -48,6 +48,7 @@
 #define clientbase ((client_t*)CLIENT_BASE_ADDR)  //e.g. clientbase[i].username
 
 //Types and structs
+typedef int scr_entref_t;
 typedef int	fileHandle_t;
 typedef enum {qfalse, qtrue}	qboolean;
 typedef void (*xcommand_t)();

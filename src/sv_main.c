@@ -1514,6 +1514,8 @@ void	serverStatus_Write(){
                 XML_OpenTag(&xmlbase,"Data",2, "Name", "pswrd", "Value", "0");
             }
             XML_CloseTag(&xmlbase);
+			XML_OpenTag(&xmlbase,"Data",2, "Name", "sv_type", "Value", va("%d", sv_authorizemode->integer));
+            XML_CloseTag(&xmlbase);
         XML_CloseTag(&xmlbase);
 
         for ( i = 0, c = 0, cl = svs.clients; i < sv_maxclients->integer ; cl++, i++ ) {
