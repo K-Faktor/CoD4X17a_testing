@@ -1208,12 +1208,9 @@ void GScr_FS_TestFile(){
         Scr_Error("Usage: FS_TestFile(<filename>)\n");
 
     char* filename = Scr_GetString(0);
-    fileExists = FS_FOpenFileRead(filename, NULL);
+    fileExists = Scr_FileExists( filename );
 
-    if(fileExists == qtrue)
-        Scr_AddBool(qtrue);
-    else
-        Scr_AddBool(qfalse);
+    Scr_AddBool(fileExists);
 }
 
 

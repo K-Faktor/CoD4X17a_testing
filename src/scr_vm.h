@@ -376,6 +376,7 @@ qboolean Scr_CloseScriptFile( fileHandle_t fh);
 int Scr_FS_Read( void *buffer, int len, fileHandle_t f );
 int Scr_FS_Write( const void *buffer, int len, fileHandle_t h );
 int Scr_FS_Seek( fileHandle_t f, long offset, int origin );
+qboolean Scr_FileExists( const char* filename );
 
 void GScr_MakeCvarServerInfo(void);
 void GScr_SetCvar();
