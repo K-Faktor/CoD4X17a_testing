@@ -49,3 +49,4 @@
 	PCL void OnClientEnterWorld(client_t* client);
 	PCL void OnClientUserinfoChanged(client_t* client);
 	PCL void OnClientMoveCommand(client_t* client, usercmd_t* ucmd);
+	PCL void OnPlayerWantReservedSlot(netadr_t* from, char* pbguid, char* userinfo, int authstate, qboolean *isallowed);

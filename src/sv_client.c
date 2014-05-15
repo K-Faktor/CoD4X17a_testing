@@ -335,6 +335,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	char			*password;
 	const char		*denied;
 	qboolean		pluginreject;
+	qboolean		canreserved;
 	char			buf[MAX_STRING_CHARS];
 
 	
@@ -475,8 +476,18 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	//Get new slot for client
 	// check for privateClient password
 	password = Info_ValueForKey( userinfo, "password" );
-	if(!newcl){
-		if ( !strcmp( password, sv_privatePassword->string ) ) {
+	if(!newcl)
+	{
+		if ( !strcmp( password, sv_privatePassword->string ))
+		{ 
+			canreserved = qtrue;
+		}else{
+			canreserved = qfalse;
+		}
+		
+		PHandler_Event(PLUGINS_ONPLAYERWANTRESERVEDSLOT, from, svse.challenges[c].pbguid, userinfo, svse.challenges[c].ipAuthorize, &canreserved);
+		if ( canreserved == qtrue) 
+		{
 			for ( j = 0; j < sv_privateClients->integer ; j++) {
 				cl = &svs.clients[j];
 				if (cl->state == CS_FREE) {
