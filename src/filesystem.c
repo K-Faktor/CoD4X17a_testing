@@ -2834,7 +2834,16 @@ void FS_Startup(const char* gameName)
     if ( fs_homepath->string[0] && Q_stricmp(fs_homepath->string, fs_basepath->string) )
       FS_AddGameDirectory(fs_homepath->string, fs_basegame->string);
   }
-
+	
+  if ( fs_gameDirVar->string[0] && !Q_stricmp(gameName, BASEGAME) && Q_stricmp(fs_gameDirVar->string, gameName) && level && level->string[0])
+  {
+	if ( fs_cdpath->string[0] )
+		FS_AddGameDirectory(fs_cdpath->string, va("usermaps/%s", level->string));
+	if ( fs_basepath->string[0] )
+		FS_AddGameDirectory(fs_basepath->string, va("usermaps/%s", level->string));
+	if ( fs_homepath->string[0] && Q_stricmp(fs_homepath->string, fs_basepath->string) )
+		FS_AddGameDirectory(fs_homepath->string, va("usermaps/%s", level->string));
+  }
 
   if ( fs_gameDirVar->string[0] && !Q_stricmp(gameName, BASEGAME) && Q_stricmp(fs_gameDirVar->string, gameName) )
   {
@@ -2844,16 +2853,6 @@ void FS_Startup(const char* gameName)
       FS_AddGameDirectory(fs_basepath->string, fs_gameDirVar->string);
     if ( fs_homepath->string[0] && Q_stricmp(fs_homepath->string, fs_basepath->string) )
       FS_AddGameDirectory(fs_homepath->string, fs_gameDirVar->string);
-  }
-
-  if ( fs_gameDirVar->string[0] && !Q_stricmp(gameName, BASEGAME) && Q_stricmp(fs_gameDirVar->string, gameName) && level && level->string[0])
-  {
-    if ( fs_cdpath->string[0] )
-      FS_AddGameDirectory(fs_cdpath->string, va("usermaps/%s", level->string));
-    if ( fs_basepath->string[0] )
-      FS_AddGameDirectory(fs_basepath->string, va("usermaps/%s", level->string));
-    if ( fs_homepath->string[0] && Q_stricmp(fs_homepath->string, fs_basepath->string) )
-      FS_AddGameDirectory(fs_homepath->string, va("usermaps/%s", level->string));
   }
 
 /*  Com_ReadCDKey(); */
