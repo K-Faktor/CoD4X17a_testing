@@ -49,6 +49,7 @@ qboolean PHandler_TcpConnect(int pID, const char* remote, int connection)
             Com_Printf("Plugins: Notice! Error connecting to server: %s for plugin #%d!\n", remote, pID);
             return qfalse;
         }
+		Com_DPrintf("PHandler_TcpConnect: Received socket %d @ %d\n", pluginFunctions.plugins[pID].sockets[connection].sock, connection);
         NET_StringToAdr(remote, &pluginFunctions.plugins[pID].sockets[connection].remote, NA_UNSPEC);
         return qtrue;
     }
@@ -67,6 +68,7 @@ int PHandler_TcpGetData(int pID, int connection, void* buf, int size )
         return -1;
     }
     len = NET_TcpClientGetData(ptcs->sock, buf, &size);
+	Com_DPrintf("PHandler_TcpGetData: Retrived data from socket %d @ %d\n", ptcs->sock, connection);
 
     if(len == -1)
     {
@@ -87,6 +89,7 @@ qboolean PHandler_TcpSendData(int pID, int connection, void* data, int len)
         return qfalse;
     }
     state =  NET_TcpSendData(ptcs->sock, data, len);
+	Com_DPrintf("PHandler_TcpSendData: Sent data from socket %d @ %d\n", ptcs->sock, connection);
 
     if(state == -1)
     {
@@ -105,6 +108,7 @@ void PHandler_TcpCloseConnection(int pID, int connection)
         return;
     }
     NET_TcpCloseSocket(ptcs->sock);
+	Com_DPrintf("PHandler_TcpCloseConnection: Closed socket %d @ %d\n", ptcs->sock, connection);
     ptcs->sock = -1;
 }
 

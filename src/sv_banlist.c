@@ -252,7 +252,7 @@ char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets call
 
                 if(this->expire == -1){
                     
-					Com_sprintf(message, len, "\nEnforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
+					Com_sprintf(message, len, "Enforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
                     this->uid,this->adminuid,this->banmsg);
 					return message;
 
@@ -265,7 +265,7 @@ char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets call
                     remaining = remaining%(60*60);
                     int m = remaining/60;
 
-                    Com_sprintf(message, len, "\nEnforcing prior kick/ban\nTemporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
+                    Com_sprintf(message, len, "Enforcing prior kick/ban\nTemporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
                     d,h,m,this->uid,this->adminuid,this->banmsg);
 					return message;
                 }
