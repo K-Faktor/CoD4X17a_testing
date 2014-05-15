@@ -850,7 +850,6 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 	int	ret = SOCKET_ERROR;
 	int	i;
 	struct sockaddr_storage	addr;
-	char tmpstr[64];
 
 	if( to->type != NA_BROADCAST && to->type != NA_IP && to->type != NA_IP6 && to->type != NA_MULTICAST6)
 	{

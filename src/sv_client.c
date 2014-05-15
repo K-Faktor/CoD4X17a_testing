@@ -585,31 +585,22 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
         Q_strncpyz(cl->originguid, svse.challenges[c].pbguid, 33);
         Q_strncpyz(cl->pbguid, svse.challenges[c].pbguid, 33);	// save the pbguid
 
-        if(psvs.useuids != 1){
-
-            if(newcl->authentication != 1 && sv_authorizemode->integer != -1){
-                Com_Memset(newcl->pbguid, '0', 8);
-            }
-
-        }else{
-
-            char ret[33];
-            Com_sprintf(ret,sizeof(ret),"NoGUID*%.2x%.2x%.2x%.2x%.4x",from->ip[0],from->ip[1],from->ip[2],from->ip[3],from->port);
-            Q_strncpyz(newcl->pbguid, ret, sizeof(newcl->pbguid));	// save the pbguid
+        if(newcl->authentication != 1 && sv_authorizemode->integer != -1){
+            Com_Memset(newcl->pbguid, '0', 8);
         }
+
+        //    char ret[33];
+        //    Com_sprintf(ret,sizeof(ret),"NoGUID*%.2x%.2x%.2x%.2x%.4x",from->ip[0],from->ip[1],from->ip[2],from->ip[3],from->port);
+        //    Q_strncpyz(newcl->pbguid, ret, sizeof(newcl->pbguid));	// save the pbguid
 
         denied = NULL;
 
         // save the userinfo
-        Q_strncpyz(newcl->userinfo, userinfo, 1024 );
+        Q_strncpyz(newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
         PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, &denied);
 
-        if(!psvs.useuids)
-            denied = SV_PlayerIsBanned(0, newcl->pbguid, from, buf, sizeof(buf));
-
-        else if(newcl->uid != 0)
-            denied = SV_PlayerIsBanned(newcl->uid, NULL, from, buf, sizeof(buf));
+        denied = SV_PlayerIsBanned(newcl->uid, newcl->pbguid, from, buf, sizeof(buf));
 
         if(denied){
                 NET_OutOfBandPrint( NS_SERVER, from, "error\n%s", denied);
