@@ -420,6 +420,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	denied = SV_PlayerBannedByip(from, buf, sizeof(buf));
 	if(denied){
             NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied);
+		Com_Printf("Rejecting a connection from a banned network address: %s\n", NET_AdrToString(from));
 	    Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
 	    return;
 	}
@@ -601,12 +602,13 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 
         if(denied){
                 NET_OutOfBandPrint( NS_SERVER, from, "error\n%s", denied);
-		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
+				Com_Printf("Rejecting a connection from a banned GUID/UID\n");
+				Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
                 svse.connectqueue[i].lasttime = 0;
                 svse.connectqueue[i].firsttime = 0;
                 svse.connectqueue[i].challengeslot = 0;
-		svse.connectqueue[i].attempts = 0;
-		return;
+				svse.connectqueue[i].attempts = 0;
+				return;
         }
 
 #ifdef PUNKBUSTER
@@ -831,6 +833,9 @@ void SV_UserinfoChanged( client_t *cl ) {
 	cl->wwwDownload = qfalse;
 	if(Info_ValueForKey(cl->userinfo, "cl_wwwDownload"))
 		cl->wwwDownload = qtrue;
+		
+	PHandler_Event(PLUGINS_ONCLIENTUSERINFOCHANGED, cl);
+
 }
 
 
@@ -911,7 +916,7 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 		drop->state = CS_ZOMBIE;        // become free in a few seconds
 
 		HL2Rcon_EventClientLeave(clientnum);
-		PHandler_Event(PLUGINS_ONPLAYERDC,(void*)drop);	// Plugin event
+		PHandler_Event(PLUGINS_ONPLAYERDC, drop, reason);	// Plugin event
 		return;
 	}
 
@@ -1118,6 +1123,8 @@ __optimize3 __regparm3 void SV_UserMove( client_t *cl, msg_t *msg, qboolean delt
 		cl->clFrames++;
 
 		SV_ClientThink( cl, &cmds[ i ] );
+	
+		PHandler_Event(PLUGINS_ONCLIENTMOVECOMMAND, cl, &cmds[ i ]);
 
 		if(cl->demorecording && !cl->demowaiting)
 			SV_WriteDemoArchive(cl);

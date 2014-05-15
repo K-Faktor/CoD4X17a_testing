@@ -640,17 +640,18 @@ static void Cmd_BanPlayer_f() {
     char banreason[256];
     char dropmsg[MAX_STRING_CHARS];
 
-    if ( Cmd_Argc() < 3) {
-        if(Q_stricmp(Cmd_Argv(0), "banUser") || Q_stricmp(Cmd_Argv(0), "banClient")){
-            if(Cmd_Argc() < 2){
-                Com_Printf( "Usage: banUser <user>\n" );
-				Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
-				Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
-				Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
-                return;
-            }
-
-        }else{
+    if(!Q_stricmp(Cmd_Argv(0), "banUser") || !Q_stricmp(Cmd_Argv(0), "banClient"))
+	{
+        if(Cmd_Argc() < 2){
+            Com_Printf( "Usage: banUser <user>\n" );
+			Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
+			Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
+			Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
+            return;
+        }
+	
+	}else{
+	    if ( Cmd_Argc() < 3) {
             Com_Printf( "Usage: permban <user> <Reason for this ban (max 126 chars)>\n" );
 			Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
 			Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
@@ -686,7 +687,7 @@ gothandle:
 	{
 		Com_Printf("Error: This player has no valid ID and got banned by IP only\n");
 		SV_DropClient(cl.cl, "Invalid ID\n");
-		SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, "INVALID USER", 0, "INVALID", 0, 0x7FFFFFFF);
+		SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, "INVALID USER", 0, "INVALID", 0, -1);
 		return;
 	}
 	
@@ -722,7 +723,7 @@ gothandle:
 				cl.cl->pbguid, SV_RemoteCmdGetInvokerUid(), banreason);			
 			
 			if(cl.cl->authentication < 1)
-				SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, banreason, 0, cl.cl->pbguid, 0, 0x7FFFFFFF);
+				SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, banreason, 0, cl.cl->pbguid, 0, -1);
 		}
 		SV_DropClient(cl.cl, dropmsg);
 

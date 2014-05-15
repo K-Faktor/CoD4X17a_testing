@@ -1691,7 +1691,7 @@ As Cvar_Set, but also flags it as userinfo
 void Cvar_SetU_f( void ) {
 	cvar_t	*v;
 
-	if ( Cmd_Argc() != 3 ) {
+	if ( Cmd_Argc() < 3 ) {
 		Com_Printf ("usage: setu <variable> <value>\n");
 		return;
 	}
@@ -1713,7 +1713,7 @@ As Cvar_Set, but also flags it as userinfo
 void Cvar_SetS_f( void ) {
 	cvar_t	*v;
 
-	if ( Cmd_Argc() != 3 ) {
+	if ( Cmd_Argc() < 3 ) {
 		Com_Printf ("usage: sets <variable> <value>\n");
 		return;
 	}
@@ -1735,7 +1735,7 @@ As Cvar_Set, but also flags it as archived
 void Cvar_SetA_f( void ) {
 	cvar_t	*v;
 
-	if ( Cmd_Argc() != 3 ) {
+	if ( Cmd_Argc() < 3 ) {
 		Com_Printf ("usage: seta <variable> <value>\n");
 		return;
 	}

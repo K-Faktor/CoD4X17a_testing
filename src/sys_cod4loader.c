@@ -259,6 +259,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x818e73c, FS_Restart);
 	SetJump(0x818726c, FS_FCloseFile);
 
+
 	SetJump(0x81a2944, Cvar_RegisterString);
 	SetJump(0x81a2d94, Cvar_RegisterBool);
 	SetJump(0x81a2cc6, Cvar_RegisterInt);
@@ -303,6 +304,8 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	Cvar_PatchModifiedFlags();
 	/* Override the unknown gametype -> defaulting to dm bug */
 	*(byte*)0x817c7bc = 0xeb;
+	/* Kill the function DB_AddUserMapDir */
+	*(byte*)0x8204bc8 = 0xc3;
 
 }
 

@@ -224,6 +224,23 @@ qboolean Scr_FS_FOpenFile( const char *filename, fsMode_t mode, scr_fileHandle_t
 
 }
 
+qboolean Scr_FileExists( const char* qpath )
+{
+
+    scr_fileHandle_t fh;
+
+    Com_Memset( &fh, 0, sizeof( fh ));
+
+    if(!Scr_FS_FOpenFile(qpath, FS_READ, &fh))
+    {
+        return 0;
+    }
+
+    Scr_FS_CloseFile(&fh);
+    return qtrue;
+
+}
+
 fileHandle_t Scr_OpenScriptFile( char* qpath, scr_fileHandleType_t ft, fsMode_t mode){
 
     int i;

@@ -109,6 +109,10 @@
     __cdecl int Plugin_GetLevelTime();                                       // Self explanatory
     __cdecl int Plugin_GetServerTime();                                      // Self explanatory
 
+	//	-- Functions for clients --
+	
+	__cdecl void Plugin_DropClient( int clientnum, const char *reason );	// Kicks the client from server
+	__cdecl void Plugin_BanClient( unsigned int clientnum, int seconds, int invokerid, char *reason ); //Bans the client for seconds from server. Seconds can be "-1" to create a permanent ban. invokerid can be 0 or the numeric uid. banreason can be NULL or a valid char* pointer.
 
     //  -- TCP Connection functions --
 
@@ -126,7 +130,6 @@
     __cdecl unsigned int Plugin_GetPlayerUID(unsigned int clientslot);               // Get player's UID
     __cdecl const char* Plugin_GetPlayerGUID(unsigned int clientslot);               // Get player's GUID
     __cdecl void Plugin_SetPlayerGUID(unsigned int clientslot, const char* guid);    // Set player's GUID
-    __cdecl void Plugin_SetPlayerNoPB(unsigned int clientslot);                      // Turn off PunkBuster for a player
     __cdecl int Plugin_DoesServerUseUids(void);                                      // Self explanatory
     __cdecl void Plugin_SetServerToUseUids(int useuids);                             // Self explanatory
 

@@ -60,8 +60,9 @@ char PHandler_Events[PLUGINS_ITEMCOUNT][32]={
     "OnSpawnServer",
     "OnPreFastRestart",
     "OnPostFastRestart",
-    "OnPlayerConnectAuthFail"
-
+    "OnPlayerConnectAuthFail",
+	"OnClientUserinfoChanged",
+    "OnClientMoveCommand"
 };
 
 void PHandler_Init() // Initialize the Plugin Handler's data structures and add commands

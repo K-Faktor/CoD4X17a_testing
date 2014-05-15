@@ -2663,6 +2663,45 @@ qboolean SEH_GetLanguageIndexForName(const char* language, int *langindex)
     return qfalse;
 }
 
+/*
+=================
+FS_ShutdownSearchpath
+
+Shuts down and clears a single searchpath only
+=================
+*/
+
+void FS_ShutdownSearchpath(searchpath_t *clear)
+{
+	searchpath_t    **back, *p;
+	
+	back = &fs_searchpaths;
+	while ( 1 )
+	{	
+		p = *back;
+		if( p == NULL )
+		{
+			return;
+		}
+		if(p == clear)
+		{
+			*back = p->next;
+			if ( p->pack ) {
+				unzClose( p->pack->handle );
+				Z_Free( p->pack->buildBuffer );
+				Z_Free( p->pack );
+			}
+			if ( p->dir ) {
+				Z_Free( p->dir );
+			}
+			Z_Free( p );
+			return;
+		}
+		back = &p->next;
+	}
+}
+
+
 
 void FS_DisplayPath( void ) {
 	searchpath_t    *s;
@@ -2711,6 +2750,7 @@ void FS_Startup(const char* gameName)
 {
 
   char* homePath;
+  cvar_t *level;
   mvabuf;
 
   Sys_EnterCriticalSection(CRIT_FILESYSTEM);
@@ -2730,6 +2770,8 @@ void FS_Startup(const char* gameName)
   fs_homepath = Cvar_RegisterString("fs_homepath", homePath, 528, "Game home path");
   fs_restrict = Cvar_RegisterBool("fs_restrict", qfalse, 16, "Restrict file access for demos etc.");
   fs_usedevdir = Cvar_RegisterBool("fs_usedevdir", qfalse, 16, "Use development directories.");
+
+  level = Cvar_FindVar("mapname");
 
   FS_SetDirSep(fs_homepath);
   FS_SetDirSep(fs_basepath);
@@ -2781,6 +2823,8 @@ void FS_Startup(const char* gameName)
     FS_AddGameDirectory(fs_homepath->string, gameName);
   }
 
+
+
   if ( fs_basegame->string[0] && !Q_stricmp(gameName, BASEGAME) && Q_stricmp(fs_basegame->string, gameName) )
   {
     if ( fs_cdpath->string[0] )
@@ -2791,6 +2835,7 @@ void FS_Startup(const char* gameName)
       FS_AddGameDirectory(fs_homepath->string, fs_basegame->string);
   }
 
+
   if ( fs_gameDirVar->string[0] && !Q_stricmp(gameName, BASEGAME) && Q_stricmp(fs_gameDirVar->string, gameName) )
   {
     if ( fs_cdpath->string[0] )
@@ -2800,6 +2845,17 @@ void FS_Startup(const char* gameName)
     if ( fs_homepath->string[0] && Q_stricmp(fs_homepath->string, fs_basepath->string) )
       FS_AddGameDirectory(fs_homepath->string, fs_gameDirVar->string);
   }
+
+  if ( fs_gameDirVar->string[0] && !Q_stricmp(gameName, BASEGAME) && Q_stricmp(fs_gameDirVar->string, gameName) && level && level->string[0])
+  {
+    if ( fs_cdpath->string[0] )
+      FS_AddGameDirectory(fs_cdpath->string, va("usermaps/%s", level->string));
+    if ( fs_basepath->string[0] )
+      FS_AddGameDirectory(fs_basepath->string, va("usermaps/%s", level->string));
+    if ( fs_homepath->string[0] && Q_stricmp(fs_homepath->string, fs_basepath->string) )
+      FS_AddGameDirectory(fs_homepath->string, va("usermaps/%s", level->string));
+  }
+
 /*  Com_ReadCDKey(); */
   Cmd_AddCommand("path", FS_Path_f);
   Cmd_AddCommand("which", FS_Which_f);
@@ -3035,7 +3091,17 @@ void FS_AddIwdFilesForGameDirectory(const char *path, const char *dir)
 		{
 			continue;
 		}
+		/* Shutdown already loaded pak files with same name to circumvent conflicts */
 
+		for(sp = fs_searchpaths; sp != NULL; sp = sp->next)
+		{
+			if(sp->pack != NULL && !Q_stricmp(sp->pack->pakBasename, pak->pakBasename))
+			{
+				FS_ShutdownSearchpath(sp);
+				break; //Break out - sp is now invalid
+			}	
+		}
+		
 		Q_strncpyz(pak->pakGamename, dir, sizeof(pak->pakGamename));
 		
 		search = (searchpath_t *)Z_Malloc(sizeof(searchpath_t));
@@ -3308,6 +3374,8 @@ void FS_PatchFileHandleData()
 	*(int**)0x818BBCE = &fs_loadStack;
 
 }
+
+
 
 /*
 ================

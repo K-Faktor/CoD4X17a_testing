@@ -546,6 +546,7 @@ Win32 specific initialisation
 */
 void Sys_PlatformInit( void )
 {
+#if 0
 	void *allocptr = (void*)0x8040000;  /* Image base of cod4_lnxded-bin */ 
 	void *received_mem;
 	int commitsize;
@@ -563,7 +564,7 @@ void Sys_PlatformInit( void )
 	commitsize += 0x9454; /* Size of .data */
 	commitsize += 0x2c; /* Offset of .bss */
 	commitsize += 0xc182240; /* Size of .bss */
-	
+	/* .= 0xc3b6c40 */
 	pagesize = Sys_GetPageSize();
 	
 	delta = commitsize % pagesize;
@@ -576,7 +577,7 @@ void Sys_PlatformInit( void )
 		Sys_ShowErrorDialog(errormsg);
 		exit(1);
 	}
-
+#endif
 	Sys_SetFloatEnv( );
 }
 

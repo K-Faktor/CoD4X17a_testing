@@ -29,7 +29,26 @@
 #include <string.h>
 
 
-	//Types and structs
+#define MAX_QPATH 64
+#define GENTITYNUM_BITS     10  // JPW NERVE put q3ta default back for testing	// don't need to send any more
+//#define	GENTITYNUM_BITS		11		// don't need to send any more		(SA) upped 4/21/2001 adjusted: tr_local.h (802-822), tr_main.c (1501), sv_snapshot (206)
+#define MAX_GENTITIES       ( 1 << GENTITYNUM_BITS )
+#define	MAX_STRING_CHARS	1024
+#define MAX_INFO_STRING		1024
+#define MAX_RELIABLE_COMMANDS 128
+#define MAX_NAME_LENGTH		16
+#define MAX_DOWNLOAD_WINDOW	8
+#define MAX_OSPATH			256
+#define PACKET_BACKUP		32
+#define MAX_CLIENTS			64
+#define NETCHAN_UNSENTBUFFER_SIZE 0x20000
+#define NETCHAN_FRAGMENTBUFFER_SIZE 0x800
+
+#define CLIENT_BASE_ADDR 0x90b4f8C
+#define clientbase ((client_t*)CLIENT_BASE_ADDR)  //e.g. clientbase[i].username
+
+//Types and structs
+typedef int scr_entref_t;
 typedef int	fileHandle_t;
 typedef enum {qfalse, qtrue}	qboolean;
 typedef void (*xcommand_t)();
@@ -52,6 +71,8 @@ typedef enum {
 	NA_DOWN = 10
 } netadrtype_t;
 
+#pragma pack(1)
+
 typedef struct {
 	netadrtype_t	type;
 	int				scope_id;
@@ -63,6 +84,31 @@ typedef struct {
 	    byte	ip6[16];
 	};
 }netadr_t;
+
+typedef struct {
+	// sequencing variables
+	int			outgoingSequence;
+	int			sock;
+	int			dropped;			// between last packet and previous
+	int			incomingSequence;
+
+	//Remote address
+	netadr_t	remoteAddress;			// (0x10)
+	int			qport;				// qport value to write when transmitting (0x24)
+	// incoming fragment assembly buffer
+	int			fragmentSequence;
+	int			fragmentLength;	
+	byte		*fragmentBuffer; // Old: (0x30)
+	int			fragmentBufferSize;
+
+	// outgoing fragment buffer
+	// we need to space out the sending of large fragmented messages
+	qboolean	unsentFragments;
+	int			unsentFragmentStart;
+	int			unsentLength;
+	byte		*unsentBuffer; //Old: (0x44)
+	int			unsentBufferSize;
+} netchan_t;
 
 typedef float vec_t;
 typedef vec_t vec2_t[2];
@@ -79,6 +125,18 @@ typedef struct{		// A structure representing a player's scoreboard
     int	assists;
 }clientScoreboard_t;
 
+// usercmd_t is sent to the server each client frame
+typedef struct usercmd_s {//Not Known
+	int			serverTime;
+	int			buttons;
+	int			angles[3];
+	byte weapon;
+	byte offhandindex;
+	byte field_16;
+	byte field_17;
+	int field_18;
+	int field_1C;
+} usercmd_t;
 
 
 typedef enum{
@@ -137,6 +195,7 @@ typedef struct{
 
 #define cvardeclarations
 
+typedef int fileHandle_t;
 typedef int clipHandle_t;
 
 typedef enum {
@@ -296,8 +355,341 @@ typedef struct {
 	int			eventTime;
 } entityShared_t;
 
+typedef struct{
+	int	sprintButtonUpRequired;
+	int	sprintDelay;
+	int	lastSprintStart;
+	int	lastSprintEnd;
+	int	sprintStartMaxLength;
+}sprintState_t;
+
+typedef struct{
+	int	yaw;
+	int	timer;
+	int	transIndex;
+	int	flags;
+}mantleState_t;
+
+typedef struct playerState_s {
+	int		commandTime;  // 0
+	int		pm_type;  // 4
+	int		bobCycle;  // 8
+	int		pm_flags;  // 12
+	int		weapFlags;  // 16
+	int		otherFlags;  // 20
+	int		pm_time;  // 24
+	vec3_t		origin;  // 28
+	
+	// http://zeroy.com/script/player/getvelocity.htm
+	vec3_t		velocity;  // 40
+
+	int		var_01;  //
+	int		var_02;  //
+
+	int		weaponTime;  // 60
+	int		weaponDelay;  // 64
+	int		grenadeTimeLeft;  // 68
+	int		throwBackGrenadeOwner;  // 72
+	int		throwBackGrenadeTimeLeft;  // 76
+	int		weaponRestrictKickTime;  // 80
+	int		foliageSoundTime;  // 84
+	int		gravity;  // 88
+	int		leanf;  // 92
+	int		speed;  // 96
+	vec3_t		delta_angles;  // 100
+	
+	/*The ground entity's rotation will be added onto the player's view.  In particular, this will 
+	* cause the player's yaw to rotate around the entity's z-axis instead of the world z-axis. 
+	* Any rotation that the reference entity undergoes will affect the player.
+	* http://zeroy.com/script/player/playersetgroundreferenceent.htm */
+	int		groundEntityNum;  // 112
+
+	vec3_t		vLadderVec;  // 116
+	int		jumpTime;  // 128
+	float		jumpOriginZ;  // 132
+	
+	// Animations as in mp/playeranim.script and animtrees/multiplayer.atr, it also depends on mp/playeranimtypes.txt (the currently used weapon)
+	int		legsTimer;  // 136
+	int		legsAnim;  // 140
+	int		torsoTimer;  // 144
+	int		torsoAnim;  // 148
+
+	int		var_03;  //
+	int		var_04;  //
+
+	int		damageTimer;  // 160
+	int		damageDuration;  // 164
+	int		flinchYawAnim;  // 168
+	int		movementDir;  // 172
+	int		eFlags;  // 176
+	int		eventSequence;  // 180
+
+	vec4_t		events;  // 184
+	vec4_t		eventParms;  // 200
+
+	int		var_05;  //
+
+	int		clientNum;  // 220
+	int		offHandIndex;  // 224
+	int		offhandSecondary;  // 228
+	int		weapon;  // 232
+	int		weaponstate;  // 236
+	int		weaponShotCount;  // 240
+	int		fWeaponPosFrac;  // 244
+	int		adsDelayTime;  // 248
+	
+	// http://zeroy.com/script/player/resetspreadoverride.htm
+	// http://zeroy.com/script/player/setspreadoverride.htm
+	int		spreadOverride;  // 252
+	int		spreadOverrideState;  // 256
+	
+	int		viewmodelIndex;  // 260
+
+	vec3_t		viewangles;  // 264
+	int		viewHeightTarget;  // 276
+	int		viewHeightCurrent;  // 280
+	int		viewHeightLerpTime;  // 284
+	int		viewHeightLerpTarget;  // 288
+	int		viewHeightLerpDown;  // 292
+	vec2_t		viewAngleClampBase;  // 296
+	vec2_t		viewAngleClampRange;  // 304
+
+	int		damageEvent;  // 312
+	int		damageYaw;  // 316
+	int		damagePitch;  // 320
+	int		damageCount;  // 324
+
+	int		unk1[261];  // 328
+
+	vec4_t		weapons;  // 1372
+
+	vec4_t		weaponold;  // 1388
+
+	vec4_t		weaponrechamber;  // 1404
+
+	int		proneDirection;  // 1420
+	int		proneDirectionPitch;  // 1424
+	int		proneTorsoPitch;  // 1428
+	int		viewlocked;  // 1432
+	int		viewlocked_entNum;  // 1436
+
+	int		cursorHint;  // 1440
+	int		cursorHintString;  // 1444
+	int		cursorHintEntIndex;  // 1448
+
+	int		iCompassPlayerInfo;  // 1452
+	int		radarEnabled;  // 1456
+
+	int		locationSelectionInfo;  // 1460
+	sprintState_t	sprintState;  // 1464
+	
+	// used for leaning?
+	int		fTorsoPitch;  // 1484
+	int		fWaistPitch;  // 1488
+
+	int		holdBreathScale;  // 1492
+	int		holdBreathTimer;  // 1496
+	
+	// Scales player movement speed by this amount, ???it's actually a float???
+	// http://zeroy.com/script/player/setmovespeedscale.htm
+	int		moveSpeedScaleMultiplier;  // 1500
+	
+	mantleState_t	mantleState;  // 1504
+	int		meleeChargeYaw;  // 1520
+	int		meleeChargeDist;  // 1524
+	int		meleeChargeTime;  // 1528
+	int		perks;  // 1532
+
+	vec4_t		actionSlotType;  // 1536
+	vec4_t		actionSlotParam;  // 1552
+
+	int		var_06; // 1568
+
+	int		weapAnim;  // 1572
+	int		aimSpreadScale;  // 1576
+	
+	// http://zeroy.com/script/player/shellshock.htm
+	int		shellshockIndex;  // 1580
+	int		shellshockTime;  // 1584
+	int		shellshockDuration;  // 1588
+
+	// http://zeroy.com/script/player/setdepthoffield.htm
+	int		dofNearStart;  // 1592
+	int		dofNearEnd;  // 1596
+	int		dofFarStart;  // 1600
+	int		dofFarEnd;  // 1604
+	int		dofNearBlur;  // 1608
+	int		dofFarBlur;  // 1612
+	int		dofViewmodelStart;  // 1616
+	int		dofViewmodelEnd;  // 1620
+
+	int		unk2[145];  // 1624
+
+	int		deltaTime;  // 2204
+	int		killCamEntity;  // 2208
+
+	int		unk3[2480];  // 2212
+} playerState_t;//Size: 0x2f64
+
+
+
+
+typedef enum {
+	CS_FREE,		// can be reused for a new connection
+	CS_ZOMBIE,		// client has been disconnected, but don't reuse
+				// connection for a couple seconds
+	CS_CONNECTED,		// has been assigned to a client_t, but no gamestate yet
+	CS_PRIMED,		// gamestate has been sent, but client hasn't sent a usercmd
+	CS_ACTIVE		// client is fully in game
+}clientState_t;
+
+// the server looks at a sharedEntity, which is the start of the game's gentity_t structure
+typedef struct {
+	entityState_t	s;				// communicated by server to clients
+	entityShared_t	r;				// shared by both the server system and game
+} sharedEntity_t;
+
+
+typedef struct {//(0x2146c);
+	playerState_t	ps;			//0x2146c
+	int		num_entities;
+	int		num_clients;		// (0x2f68)
+	int		first_entity;		// (0x2f6c)into the circular sv_packet_entities[]
+	int		first_client;
+							// the entities MUST be in increasing state number
+							// order, otherwise the delta compression will fail
+	unsigned int	messageSent;		// (0x243e0 | 0x2f74) time the message was transmitted
+	unsigned int	messageAcked;		// (0x243e4 | 0x2f78) time the message was acked
+	int		messageSize;		// (0x243e8 | 0x2f7c)   used to rate drop packets
+	int		var_03;
+} clientSnapshot_t;//size: 0x2f84
+
+typedef struct
+{
+	char num;
+	char data[256];
+	int dataLen;
+}voices_t;
+
+typedef struct client_s {//90b4f8c
+	clientState_t		state;
+	int			unksnapshotvar;		// must timeout a few frames in a row so debugging doesn't break
+	int			deltaMessage;		// (0x8) frame last client usercmd message
+	qboolean		rateDelayed;		// true if nextSnapshotTime was set based on rate instead of snapshotMsec
+	netchan_t		netchan;	//(0x10)
+	//DemoData
+	byte			demofile[284];
+	qboolean		demorecording;
+	qboolean		demowaiting;
+	char			demoName[MAX_QPATH];
+	int			demoArchiveIndex;
+	int			demoMaxDeltaFrames;
+	int			demoDeltaFrameCount;
+
+	int			authentication;
+	qboolean		playerauthorized;
+	qboolean		noPb;
+	int			usernamechanged;
+	int			bantime;
+	int			clienttimeout;
+	int			uid;
+	char			OS;
+	int			power;
+	char			originguid[33];
+	qboolean		firstSpawn;
+	void		*hudMsg;
+	int			msgType;
+	unsigned int		currentAd;
+	int			enteredWorldTime;
+	byte			entityNotSolid[MAX_GENTITIES / 8];//One bit for entity
+	byte			entityInvisible[MAX_GENTITIES / 8];//One bit for entity
+	unsigned int		clFrames;
+	unsigned int		clFrameCalcTime;
+	unsigned int		clFPS;
+	float			jumpHeight;
+	int			gravity;
+	int			playerMoveSpeed;
+	qboolean		needPassword;
+	qboolean		needPasswordNotified;
+	char			loginname[32];
+	//Free Space
+	qboolean		enteredWorldForFirstTime;
+	byte			free[652];
+	char			name[64];
+
+	int			unknownUsercmd1;	//0x63c
+	int			unknownUsercmd2;	//0x640
+	int			unknownUsercmd3;	//0x644
+	int			unknownUsercmd4;	//0x648
+
+	const char*		delayDropMsg;		//0x64c
+	char			userinfo[MAX_INFO_STRING];		// name, etc (0x650)
+	byte		reliableCommands[MAX_RELIABLE_COMMANDS * (MAX_STRING_CHARS + 2 * sizeof(int))];	// (0xa50)
+	int			reliableSequence;	// (0x20e50)last added reliable message, not necesarily sent or acknowledged yet
+	int			reliableAcknowledge;	// (0x20e54)last acknowledged reliable message
+	int			reliableSent;		// last sent reliable message, not necesarily acknowledged yet
+	int			messageAcknowledge;	// (0x20e5c)
+	int			gamestateMessageNum;	// (0x20e60) netchan->outgoingSequence of gamestate
+	int			challenge; //0x20e64
+//Unknown where the offset error is
+	usercmd_t		lastUsercmd;		//(0x20e68)
+	int			lastClientCommand;	//(0x20e88) reliable client message sequence
+	char			lastClientCommandString[MAX_STRING_CHARS]; //(0x20e8c)
+	sharedEntity_t		*gentity;		//(0x2128c)
+
+	char			shortname[MAX_NAME_LENGTH];	//(0x21290) extracted from userinfo, high bits masked
+	int			wwwDl_var01;
+	// downloading
+	char			downloadName[MAX_QPATH]; //(0x212a4) if not empty string, we are downloading
+	fileHandle_t	download;		//(0x212e4) file being downloaded
+ 	int			downloadSize;		//(0x212e8) total bytes (can't use EOF because of paks)
+ 	int			downloadCount;		//(0x212ec) bytes sent
+	int			downloadClientBlock;	//(0x212f0) last block we sent to the client, awaiting ack
+	int			downloadCurrentBlock;	//(0x212f4) current block number
+	int			downloadXmitBlock;	//(0x212f8) last block we xmited
+	unsigned char		*downloadBlocks[MAX_DOWNLOAD_WINDOW];	//(0x212fc) the buffers for the download blocks
+	int			downloadBlockSize[MAX_DOWNLOAD_WINDOW];	//(0x2131c)
+	qboolean		downloadEOF;		//(0x2133c) We have sent the EOF block
+	int			downloadSendTime;	//(0x21340) time we last got an ack from the client
+	char			wwwDownloadURL[MAX_OSPATH]; //(0x21344) URL from where the client should download the current file
+
+	qboolean		wwwDownload;		// (0x21444)
+	qboolean		wwwDownloadStarted;	// (0x21448)
+	qboolean		wwwDl_var02;		// (0x2144c)
+	qboolean		wwwDl_var03;
+	int			nextReliableTime;	// (0x21454) svs.time when another reliable command will be allowed
+	int			floodprotect;		// (0x21458)
+	int			lastPacketTime;		// (0x2145c)svs.time when packet was last received
+	int			lastConnectTime;	// (0x21460)svs.time when connection started
+	int			nextSnapshotTime;	// (0x21464) send another snapshot when svs.time >= nextSnapshotTime
+	int			timeoutCount;
+	clientSnapshot_t	frames[PACKET_BACKUP];	// (0x2146c) updates can be delta'd from here
+	int			ping;		//(0x804ec)
+	int			rate;		//(0x804f0)		// bytes / second
+	int			snapshotMsec;	//(0x804f4)	// requests a snapshot every snapshotMsec unless rate choked
+	int			unknown6;
+	int			pureAuthentic; 	//(0x804fc)
+	byte			unsentBuffer[NETCHAN_UNSENTBUFFER_SIZE]; //(0x80500)
+	byte			fragmentBuffer[NETCHAN_FRAGMENTBUFFER_SIZE]; //(0xa0500)
+	char			pbguid[33]; //0xa0d00
+	byte			pad;
+	short			clscriptid; //0xa0d22
+	int			canNotReliable; 
+	int			serverId; //0xa0d28
+	voices_t	voicedata[40];
+	int			unsentVoiceData;//(0xa35f4)
+	byte			mutedClients[MAX_CLIENTS];
+	byte			hasVoip;//(0xa3638)
+	byte			stats[8192];		//(0xa3639)
+	byte			receivedstats;		//(0xa5639)
+	byte			dummy1;
+	byte			dummy2;
+} client_t;//0x0a563c
+
+
 
 typedef struct gentity_s gentity_t;
+
 
 struct gentity_s {
 	entityState_t s;
@@ -533,6 +925,9 @@ struct gentity_s {
 };//Size: 0x274
 
 
+#pragma pack(push, 1)
+
+
 #include "plugin_declarations.h"
 #include "function_declarations.h" // Function descriptions are available in this file
-
+#include "callback_declarations.h"

@@ -850,6 +850,7 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 	int	ret = SOCKET_ERROR;
 	int	i;
 	struct sockaddr_storage	addr;
+	char tmpstr[64];
 
 	if( to->type != NA_BROADCAST && to->type != NA_IP && to->type != NA_IP6 && to->type != NA_MULTICAST6)
 	{
@@ -880,50 +881,64 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 
 	if(to->sock != 0)
 	{
-		if(addr.ss_family == AF_INET)
+		if( to->type == NA_IP || to->type == NA_BROADCAST )
 			ret = sendto( to->sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
-		else if(addr.ss_family == AF_INET6)
+		else if( to->type == NA_IP6 || to->type == NA_MULTICAST6 )
 			ret = sendto( to->sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 		
 #ifdef SOCKET_DEBUG
-		int ret;
-		int err2;
-						
-		err2 = socketError;
+			int err2;
 			
-		if(ret == SOCKET_ERROR && err2 != EAGAIN)
-		{
-			Com_PrintError( "Sys_SendPacket: socket %d failed with: %s\n", to->sock,  NET_ErrorString() );
-				
-		}
-
+			if(ret == SOCKET_ERROR)
+			{
+				err2 = socketError;
+				if(err2 != EAGAIN)
+				{
+					Q_strncpyz( tmpstr, NET_AdrToString(NET_SockToAdr(to->sock)), sizeof(tmpstr));
+					Com_PrintError( "Sys_SendPacket: socket %d Conn: %s ==> %s failed with: %s\n", to->sock, tmpstr, NET_AdrToString(to), NET_ErrorString() );
+				}
+			}
 #endif
-		
 		
 	}else{//Send this packet to any available socket
 
 		for(i = 0; i < numIP; i++)
 		{
+			ret = 0;
+
 			if(ip_socket[i].sock == INVALID_SOCKET)
 				break;
 
-			if(addr.ss_family == AF_INET && ip_socket[i].type == NA_IP)
+			if( to->type != ip_socket[i].type )
+				continue;
+
+			if( to->type == NA_IP )
+			{
+				if(ip_socket[i].ip[0] == 127)
+				{
+					continue;
+				}
 				ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
-			else if(addr.ss_family == AF_INET6 && ip_socket[i].type == NA_IP6)
+			}
+			else if( to->type == NA_IP6 )
+			{
 				ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
-			
+			}
 #ifdef SOCKET_DEBUG
-			int ret;
 			int err2;
 			
-			err2 = socketError;
-			
-			if(ret == SOCKET_ERROR && err2 != EAGAIN)
+			if(ret == SOCKET_ERROR)
 			{
-				Com_PrintError( "Sys_SendPacket: socket %d failed with: %s\n", ip_socket[i].sock,  NET_ErrorString() );
-				
+				err2 = socketError;
+				if(err2 != EAGAIN)
+				{
+					Q_strncpyz( tmpstr, NET_AdrToString(&ip_socket[i]), sizeof(tmpstr));
+					Com_PrintError( "Sys_SendPacket: socket %d Conn: %s ==> %s failed with: %s\n", ip_socket[i].sock, tmpstr, NET_AdrToString(to), NET_ErrorString() );
+				}
+			}else{
+				Q_strncpyz( tmpstr, NET_AdrToString(&ip_socket[i]), sizeof(tmpstr));
+				Com_Printf( "^2Sys_SendPacket: socket %d Conn: %s ==> %s successfully sent\n", ip_socket[i].sock, tmpstr, NET_AdrToString(to) );
 			}
-			
 #endif
 			
 			
