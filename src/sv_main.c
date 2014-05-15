@@ -2798,9 +2798,9 @@ __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 		m = uptime/60;
 
 		if(h < 4)
-			Cvar_SetString(sv_uptime, va("%i minutes", m+h*60));
+			Cvar_SetString(sv_uptime, va("%i minutes", m));
 		else if(d < 3)
-			Cvar_SetString(sv_uptime, va("%i hours", h+d*24));
+			Cvar_SetString(sv_uptime, va("%i hours", h));
 		else
 			Cvar_SetString(sv_uptime, va("%i days", d));
 

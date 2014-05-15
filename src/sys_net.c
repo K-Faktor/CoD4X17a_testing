@@ -2241,7 +2241,7 @@ void NET_TcpCloseSocket(int socket)
 			if(conn->state >= TCP_AUTHSUCCESSFULL)
 			{
 				tcpServer.activeConnectionCount--;
-				NET_TCPConnectionClosed(&conn->remote, conn->remote.sock, conn->connectionId, conn->serviceId);
+				NET_TCPConnectionClosed(&conn->remote, conn->connectionId, conn->serviceId);
 			}
 			conn->remote.sock = INVALID_SOCKET;
 			NET_TcpServerRebuildFDList();
@@ -2451,7 +2451,7 @@ void NET_TcpServerPacketEventLoop()
 						{
 							break; //Connection closed unexpected
 						//Close connection, we don't want to process huge messages as auth-packet or want to quit if the login was bad
-						}else if( (conn->state = NET_TCPAuthPacketEvent(&conn->remote, bufData, cursize, conn->remote.sock, &conn->connectionId, &conn->serviceId)) == TCP_AUTHBAD){
+						}else if( (conn->state = NET_TCPAuthPacketEvent(&conn->remote, bufData, cursize, &conn->connectionId, &conn->serviceId)) == TCP_AUTHBAD){
 							NET_TcpCloseSocket(conn->remote.sock);
 
 						}else if(conn->state == TCP_AUTHSUCCESSFULL){
@@ -2481,7 +2481,7 @@ void NET_TcpServerPacketEventLoop()
 							Com_PrintWarningNoRedirect( "NET_TcpServerPacketEventLoop: Oversize packet from %s. Must not happen!\n", NET_AdrToString (&conn->remote));
 							cursize = sizeof(bufData);
 						}
-						NET_TCPPacketEvent(&conn->remote, bufData, cursize, conn->remote.sock, conn->connectionId, conn->serviceId);
+						NET_TCPPacketEvent(&conn->remote, bufData, cursize, conn->connectionId, conn->serviceId);
 						break;
 				}
 
@@ -2535,7 +2535,7 @@ void NET_TcpServerOpenConnection( netadr_t *from )
 		if(tcpServer.activeConnectionCount > MAX_TCPCONNECTIONS / 3 && oldestTimeAccepted + MAX_TCPCONNECTEDTIMEOUT < NET_TimeGetTime()){
 				conn = &tcpServer.connections[oldestAccepted];
 				tcpServer.activeConnectionCount--; //As this connection is going to be closed decrease the counter
-				NET_TCPConnectionClosed(&conn->remote, conn->remote.sock, conn->connectionId, conn->serviceId);
+				NET_TCPConnectionClosed(&conn->remote, conn->connectionId, conn->serviceId);
 
 		}else if(oldestTime + MIN_TCPAUTHWAITTIME < NET_TimeGetTime()){
 				conn = &tcpServer.connections[oldest];
