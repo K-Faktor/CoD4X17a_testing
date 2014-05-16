@@ -878,6 +878,9 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 
 	} else {*/
 
+#ifdef SOCKET_DEBUG
+    char tmpstr[64];
+#endif
 	if(to->sock != 0)
 	{
 		if( to->type == NA_IP || to->type == NA_BROADCAST )
@@ -886,6 +889,7 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 			ret = sendto( to->sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
 		
 #ifdef SOCKET_DEBUG
+			
 			int err2;
 			
 			if(ret == SOCKET_ERROR)

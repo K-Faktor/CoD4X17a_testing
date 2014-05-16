@@ -603,6 +603,8 @@ void GScr_LoadGameTypeScript(void){
 /**************** Mandatory *************************/
     char gametype_path[64];
 
+    Cvar_RegisterString("g_gametype", "dm", CVAR_LATCH | CVAR_SERVERINFO, "Current game type");
+
     Com_sprintf(gametype_path, sizeof(gametype_path), "maps/mp/gametypes/%s", sv_g_gametype->string);
 
     /* Don't raise a fatal error when we couldn't find this gametype script */
