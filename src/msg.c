@@ -182,6 +182,18 @@ void MSG_WriteLong( msg_t *msg, int c ) {
 	msg->cursize += sizeof(int32_t);
 }
 
+void MSG_WriteFloat( msg_t *msg, float c ) {
+	float *dst;
+
+	if ( msg->maxsize - msg->cursize < 4 ) {
+		msg->overflowed = qtrue;
+		return;
+	}
+	dst = (float*)&msg->data[msg->cursize];
+	*dst = c;
+	msg->cursize += sizeof(float);
+}
+
 void MSG_WriteData( msg_t *buf, const void *data, int length ) {
 	int i;
 	for(i=0; i < length; i++){

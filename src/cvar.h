@@ -171,7 +171,7 @@ qboolean Cvar_ValidateString( const char *s );
 void Cvar_AddFlags(cvar_t* var, unsigned short flags);
 void Cvar_AddFlagsByName(const char* var_name, unsigned short flags);
 void Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
-
+cvar_t* Cvar_GetNext(cvar_t* cvar, short flags);
 #define Cvar_GetInt Cvar_VariableIntegerValue
 #define Cvar_GetFloat Cvar_VariableValue
 #define Cvar_GetString Cvar_VariableString

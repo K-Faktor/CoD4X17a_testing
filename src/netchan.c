@@ -31,10 +31,11 @@
 #include "q_platform.h"
 #include "plugin_handler.h"
 #include "net_game_conf.h"
+#include "sha.h"
 
 #include <string.h>
 #include <stdarg.h>
-
+#include <stdint.h>
 /*
 
 packet header
@@ -89,6 +90,7 @@ void Netchan_Init( int port ) {
 	showpackets = Cvar_RegisterBool( "showpackets", qfalse, CVAR_TEMP, "Show all sent and received packets");
 	showdrop = Cvar_RegisterBool( "showdrop", qfalse, CVAR_TEMP, "Show dropped packets");
 	qport = Cvar_RegisterInt( "net_qport", port, 1, 65535, CVAR_INIT, "The net_chan qport" );
+	NET_CookieInit();
 }
 
 /*
@@ -622,3 +624,47 @@ int NET_ReceiveData( int sock, msg_t* msg) {
 	}
 	return 1;
 }
+
+
+byte net_cookieSecret[58];
+
+
+void NET_CookieInit(){
+
+    Com_RandomBytes(net_cookieSecret, sizeof(net_cookieSecret));
+}
+
+int NET_CookieHash(netadr_t *from){
+
+    uint32_t digest[5];
+    uint32_t workspace[80];
+    char data[64];
+    int i;
+
+    if(from->type == NA_IP){
+
+        for(i = 0; i < 4; i++)
+            data[i] = from->ip[i];
+
+        *((unsigned short*)&data[4]) = from->port;
+
+        Com_Memcpy(&data[6], net_cookieSecret, sizeof(net_cookieSecret));
+
+    }else if(from->type == NA_IP6){
+        for(i = 0; i < 16; i++)
+            data[i] = from->ip[i];
+
+        *((unsigned short*)&data[16]) = from->port;
+
+        Com_Memcpy(&data[18], net_cookieSecret, sizeof(net_cookieSecret) - 46);
+
+    }else
+        return 0;
+
+    sha_init(digest);
+
+    sha_transform(digest, data, workspace);
+
+    return digest[0];
+}
+
