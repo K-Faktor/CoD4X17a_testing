@@ -195,7 +195,7 @@ typedef struct{
 
 #define cvardeclarations
 
-typedef int fileHandle_t;
+//typedef int fileHandle_t;
 typedef int clipHandle_t;
 
 typedef enum {
