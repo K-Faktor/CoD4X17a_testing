@@ -115,10 +115,14 @@
 	__cdecl void Plugin_BanClient( unsigned int clientnum, int seconds, int invokerid, char *reason ); //Bans the client for seconds from server. Seconds can be "-1" to create a permanent ban. invokerid can be 0 or the numeric uid. banreason can be NULL or a valid char* pointer.
 
     //  -- TCP Connection functions --
-
-    __cdecl qboolean Plugin_TcpConnect(int connection, const char* remote);      // Open a new TCP connection
-    __cdecl int Plugin_TcpGetData(int connection, void *buf, int size);          // Receive TCP data
-    __cdecl qboolean Plugin_TcpSendData(int connection, void *data, int len);    // Send TCP data
+    /* 
+    connection is a static constant number. Every plugin can use a connection 0 up to 3. This is not a socket. This is handled internal.
+    You can not use the same number for 2 open connections on the same time.
+    
+    */
+    __cdecl qboolean Plugin_TcpConnect(int connection, const char* remote);      // Open a new TCP connection - Returns qfalse if failed, remote can be a domainname
+    __cdecl int Plugin_TcpGetData(int connection, void *buf, int size);          // Receive TCP data - buf and size is the receiving buffer. It returns -1 if the connection is closed. It returns 0 when no new data is available. All other return values is the number of bytes received.
+    __cdecl qboolean Plugin_TcpSendData(int connection, void *data, int len);    // Send TCP data - buf and len point to the buffer which has the data to send. Len is the amount to bytes to send. Returns qfalse if something has failed.
     __cdecl void Plugin_TcpCloseConnection(int connection);                      // Close an open TCP connection
     __cdecl qboolean Plugin_UdpSendData(netadr_t* to, void* data, int len);      // Send UDP data
     __cdecl void Plugin_ServerPacketEvent(netadr_t* to, void* data, int len);    // Receive UDP data
