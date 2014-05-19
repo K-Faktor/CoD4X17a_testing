@@ -175,4 +175,4 @@
     __cdecl short Plugin_Scr_ExecThread( int callbackHook, unsigned int numArgs);
     __cdecl void  Plugin_Scr_FreeThread( short threadId);
 
-    __cdecl playerState_t *SV_GameClientNum( int num ); //Retrives the playerState_t* object from a client number
+    __cdecl playerState_t *Plugin_SV_GameClientNum( int num ); //Retrives the playerState_t* object from a client number
