@@ -123,3 +123,5 @@ pexport Scr_ExecThread
 pexport Scr_FreeThread
 
 pexport G_LogPrintf
+
+pexport SV_GameClientNum
