@@ -114,7 +114,7 @@ void SV_RemoteCmdInit(){
     Cmd_SetPower("setcmdminpower", 95);
     Cmd_SetPower("setadmin", 95);
     Cmd_SetPower("unsetadmin", 95);
-    Cbuf_AddText("addCommand gametype \"set g_gametype $arg; map_restart\"");
+    Cbuf_AddText("addCommand gametype \"set g_gametype $arg; map_restart\"\n");
     Cmd_SetPower("gametype", 60);
     Cmd_SetPower("authLogin", 1);
     Cmd_SetPower("authChangePassword", 10);

@@ -1040,7 +1040,7 @@ __optimize3 void Com_Frame( void ) {
 	// mess with msec if needed
 	usec = Com_ModifyUsec(usec);
 
-
+	Cbuf_Execute (0 ,0);
 	//
 	// server side
 	//
@@ -1062,7 +1062,6 @@ __optimize3 void Com_Frame( void ) {
 	Cbuf_Execute (0 ,0);
 	NET_Sleep(0);
 	NET_TcpServerPacketEventLoop();
-	Cbuf_Execute (0 ,0);
 	Sys_RunThreadCallbacks();
 	Cbuf_Execute (0 ,0);
 
