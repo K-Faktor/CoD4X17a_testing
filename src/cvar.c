@@ -1769,23 +1769,41 @@ Appends lines containing "set variable value" for all variables
 with the archive flag set to qtrue.
 ============
 */
-void Cvar_WriteVariables( fileHandle_t f ) {
+void Cvar_WriteVariables(fileHandle_t f)
+{
 	cvar_t	*var;
+	char	bufferval[1024];
+	char	bufferlatch[1024];
 	char	buffer[1024];
-	char latch[1024];
 
-	for (var = cvar_vars ; var ; var = var->next) {
+	for (var = cvar_vars; var; var = var->next)
+	{
 		if( var->flags & CVAR_ARCHIVE ) {
+
+			Cvar_ValueToStr(var, bufferval, sizeof(bufferval), NULL, 0, bufferlatch, sizeof(bufferlatch));
+
 			// write the latched value, even if it hasn't taken effect yet
-			Cvar_ValueToStr(var, NULL, 0, NULL, 0, latch, sizeof(latch));
-			if ( latch[0] )
-			{
-				Com_sprintf (buffer, sizeof(buffer), "seta %s \"%s\"\n", var->name, latch);
-				FS_Printf (f, "%s", buffer);
+			if ( bufferlatch[0] ) {
+				if( strlen( var->name ) + strlen( bufferlatch ) + 10 > sizeof( buffer ) ) {
+					Com_Printf( S_COLOR_YELLOW "WARNING: value of variable "
+							"\"%s\" too long to write to file\n", var->name );
+					continue;
+				}
+				Com_sprintf (buffer, sizeof(buffer), "seta %s \"%s\"\n", var->name, bufferlatch);
+			} else {
+				if( strlen( var->name ) + strlen( bufferval ) + 10 > sizeof( buffer ) ) {
+					Com_Printf( S_COLOR_YELLOW "WARNING: value of variable "
+							"\"%s\" too long to write to file\n", var->name );
+					continue;
+				}
+				Com_sprintf (buffer, sizeof(buffer), "seta %s \"%s\"\n", var->name, bufferval);
 			}
+			FS_Write( buffer, strlen( buffer ), f );
 		}
 	}
 }
+
+
 
 /*
 ============
@@ -2389,3 +2407,6 @@ void Cvar_PatchModifiedFlags()
 	*(int**)0x81775CA = (int*)(((char*)&cvar_modifiedFlags) +1);
 
 }
+
+
+

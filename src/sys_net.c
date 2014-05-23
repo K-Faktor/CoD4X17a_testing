@@ -167,20 +167,21 @@ qboolean NET_TCPPacketEvent(netadr_t* remote, byte* bufData, int cursize, int* s
 static int networkingEnabled = 0;
 
 cvar_t		*net_enabled;
-
+/*
 static cvar_t	*net_socksEnabled;
 static cvar_t	*net_socksServer;
 static cvar_t	*net_socksPort;
 static cvar_t	*net_socksUsername;
 static cvar_t	*net_socksPassword;
-
+*/
 cvar_t	*net_ip;
 cvar_t	*net_ip6;
 cvar_t	*net_port;
 cvar_t	*net_port6;
+/*
 static cvar_t	*net_mcast6addr;
 static cvar_t	*net_mcast6iface;
-
+*/
 static cvar_t	*net_dropsim;
 
 
@@ -1329,6 +1330,7 @@ NET_SetMulticast
 Set the current multicast group
 ====================
 */
+/*
 void NET_SetMulticast6(void)
 {
 	struct sockaddr_in6 addr;
@@ -1361,7 +1363,7 @@ void NET_SetMulticast6(void)
 	else
 		curgroup.ipv6mr_interface = 0;
 }
-
+*/
 /*
 ====================
 NET_JoinMulticast
@@ -2027,7 +2029,7 @@ static qboolean NET_GetCvars( void ) {
 	net_port6 = Cvar_RegisterInt( "net_port6", 0, 0, 65535, CVAR_LATCH, "IPv6 Network Port Server will listen on" );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
-
+/*
 	// Some cvars for configuring multicast options which facilitates scanning for servers on local subnets.
 	net_mcast6addr = Cvar_RegisterString( "net_mcast6addr", NET_MULTICAST_IP6, CVAR_LATCH | CVAR_ARCHIVE,  "IPv6 Network multicast address");
 	modified += net_mcast6addr->modified;
@@ -2038,6 +2040,7 @@ static qboolean NET_GetCvars( void ) {
 #else
 	net_mcast6iface = Cvar_RegisterString( "net_mcast6iface", "", CVAR_LATCH | CVAR_ARCHIVE ,  "IPv6 Network multicast interface");
 #endif
+
 	modified += net_mcast6iface->modified;
 	net_mcast6iface->modified = qfalse;
 
@@ -2060,7 +2063,7 @@ static qboolean NET_GetCvars( void ) {
 	net_socksPassword = Cvar_RegisterString( "net_socksPassword", "", CVAR_LATCH | CVAR_ARCHIVE , "Net socks proxyserver password");
 	modified += net_socksPassword->modified;
 	net_socksPassword->modified = qfalse;
-
+*/
 	net_dropsim = Cvar_RegisterInt("net_dropsim", 0,0,100, CVAR_TEMP, "Net enable packetloss simulation");
 	return modified ? qtrue : qfalse;
 }

@@ -87,5 +87,9 @@ qboolean Com_LoadBinaryImage();
 #define PACKET_MASK ( PACKET_BACKUP - 1 )
 
 
+
+#define Q3CONFIG_CFG "q3config_server.cfg"
+
+
 #endif
 

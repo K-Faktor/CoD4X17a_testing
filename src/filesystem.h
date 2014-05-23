@@ -58,8 +58,6 @@
 //#define MAX_OSPATH 256
 #define MAX_FILE_HANDLES 64
 
-typedef int	fileHandle_t;
-
 // mode parm for FS_FOpenFile
 typedef enum {
 	FS_READ,

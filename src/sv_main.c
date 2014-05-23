@@ -2017,31 +2017,31 @@ void SV_InitCvarsOnce(void){
 
 	Cvar_RegisterBool("clientSideEffects", qtrue, 0x80, "Enable loading _fx.gsc files on the client");
 
-	sv_modStats = Cvar_RegisterBool("ModStats", qtrue, CVAR_ARCHIVE, "Flag whether to use stats of mod (when running a mod) or to use stats of the Cod4 coregame");
+	sv_modStats = Cvar_RegisterBool("ModStats", qtrue, 0, "Flag whether to use stats of mod (when running a mod) or to use stats of the Cod4 coregame");
 	sv_authorizemode = Cvar_RegisterInt("sv_authorizemode", 1, -1, 1, CVAR_ARCHIVE, "How to authorize clients, 0=acceptall(No GUIDs) 1=accept no one with invalid GUID");
-	sv_showasranked = Cvar_RegisterBool("sv_showasranked", qfalse, CVAR_ARCHIVE, "List the server in serverlist of ranked servers even when it is modded");
+	sv_showasranked = Cvar_RegisterBool("sv_showasranked", qfalse, 0, "List the server in serverlist of ranked servers even when it is modded");
 	sv_statusfile = Cvar_RegisterString("sv_statusfilename", "serverstatus.xml", CVAR_ARCHIVE, "Filename to write serverstatus to disk");
 	g_mapstarttime = Cvar_RegisterString("g_mapStartTime", "", CVAR_SERVERINFO | CVAR_ROM, "Time when current map has started");
-	g_friendlyPlayerCanBlock = Cvar_RegisterBool("g_friendlyPlayerCanBlock", qfalse, CVAR_ARCHIVE, "Flag whether friendly players can block each other");
-	g_FFAPlayerCanBlock = Cvar_RegisterBool("g_FFAPlayerCanBlock", qtrue, CVAR_ARCHIVE, "Flag whether players in non team based games can block each other");
+	g_friendlyPlayerCanBlock = Cvar_RegisterBool("g_friendlyPlayerCanBlock", qfalse, 0, "Flag whether friendly players can block each other");
+	g_FFAPlayerCanBlock = Cvar_RegisterBool("g_FFAPlayerCanBlock", qtrue, 0, "Flag whether players in non team based games can block each other");
 	sv_password = Cvar_RegisterString("g_password", "", CVAR_ARCHIVE, "Password which is required to join this server");
 	g_motd = Cvar_RegisterString("g_motd", "", CVAR_ARCHIVE, "Message of the day, which getting shown to every player on his 1st spawn");
 	sv_uptime = Cvar_RegisterString("uptime", "", CVAR_SERVERINFO | CVAR_ROM, "Time the server is running since last restart");
-	sv_autodemorecord = Cvar_RegisterBool("sv_autodemorecord", qfalse, CVAR_ARCHIVE, "Automatically start from each connected client a demo.");
-	sv_demoCompletedCmd = Cvar_RegisterString("sv_demoCompletedCmd", "", CVAR_ARCHIVE, "This program will be executed when a demo has been completed. The demofilename will be passed as argument.");
+	sv_autodemorecord = Cvar_RegisterBool("sv_autodemorecord", qfalse, 0, "Automatically start from each connected client a demo.");
+	sv_demoCompletedCmd = Cvar_RegisterString("sv_demoCompletedCmd", "", 0, "This program will be executed when a demo has been completed. The demofilename will be passed as argument.");
 	sv_consayname = Cvar_RegisterString("sv_consayname", "^2Server: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 	sv_contellname = Cvar_RegisterString("sv_contellname", "^5Server^7->^5PM: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 
-	sv_master[0] = Cvar_RegisterString("sv_master1", "", CVAR_ARCHIVE, "A masterserver name");
-	sv_master[1] = Cvar_RegisterString("sv_master2", "", CVAR_ARCHIVE, "A masterserver name");
-	sv_master[2] = Cvar_RegisterString("sv_master3", "", CVAR_ARCHIVE, "A masterserver name");
-	sv_master[3] = Cvar_RegisterString("sv_master4", "", CVAR_ARCHIVE, "A masterserver name");
-	sv_master[4] = Cvar_RegisterString("sv_master5", "", CVAR_ARCHIVE, "A masterserver name");
+	sv_master[0] = Cvar_RegisterString("sv_master1", "", 0, "A masterserver name");
+	sv_master[1] = Cvar_RegisterString("sv_master2", "", 0, "A masterserver name");
+	sv_master[2] = Cvar_RegisterString("sv_master3", "", 0, "A masterserver name");
+	sv_master[3] = Cvar_RegisterString("sv_master4", "", 0, "A masterserver name");
+	sv_master[4] = Cvar_RegisterString("sv_master5", "", 0, "A masterserver name");
 
 	if(sv_authorizemode->integer < 1)
 		sv_master[5] = Cvar_RegisterString("sv_master6", "cod.iw4play.de", CVAR_ROM, "A masterserver name");
 	else
-		sv_master[5] = Cvar_RegisterString("sv_master6", "", CVAR_ARCHIVE, "A masterserver name");
+		sv_master[5] = Cvar_RegisterString("sv_master6", "", 0, "A masterserver name");
 
 	sv_master[6] = Cvar_RegisterString("sv_master7", MASTER_SERVER_NAME, CVAR_ROM, "Default masterserver name");
 	sv_master[7] = Cvar_RegisterString("sv_master8", MASTER_SERVER_NAME2, CVAR_ROM, "Default masterserver name");

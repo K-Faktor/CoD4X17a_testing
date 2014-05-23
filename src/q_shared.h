@@ -169,6 +169,8 @@ qboolean Q_isanumber( const char *s );
 qboolean Q_isintegral( float f );
 qboolean Q_isprintstring( char* s );
 
+typedef int fileHandle_t;
+
 #ifdef _MSC_VER
 int Q_vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
