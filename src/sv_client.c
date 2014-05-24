@@ -333,12 +333,11 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	int			qport;
 	int			challenge;
 	char			*password;
-	const char		*denied;
+	char			denied[MAX_STRING_CHARS];
+	const char		*denied2;
 	qboolean		pluginreject;
 	qboolean		canreserved;
-	char			buf[MAX_STRING_CHARS];
 
-	
 	Q_strncpyz( userinfo, SV_Cmd_Argv(1), sizeof(userinfo) );
 	challenge = atoi( Info_ValueForKey( userinfo, "challenge" ) );
 	qport = atoi( Info_ValueForKey( userinfo, "qport" ) );
@@ -418,8 +417,10 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 
 	Q_strncpyz(nick, Info_ValueForKey( userinfo, "name" ),33);
 
-	denied = SV_PlayerBannedByip(from, buf, sizeof(buf));
-	if(denied){
+	denied[0] = '\0';
+
+	SV_PlayerBannedByip(from, denied, sizeof(denied));
+	if(denied[0]){
             NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied);
 		Com_Printf("Rejecting a connection from a banned network address: %s\n", NET_AdrToString(from));
 	    Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
@@ -593,16 +594,16 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
         //    Com_sprintf(ret,sizeof(ret),"NoGUID*%.2x%.2x%.2x%.2x%.4x",from->ip[0],from->ip[1],from->ip[2],from->ip[3],from->port);
         //    Q_strncpyz(newcl->pbguid, ret, sizeof(newcl->pbguid));	// save the pbguid
 
-        denied = NULL;
+        denied[0] = '\0';
 
         // save the userinfo
         Q_strncpyz(newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
-        PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, &denied);
+        PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, denied, sizeof(denied));
 
-        denied = SV_PlayerIsBanned(newcl->uid, newcl->pbguid, from, buf, sizeof(buf));
+        SV_PlayerIsBanned(newcl->uid, newcl->pbguid, from, denied, sizeof(denied));
 
-        if(denied){
+        if(denied[0]){
                 NET_OutOfBandPrint( NS_SERVER, from, "error\n%s", denied);
 				Com_Printf("Rejecting a connection from a banned GUID/UID\n");
 				Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
@@ -636,11 +637,11 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
     newcl->clscriptid = Scr_AllocArray();
 
 	// get the game a chance to reject this connection or modify the userinfo
-	denied = ClientConnect(clientNum, newcl->clscriptid);
+	denied2 = ClientConnect(clientNum, newcl->clscriptid);
 
-	if ( denied ) {
-		NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied );
-		Com_Printf("Game rejected a connection: %s\n", denied);
+	if ( denied2 ) {
+		NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied2 );
+		Com_Printf("Game rejected a connection: %s\n", denied2);
 		SV_FreeClientScriptId(newcl);
 		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
 		return;
