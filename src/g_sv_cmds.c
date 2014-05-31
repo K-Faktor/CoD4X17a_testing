@@ -473,7 +473,7 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 	}
 
 	qboolean show = qtrue;
-	PHandler_Event(PLUGINS_ONMESSAGESENT, text, ent->s.number, &show);
+	PHandler_Event(PLUGINS_ONMESSAGESENT, text, ent->s.number, &show, mode);
 
 	if(!show)
 		return;
