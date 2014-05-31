@@ -32,7 +32,7 @@
 
 	PCL	void OnInfoRequest(pluginInfo_t *info);
 	PCL int OnInit();
-	PCL void OnMessageSent(char* message, int slot, qboolean *show);
+	PCL void OnMessageSent(char* message, int slot, qboolean *show, int mode);
 	PCL void OnPreFastRestart();
 	PCL void OnExitLevel();
 	PCL void OnPostFastRestart();
