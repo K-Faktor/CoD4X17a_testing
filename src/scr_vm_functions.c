@@ -1675,7 +1675,7 @@ void GScr_NewHudElem(){
         element->movestarttime = 0;
         element->movingtime = 0;
         element->fontscale = 0;
-        element->archived = 0;
+        element->archived = 1;
         element->var_14 = 0;
         element->var_15 = 0;
         element->var_16 = 0;
@@ -1755,7 +1755,7 @@ void GScr_NewClientHudElem(){
         element->movestarttime = 0;
         element->movingtime = 0;
         element->fontscale = 0;
-        element->archived = 0;
+        element->archived = 1;
         element->var_14 = 0;
         element->var_15 = 0;
         element->var_16 = 0;
