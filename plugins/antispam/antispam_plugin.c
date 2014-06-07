@@ -38,7 +38,7 @@ PCL int OnInit(){	// Funciton called on server initiation
 	Antispam_Initialize();
 	return 0;
 }
-PCL void OnMessageSent(char *message,int slot, qboolean *show){
+PCL void OnMessageSent(char *message,int slot, qboolean *show, int type){
 	if(!(*show))
 	    return;
 	if(!message){
