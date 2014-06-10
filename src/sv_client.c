@@ -1514,7 +1514,7 @@ __cdecl void SV_WriteDownloadToClient( client_t *cl, msg_t *msg ) {
 				Com_sprintf( errorMessage, sizeof( errorMessage ), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl->downloadName );
 			}
 			MSG_WriteByte( msg, svc_download );
-			MSG_WriteShort( msg, 0 ); // client is expecting block zero
+			MSG_WriteLong( msg, 0 ); // client is expecting block zero
 			MSG_WriteLong( msg, -1 ); // illegal file size
 			MSG_WriteString( msg, errorMessage );
 
