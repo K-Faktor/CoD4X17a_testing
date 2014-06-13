@@ -127,8 +127,8 @@ typedef struct playerState_s {
 	int		viewmodelIndex;  // 260
 
 	vec3_t		viewangles;  // 264
-	int		viewHeightTarget;  // 276
-	int		viewHeightCurrent;  // 280
+	float		viewHeightTarget;  // 276
+	float		viewHeightCurrent;  // 280
 	int		viewHeightLerpTime;  // 284
 	int		viewHeightLerpTarget;  // 288
 	int		viewHeightLerpDown;  // 292
@@ -199,8 +199,8 @@ typedef struct playerState_s {
 	int		dofNearEnd;  // 1596
 	int		dofFarStart;  // 1600
 	int		dofFarEnd;  // 1604
-	int		dofNearBlur;  // 1608
-	int		dofFarBlur;  // 1612
+	float		dofNearBlur;  // 1608
+	float		dofFarBlur;  // 1612
 	int		dofViewmodelStart;  // 1616
 	int		dofViewmodelEnd;  // 1620
 
