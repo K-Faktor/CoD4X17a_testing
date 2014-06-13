@@ -181,7 +181,7 @@ qboolean Sys_MemoryProtectWrite(void* startoffset, int len)
 {
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_READWRITE, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READWRITE, &oldProtect) == 0)
 	{
 	        Sys_ShowErrorDialog("Sys_MemoryProtectWrite");
             return qfalse;
@@ -195,7 +195,7 @@ qboolean Sys_MemoryProtectExec(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_EXECUTE_READ, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_EXECUTE_READ, &oldProtect) == 0)
 	{
             Sys_ShowErrorDialog("Sys_MemoryProtectExec");
             return qfalse;
@@ -209,7 +209,7 @@ qboolean Sys_MemoryProtectReadonly(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_READONLY, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READONLY, &oldProtect) == 0)
 	{
 	        Sys_ShowErrorDialog("Sys_MemoryProtectReadonly");
             return qfalse;
