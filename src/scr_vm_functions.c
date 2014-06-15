@@ -2031,6 +2031,96 @@ void GScr_AddScriptCommand()
 
 }
 
+
+
+void GScr_Spawn()
+{
+
+	int spawnflags;
+	int strindex;
+	gentity_t *gentity;
+	vec3_t origin;
+	mvabuf;
+
+	strindex = Scr_GetConstString( 0 );
+
+	Scr_GetVector(1, &origin);
+
+	if ( Scr_GetNumParam() > 2 )
+		spawnflags = Scr_GetInt(2);
+	else
+		spawnflags = 0;
+
+	gentity = G_Spawn();
+
+	Scr_SetString((unsigned short*)&gentity->constClassname, strindex);
+
+	gentity->r.currentOrigin[0] = origin[0];
+	gentity->r.currentOrigin[1] = origin[1];
+	gentity->r.currentOrigin[2] = origin[2];
+
+	gentity->spawnflags = spawnflags;
+
+	if ( G_CallSpawnEntity( gentity ) )
+	{
+		Scr_AddEntity( gentity );
+	}
+	else
+	{
+
+		Scr_Error( va("unable to spawn \"%s\" entity", SL_ConvertToString(strindex) ));
+	}
+}
+
+
+void GScr_SpawnHelicopter()
+{
+  int spawnflags;
+  const char *type;
+  const char *model;
+  gentity_t *newent;
+  gentity_t *ownerent;
+  vec3_t rotation;
+  vec3_t position;
+
+  ownerent = Scr_GetEntity(0);
+
+  if ( !ownerent->client )
+  {
+    Scr_ParamError(0, "Owner entity is not a player");
+  }
+  Scr_GetVector(1, &position);
+  Scr_GetVector(2, &rotation);
+  type = Scr_GetString(3);
+  model = Scr_GetString(4);
+
+  if ( Scr_GetNumParam() > 5 ){
+    spawnflags = Scr_GetInt(5);
+  }else{
+    spawnflags = 0;
+  }
+
+  newent = G_Spawn();
+
+  Scr_SetString((unsigned short*)&newent->constClassname, stringIndex.script_vehicle);
+
+  newent->r.currentOrigin[0] = position[0];
+  newent->r.currentOrigin[1] = position[1];
+  newent->r.currentOrigin[2] = position[2];
+  newent->r.currentAngles[0] = rotation[0];
+  newent->r.currentAngles[1] = rotation[1];
+  newent->r.currentAngles[2] = rotation[2];
+
+  newent->spawnflags = spawnflags;
+
+  G_SpawnHelicopter(newent, ownerent, type, model);
+
+  Scr_AddEntity(newent);
+}
+
+
+
+
 /*
 void ScrCmd_SetStance(scr_entref_t arg){
 

@@ -37,8 +37,10 @@
 #include "misc.h"
 #include "sys_cod4loader.h"
 #include "sec_update.h"
+#include "sec_crypto.h"
 #include "cmd.h"
 #include "xassets.h"
+
 
 #include <string.h>
 #include <unistd.h>
@@ -56,6 +58,7 @@
 #define DLLMOD_FILESIZE 2281820
 #define ELF_TEXTSECTIONLENGTH 1831332
 
+#define DLLMOD_HASH "cee9b3bebf21090df727a946e2a20d696548457a88a2fe74"
 
 void Sys_CoD4Linker();
 void Com_PatchError(void);
@@ -347,9 +350,12 @@ qboolean Sys_LoadImage( ){
 
     byte *fileimage;
     int len;
+    char hash[128];
+    long unsigned sizeofhash;
 
     /* Is this file here ? */
     len = FS_FOpenFileRead(BIN_FILENAME, NULL);
+
     if(len != DLLMOD_FILESIZE)
     {/* Nope !*/
 
@@ -364,17 +370,32 @@ qboolean Sys_LoadImage( ){
     Sec_Update( qfalse );
 
     len = FS_ReadFile(BIN_FILENAME, (void**)&fileimage);
+
+
     if(!fileimage)
     {
 	Com_PrintError("Couldn't open "BIN_FILENAME". CoD4 can not startup.\n");
 	return qfalse;
     }
+
     if(len != DLLMOD_FILESIZE)
     {
-	Com_PrintError(BIN_FILENAME" is corrupted! CoD4 can not startup.\n");
+	Com_PrintError(BIN_FILENAME" has an invalid length! CoD4 can not startup.\n");
 	FS_FreeFile(fileimage);
 	return qfalse;
     }
+
+    sizeofhash = sizeof(hash);
+    Sec_HashMemory(SEC_HASH_TIGER, fileimage, len, hash, &sizeofhash, qfalse);
+
+    if(Q_stricmp(hash ,DLLMOD_HASH))
+    {
+	Com_Printf("Tiger = %s\n", hash);
+	Com_PrintError(BIN_FILENAME" checksum missmatch! CoD4 can not startup.\n");
+	FS_FreeFile(fileimage);
+	return qfalse;
+    }
+
 
     Com_Memcpy(BIN_SECT_TEXT_START, fileimage + BIN_SECT_TEXT_FOFFSET, BIN_SECT_TEXT_LENGTH);
     Com_Memcpy(BIN_SECT_RODATA_START, fileimage + BIN_SECT_RODATA_FOFFSET, BIN_SECT_RODATA_LENGTH);

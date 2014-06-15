@@ -50,6 +50,19 @@ global G_SayTo
 G_SayTo:
 	jmp dword [oG_SayTo]
 
+global G_Spawn
+G_Spawn:
+	jmp dword [oG_Spawn]
+
+global G_CallSpawnEntity
+G_CallSpawnEntity:
+	jmp dword [oG_CallSpawnEntity]
+
+global G_SpawnHelicopter
+G_SpawnHelicopter:
+	jmp dword [oG_SpawnHelicopter]
+
+
 SECTION .rodata
 
 oG_RunFrame dd 0x80b61fc
@@ -59,3 +72,6 @@ oClientConnect dd 0x80a83d4
 oClientBegin dd 0x80a7700
 oStopFollowing dd 0x80af24c
 oG_SayTo dd 0x80ae6f4
+oG_Spawn dd 0x80cbbe8
+oG_CallSpawnEntity dd 0x80c8af8
+oG_SpawnHelicopter dd 0x80ba8d6

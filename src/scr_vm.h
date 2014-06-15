@@ -319,6 +319,7 @@ void __cdecl Scr_SetClassMap( unsigned int );
 void __cdecl Scr_AddFields( unsigned int, const char*, unsigned int );
 void __cdecl Scr_SetGenericField( void*, fieldtype_t, int );
 void __cdecl Scr_GetGenericField( void*, fieldtype_t, int );
+void __cdecl Scr_SetString(unsigned short *strindexptr, unsigned const stringindex);
 /*
 void __cdecl GScr_AddFieldsForEntity( void );
 tGScr_AddFieldsForEntity GScr_AddFieldsForEntity = (tGScr_AddFieldsForEntity(0x80c7808);
