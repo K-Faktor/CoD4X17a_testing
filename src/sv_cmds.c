@@ -768,7 +768,7 @@ static void Cmd_TempBanPlayer_f() {
     if ( Cmd_Argc() < 4) {
 		Com_Printf( "Usage: tempban <user> <time> <Reason for this ban (max. 126 chars)>\n" );
 		Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
-		Com_Printf( "Where time is one of the following: mXX | hXX | dXX\n" );
+		Com_Printf( "Where time is one of the following: XXm | XXh | XXd\n" );
 		Com_Printf( "Where reason for this ban is contains a description without the letters: \" ; %% / \\ \n" );		
 		Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
 		Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
