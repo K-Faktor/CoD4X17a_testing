@@ -713,12 +713,12 @@ gothandle:
 		//Messages and kick
 		if(cl.uid > 0){
 			Com_Printf( "Banrecord added for player: %s uid: %i\n", cl.cl->name, cl.uid);
-			SV_PrintAdministrativeLog( "banned player: %s uid: %i with the following reason: %s", cl.cl->name, cl.uid, banreason);
+			SV_PrintAdministrativeLog( "banned player: %s uid: %i IP: %s with the following reason: %s", cl.cl->name, cl.uid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), banreason);
 			Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour ban will %s expire\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
 				"never", cl.uid, SV_RemoteCmdGetInvokerUid(), banreason);
 		}else{
 			Com_Printf( "Banrecord added for player: %s guid: %s\n", cl.cl->name, cl.cl->pbguid);
-			SV_PrintAdministrativeLog( "banned player: %s guid: %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, banreason);
+			SV_PrintAdministrativeLog( "banned player: %s guid: %s IP: %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), banreason);
 			Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
 				cl.cl->pbguid, SV_RemoteCmdGetInvokerUid(), banreason);			
 			
@@ -768,7 +768,7 @@ static void Cmd_TempBanPlayer_f() {
     if ( Cmd_Argc() < 4) {
 		Com_Printf( "Usage: tempban <user> <time> <Reason for this ban (max. 126 chars)>\n" );
 		Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
-		Com_Printf( "Where time is one of the following: XXm | XXh | XXd\n" );
+		Com_Printf( "Where time is one of the following: mXX | hXX | dXX\n" );
 		Com_Printf( "Where reason for this ban is contains a description without the letters: \" ; %% / \\ \n" );		
 		Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
 		Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
@@ -865,14 +865,14 @@ gothandle:
 		if( cl.uid > 0 ){
 
 			Com_Printf( "Banrecord added for player: %s uid: %i\n", cl.cl->name, cl.uid);
-			SV_PrintAdministrativeLog( "temporarily banned player: %s uid: %i until %s with the following reason: %s", cl.cl->name, cl.uid, endtime, banreason);
+			SV_PrintAdministrativeLog( "temporarily banned player: %s uid: %i IP: %s until %s with the following reason: %s", cl.cl->name, cl.uid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
 			Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a temporarily ban onto this gameserver\nYour ban will expire on: %s UTC\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
 				endtime, cl.uid, SV_RemoteCmdGetInvokerUid(), banreason);
 			SV_DropClient(cl.cl, dropmsg);
 
 		}else{
 			Com_Printf( "Banrecord added for player: %s guid: %s\n", cl.cl->name, cl.cl->pbguid);
-			SV_PrintAdministrativeLog( "temporarily banned player: %s guid: %s until %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, endtime, banreason);
+			SV_PrintAdministrativeLog( "temporarily banned player: %s guid: %s IP: %s until %s with the following reason: %s", cl.cl->name, cl.cl->pbguid,NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
 			Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a temporarily ban onto this gameserver\nYour ban will expire on: %s UTC\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
 				endtime, cl.cl->pbguid, SV_RemoteCmdGetInvokerUid(), banreason);
 
@@ -887,11 +887,11 @@ gothandle:
 
 		if(cl.uid > 0){
 			Com_Printf( "Banrecord added for uid: %i\n", cl.uid);
-			SV_PrintAdministrativeLog( "temporarily banned player uid: %i until %s with the following reason: %s", cl.uid, endtime, banreason);
+			SV_PrintAdministrativeLog( "temporarily banned player uid: %i IP: %s until %s with the following reason: %s", cl.uid,NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
 
 		}else{
 			Com_Printf( "Banrecord added for guid: %s\n", guid);
-			SV_PrintAdministrativeLog( "temporarily banned player guid: %s until %s with the following reason: %s", guid, endtime, banreason);
+			SV_PrintAdministrativeLog( "temporarily banned player guid: %s IP: %s until %s with the following reason: %s", guid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
 		}
 	}
 	//InsertPluginEvent
