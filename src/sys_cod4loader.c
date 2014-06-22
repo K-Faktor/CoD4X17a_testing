@@ -223,6 +223,11 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x810e6ea, PbSvGameQuery);
 	SetJump(0x810e5dc, PbSvSendToClient);
 	SetJump(0x810e5b0, PbSvSendToAddrPort);
+	SetJump(0x810e916, DisablePbSv);
+	SetJump(0x810e952, EnablePbSv);
+#else
+	*(byte*)0x810e916 = 0xc3;
+	*(byte*)0x810e952 = 0xc3;
 #endif
 	SetJump(0x817e988, SV_ClipMoveToEntity);
 	SetJump(0x81d5a14, Sys_Error);
@@ -309,6 +314,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	*(byte*)0x817c7bc = 0xeb;
 	/* Kill the function DB_AddUserMapDir */
 	*(byte*)0x8204bc8 = 0xc3;
+	*(byte*)0x810f6b4 = 0xcc;
 
 }
 

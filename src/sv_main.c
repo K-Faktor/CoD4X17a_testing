@@ -2028,7 +2028,7 @@ void SV_InitCvarsOnce(void){
 	g_motd = Cvar_RegisterString("g_motd", "", CVAR_ARCHIVE, "Message of the day, which getting shown to every player on his 1st spawn");
 	sv_uptime = Cvar_RegisterString("uptime", "", CVAR_SERVERINFO | CVAR_ROM, "Time the server is running since last restart");
 	sv_autodemorecord = Cvar_RegisterBool("sv_autodemorecord", qfalse, 0, "Automatically start from each connected client a demo.");
-	sv_demoCompletedCmd = Cvar_RegisterString("sv_demoCompletedCmd", "", 0, "This program will be executed when a demo has been completed. The demofilename will be passed as argument.");
+	sv_demoCompletedCmd = Cvar_RegisterString("sv_demoCompletedCmd", "", com_securemode ? CVAR_INIT : 0 , "This program will be executed when a demo has been completed. The demofilename will be passed as argument.");
 	sv_consayname = Cvar_RegisterString("sv_consayname", "^2Server: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 	sv_contellname = Cvar_RegisterString("sv_contellname", "^5Server^7->^5PM: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 
@@ -2958,7 +2958,7 @@ __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 	// send a heartbeat to the master if needed
 	SV_MasterHeartbeat( HEARTBEAT_GAME );
 #ifdef PUNKBUSTER
-	PbServerProcessEvents();
+	PbServerProcessEvents( 0 );
 #endif
 	// if time is about to hit the 32nd bit, kick all clients
 	// and clear sv.time, rather

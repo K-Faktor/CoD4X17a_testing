@@ -258,6 +258,7 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	}
 	
 	if(i > 29 || i < 3) return qfalse;
+
 	Q_strncpyz(cmd,msg,i+1);
 
 

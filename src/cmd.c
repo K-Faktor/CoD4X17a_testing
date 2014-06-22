@@ -867,9 +867,25 @@ command line completion
 Cmd_CommandCompletion
 ============
 */
-void	Cmd_CommandCompletion( void(*callback)(const char *s) ) {
+void	Cmd_CommandCompletion( void(*callback)(const char *s) , const char* completionstr) {
+
 	cmd_function_t	*cmd;
-	
+
+
+#ifdef PUNKBUSTER
+	char pbcmd[256];
+
+	if(!Q_stricmpn( completionstr, "pb_", 3))
+	{
+		Q_strncpyz(pbcmd, completionstr, sizeof(pbcmd) );
+		PbServerCompleteCommand( pbcmd, sizeof(pbcmd) );
+		if(Q_stricmp( completionstr, pbcmd))
+		{
+			callback( pbcmd );
+		}
+		return;
+	}
+#endif
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next) {
 		callback( cmd->name );
 	}

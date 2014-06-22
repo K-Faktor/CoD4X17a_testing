@@ -73,6 +73,7 @@ extern cvar_t* com_developer;
 extern cvar_t* com_useFastfiles;
 extern cvar_t* com_animCheck;
 extern cvar_t* com_version;
+extern qboolean com_securemode;
 
 int Com_IsDeveloper();
 qboolean Com_LoadBinaryImage();

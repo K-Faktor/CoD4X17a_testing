@@ -667,3 +667,9 @@ void  __attribute__ ((noreturn)) Sys_ExitForOS( int exitCode )
 {
 	exit(exitCode);
 }
+
+int Sys_Chmod(const char* file, int mode)
+{
+    return chmod(file, mode);
+
+}

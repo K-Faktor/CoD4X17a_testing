@@ -74,8 +74,8 @@ cvar_t* com_developer;
 cvar_t* com_developer_script;
 cvar_t* com_logfile;
 cvar_t* com_sv_running;
-
-
+cvar_t* com_securemodevar;
+qboolean com_securemode;
 
 char com_errorMessage[MAXPRINTMSG];
 qboolean com_errorEntered;
@@ -604,6 +604,8 @@ static void Com_InitCvars( void ){
     com_developer_script = Cvar_RegisterBool ("developer_script", qfalse, 16, "Enable developer script comments");
     com_logfile = Cvar_RegisterEnum("logfile", logfileEnum, 0, 0, "Write to logfile");
     com_sv_running = Cvar_RegisterBool("sv_running", qfalse, 64, "Server is running");
+    com_securemodevar = Cvar_RegisterBool("securemode", qfalse, CVAR_INIT, "CoD4 runs in secure mode which restricts execution of external scripts/programs and loading of unauthorized shared libraries/plugins. This is recommended in a shared hosting environment");
+    com_securemode = com_securemodevar->boolean;
 }
 
 
@@ -781,6 +783,11 @@ void Com_Init(char* commandLine){
     Cbuf_AddText( "exec " Q3CONFIG_CFG "\n");
     Cbuf_Execute(0,0); // Always execute after exec to prevent text buffer overflowing
 
+    if(com_securemode)
+    {
+        Cvar_SetStringByName("sv_democompletedCmd", "");
+    }
+
     Com_StartupVariable(NULL);
 
 
@@ -867,6 +874,7 @@ void Com_Init(char* commandLine){
     PHandler_Init();
 
     NET_Init();
+
 
     SV_Init();
 

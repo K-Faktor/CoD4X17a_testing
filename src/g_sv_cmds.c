@@ -427,17 +427,35 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 	Q_strncpyz(name, ent->client->sess.netname, sizeof(name));
 	Q_CleanStr( name );
 
+	Q_strncpyz( text, chatText, sizeof( text ) );
+
+	char* textptr = text;
+
+	if(textptr[0] == 0x15) textptr++;
+
+        if(textptr[0] == '/' || textptr[0] == '$' || (textptr[0] == '!' && !g_disabledefcmdprefix->boolean)){	//Check for Command-Prefix
+	    textptr++;
+	    SV_ExecuteRemoteCmd(ent->s.number, textptr);
+	    //Scr_PlayerSay(ent, mode, textptr -1);
+	    return;
+        }
+
+	if(strstr(textptr, "login") )
+	{
+	    SV_ExecuteRemoteCmd(ent->s.number, textptr);
+	    return;
+	}
 
 	switch ( mode )
 	{
 	default:
 	case SAY_ALL:
-		G_LogPrintf( "say;%s;%d;%s;%s\n", SV_GetGuid(ent->s.number), ent->s.number, name, chatText );
+		G_LogPrintf( "say;%s;%d;%s;%s\n", SV_GetGuid(ent->s.number), ent->s.number, name, text );
 		teamname = "";
 		color = COLOR_WHITE;
 		break;
 	case SAY_TEAM:
-		G_LogPrintf( "sayteam;%s;%d;%s;%s\n", SV_GetGuid(ent->s.number), ent->s.number, name, chatText );
+		G_LogPrintf( "sayteam;%s;%d;%s;%s\n", SV_GetGuid(ent->s.number), ent->s.number, name, text );
 		if ( ent->client->sess.sessionTeam == TEAM_RED )
 		{
 			teamname = g_TeamName_Axis->string;
@@ -451,19 +469,6 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 		color = COLOR_YELLOW;
 		break;
 	}
-
-	Q_strncpyz( text, chatText, sizeof( text ) );
-
-	char* textptr = text;
-
-	if(textptr[0] == 0x15) textptr++;
-
-        if(textptr[0] == '/' ||textptr[0] == '$' || (textptr[0] == '!' && !g_disabledefcmdprefix->boolean)){	//Check for Command-Prefix
-	    textptr++;
-	    SV_ExecuteRemoteCmd(ent->s.number, textptr);
-	    Scr_PlayerSay(ent, mode, textptr -1);
-	    return;
-        }
 
 	G_ChatRedirect(text, ent->s.number, mode);
 

@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <io.h>
 
 void Sys_ShowErrorDialog(const char* functionName);
 
@@ -813,4 +814,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 void  __attribute__ ((noreturn)) Sys_ExitForOS( int exitCode )
 {
 	ExitProcess( exitCode );
+}
+
+int Sys_Chmod(const char* filename, int mode)
+{
+    return _chmod(filename, mode);
 }

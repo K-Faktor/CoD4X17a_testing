@@ -22,7 +22,6 @@ nasm -f elf src/scr_vm_hooks.asm     -o bin/scr_vm_hooks.o
 nasm -f elf src/g_sv_hooks.asm       -o bin/g_sv_hooks.o
 nasm -f elf src/server_hooks.asm     -o bin/server_hooks.o
 nasm -f elf src/msg_hooks.asm        -o bin/msg_hooks.o
-nasm -f elf src/punkbuster_hooks.asm -o bin/punkbuster_hooks.o
 nasm -f elf src/pluginexports.asm    -o bin/pluginexports.o
 
 echo Linking...
