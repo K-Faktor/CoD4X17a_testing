@@ -887,11 +887,11 @@ gothandle:
 
 		if(cl.uid > 0){
 			Com_Printf( "Banrecord added for uid: %i\n", cl.uid);
-			SV_PrintAdministrativeLog( "temporarily banned player uid: %i IP: %s until %s with the following reason: %s", cl.uid,NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
+			SV_PrintAdministrativeLog( "temporarily banned player uid: %i until %s with the following reason: %s", cl.uid, endtime, banreason);
 
 		}else{
 			Com_Printf( "Banrecord added for guid: %s\n", guid);
-			SV_PrintAdministrativeLog( "temporarily banned player guid: %s IP: %s until %s with the following reason: %s", guid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
+			SV_PrintAdministrativeLog( "temporarily banned player guid: %s until %s with the following reason: %s", guid, endtime, banreason);
 		}
 	}
 	//InsertPluginEvent
