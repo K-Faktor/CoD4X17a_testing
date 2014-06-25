@@ -275,7 +275,7 @@ Usage:	self SetGroundReferenceEnt( <other entity id> );
 */
 void PlayerCmd_SetGroundReferenceEnt(scr_entref_t arg)
 {
-	gentity_t* gentity, groundRefEnt;
+	gentity_t* gentity, *groundRefEnt;
     int entityNum = 0;
 	int otherEntityNum = 0;
 	mvabuf;
