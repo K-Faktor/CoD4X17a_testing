@@ -258,6 +258,65 @@ void PlayerCmd_SetGravity(scr_entref_t arg){
 
 }
 
+/*
+============
+PlayerCmd_SetGroundReferenceEnt
+
+The ground entity's rotation will be added onto the player's view. 
+In particular, this will cause the player's yaw to rotate around the 
+entity's z-axis instead of the world z-axis. You only need to call 
+this function once. After that, any rotation that the reference entity 
+undergoes will affect the player. Setting it back to 0 (worldspawn)
+should disable all further effects.
+
+Usage:	self SetGroundReferenceEnt( <other entity id> );
+		self SetGroundReferenceEnt( other GetEntityNumber() );
+============
+*/
+void PlayerCmd_SetGroundReferenceEnt(scr_entref_t arg)
+{
+	gentity_t* gentity, groundRefEnt;
+    int entityNum = 0;
+	int otherEntityNum = 0;
+	mvabuf;
+
+    if(HIWORD(arg)){
+        Scr_ObjectError("Not an entity");
+        return;
+
+    }else{
+        entityNum = LOWORD(arg);
+        gentity = &g_entities[entityNum];
+
+        if(!gentity->client){
+            Scr_ObjectError(va("Entity: %i is not a player", entityNum));
+            return;
+        }
+    }
+
+    if(Scr_GetNumParam() != 1){
+        Scr_Error("Usage: self SetGroundReferenceEnt( <entity id> )\n");
+    }
+
+	otherEntityNum = Scr_GetInt(0);
+    if( otherEntityNum >= 1024 || otherEntityNum < 0 ){
+        Scr_Error( "SetGroundReferenceEnt must be in range 0-1023\n" );
+        return;
+    }
+
+	groundRefEnt = &g_entities[entityNum];
+	if( groundRefEnt->client ){
+		Scr_ObjectError(va("player entity %i can not be a ground reference entity", otherEntityNum));
+		return;
+	}
+
+	if( !groundRefEnt->inuse ){
+		Scr_ObjectError(va("SetGroundReferenceEnt: entity %i does not exist", otherEntityNum));
+		return;
+	}
+
+	gentity->s.groundEntityNum = otherEntityNum;
+}
 
 /*
 ============

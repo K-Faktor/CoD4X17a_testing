@@ -429,6 +429,7 @@ void Scr_AddStockMethods(){
 //	Scr_AddMethod("setstance", ScrCmd_SetStance, 0);
 	Scr_AddMethod("setjumpheight", PlayerCmd_SetJumpHeight, 0);
 	Scr_AddMethod("setgravity", PlayerCmd_SetGravity, 0);
+	Scr_AddMethod("setgroundreferenceent", PlayerCmd_SetGroundReferenceEnt, 0);
 	Scr_AddMethod("setmovespeed", PlayerCmd_SetMoveSpeed, 0);
 	Scr_AddMethod("setcursorhint", (void*)0x80c6348, 0);
 	Scr_AddMethod("sethintstring", (void*)0x80c619e, 0);
