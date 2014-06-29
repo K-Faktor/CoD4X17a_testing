@@ -74,12 +74,13 @@ void PlayerCmd_GetUid(scr_entref_t arg){
         Scr_Error("Usage: self getUid()\n");
     }
 
-    if(!SV_UseUids()){
+    uid = SV_GetUid(entityNum);
+
+    if(uid < 1)
+    {
         Scr_AddInt(-1);
         return;
     }
-
-    uid = SV_GetUid(entityNum);
 
     Scr_AddInt(uid);
 }
@@ -310,10 +311,12 @@ void PlayerCmd_SetGroundReferenceEnt(scr_entref_t arg)
 		return;
 	}
 
+/*
 	if( !groundRefEnt->inuse ){
 		Scr_ObjectError(va("SetGroundReferenceEnt: entity %i does not exist", otherEntityNum));
 		return;
 	}
+*/
 
 	gentity->s.groundEntityNum = otherEntityNum;
 }
