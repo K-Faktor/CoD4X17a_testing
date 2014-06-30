@@ -491,7 +491,7 @@ gclient_t* G_GetPlayerState(int num);
 clientSession_t * G_GetClientState(int num);
 void SpawnVehicle(gentity_t* ent, const char* vehtype);
 void __cdecl G_VehSpawner(gentity_t *ent);
-
+void __cdecl G_SetModel(gentity_t *ent, const char* modelname);
 //This defines Cvars directly related to executable file
 #define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
 
