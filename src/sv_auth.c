@@ -370,6 +370,11 @@ void Auth_Login_f(){
     }
 
     clientNum = SV_RemoteCmdGetInvokerClnum();
+    if(clientNum < 0)
+    {
+        Com_Printf("This command can only used from the ingame adminsystem\n");
+	return;
+    }
     if(clientNum < 0 || clientNum > 63){
 	Com_Error(ERR_FATAL,"Auth_Login_f: index out of bounds.\n");
 	return;
