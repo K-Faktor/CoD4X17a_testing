@@ -281,7 +281,7 @@ char* __cdecl Scr_GetString( unsigned int );
 gentity_t* __cdecl Scr_GetEntity( unsigned int );
 short __cdecl Scr_GetConstString( unsigned int );
 unsigned int __cdecl Scr_GetType( unsigned int );
-void __cdecl Scr_GetVector( unsigned int, vec3_t* );
+void __cdecl Scr_GetVector( unsigned int, float* );
 void __cdecl Scr_Error( const char *string);
 void __cdecl Scr_SetLoading( qboolean );
 void __cdecl Scr_ParamError( int, const char *string);

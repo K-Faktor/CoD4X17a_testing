@@ -31,6 +31,7 @@ The 2nd argument will be either true = teamchat or false = chat to all
 Gets called after a script registered command has been called. See: addScriptCommand
 In 1st argument is the called function name. In 2nd argument are all remaining arguments.
 The player entity will be available (self) if a player has called this command. If this command gets called from rcon/console "self" is undefined.
+For safe usage you have to include a waittillframeend; statement into the callback function.
 ============================
 
 

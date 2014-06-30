@@ -27,6 +27,7 @@
 #include "sys_cod4defs.h"
 #include "sys_patch.h"
 #include "g_sv_shared.h"
+#include "g_shared.h"
 #include "punkbuster.h"
 #include "sys_net.h"
 #include "scr_vm.h"
@@ -215,6 +216,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetCall(0x80a68d0, Pmove_GetGravity);
 	SetJump(0x80a7b60, ClientSpawn);
 	SetJump(0x80ae962, G_Say);
+	SetJump(0x80ce1d8, G_VehSpawner);
 	SetJump(0x80adbf2, Cmd_CallVote_f);
 	SetCall(0x80b5a68, G_RegisterCvars);
 	SetJump(0x80c0b5a, GScr_LoadScripts);

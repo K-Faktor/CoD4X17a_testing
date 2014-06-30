@@ -62,6 +62,10 @@ global G_SpawnHelicopter
 G_SpawnHelicopter:
 	jmp dword [oG_SpawnHelicopter]
 
+global SpawnVehicle
+SpawnVehicle:
+	jmp dword [oSpawnVehicle]
+
 
 SECTION .rodata
 
@@ -75,3 +79,4 @@ oG_SayTo dd 0x80ae6f4
 oG_Spawn dd 0x80cbbe8
 oG_CallSpawnEntity dd 0x80c8af8
 oG_SpawnHelicopter dd 0x80ba8d6
+oSpawnVehicle dd 0x80cd966

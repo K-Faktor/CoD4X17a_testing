@@ -26,3 +26,5 @@ Use CodeCallback_ScriptCommand and addscriptcommand() instead  (see scriptcomman
 Added securemode which should prevent breaking out of cod4 server into shell.
 
 
+June 29 2014:
+Removed the non working recusion callback function for player's chat. Use plugins instead.

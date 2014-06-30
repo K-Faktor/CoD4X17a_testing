@@ -27,6 +27,7 @@
 
 //Only CoD4 gamescript callback functions here
 
+/*
 
 qboolean Scr_PlayerSay(gentity_t* from, int mode, const char* text){
 
@@ -35,7 +36,6 @@ qboolean Scr_PlayerSay(gentity_t* from, int mode, const char* text){
     int i, j;
 
     char textbuf[MAX_STRING_CHARS];
-    /* Clean control characters */
     for(i = 0, j = 0; i < sizeof(textbuf) -1 && text[i]; ++i)
     {
         textbuf[j] = text[i];
@@ -68,7 +68,7 @@ qboolean Scr_PlayerSay(gentity_t* from, int mode, const char* text){
 
 }
 
-
+*/
 
 qboolean Scr_ScriptCommand(int clientnum, const char* cmd, const char* args){
 

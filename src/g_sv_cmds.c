@@ -482,12 +482,13 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 
 	if(!show)
 		return;
-
+/*
+	Removed. Create a plugin if you want to capature chat.
 	if(Scr_PlayerSay(ent, mode, textptr))
 	{
 		return;
 	}
-
+*/
 	if(text[0] != 0x15 && !g_allowConsoleSay->boolean) 
 		return;
 

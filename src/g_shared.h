@@ -41,6 +41,32 @@
 #define MAX_SPAWN_VARS          64
 #define MAX_SPAWN_VARS_CHARS    2048
 
+typedef struct
+{
+  const char *key;
+  const char *value;
+}keyValueStr_t;
+
+
+typedef struct
+{
+  int isGameLoadingSpawn;
+  int numSpawnVars;
+  keyValueStr_t keyValPairs[64];
+  int numSpawnVarChars;
+  char spawnVarChars[2048];
+}SpawnVar_t;
+
+
+typedef struct
+{
+  void *name;
+  int offset;
+  int type;
+}cspField_t;
+
+
+
 typedef struct { //0x8370440
 	struct gclient_s    *clients;       // [maxclients]
 
@@ -85,6 +111,10 @@ typedef struct { //0x8370440
 	int voteYes;				//0xb28
 	int voteNo;				//0xb2c
 	int numVotingClients;			// set by CalculateRanks
+
+	SpawnVar_t spawnVars;
+	int savePersist;
+
 /*
 	// team voting state
 	char teamVoteString[2][MAX_STRING_CHARS];
@@ -162,8 +192,6 @@ typedef struct { //0x8370440
 
 	qboolean latchGametype;             // DHM - Nerve*/
 
-	int unknown43[643];
-	int savePersist;
 
 } level_locals_t;
 
@@ -461,6 +489,8 @@ void G_SetSavePersist(int val);
 int G_GetClientSize();
 gclient_t* G_GetPlayerState(int num);
 clientSession_t * G_GetClientState(int num);
+void SpawnVehicle(gentity_t* ent, const char* vehtype);
+void __cdecl G_VehSpawner(gentity_t *ent);
 
 //This defines Cvars directly related to executable file
 #define getcvaradr(adr) ((cvar_t*)(*(int*)(adr)))
@@ -468,3 +498,4 @@ clientSession_t * G_GetClientState(int num);
 #define g_maxclients getcvaradr(0x84bcfe8)
 
 #endif /*G_SHARED_H*/
+
