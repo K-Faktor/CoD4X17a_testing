@@ -2172,7 +2172,44 @@ void GScr_SpawnHelicopter()
 }
 
 
+void GScr_SpawnVehicle()
+{
 
+	int spawnflags;
+	gentity_t *gentity;
+	vec3_t origin;
+	char vehTypeStr[MAX_QPATH];
+	char vehModel[MAX_QPATH];
+
+	Scr_GetVector(0, origin);
+
+	if ( Scr_GetNumParam() != 4 )
+	{
+		Scr_Error("Usage: spawnvehicle <origin>, <spawnflags>, <vehicletype>, <xmodel>");
+		return;
+	}
+
+	spawnflags = Scr_GetInt(1);
+
+	gentity = G_Spawn();
+
+	Scr_SetString((unsigned short*)&gentity->constClassname, (unsigned short)stringIndex.script_vehicle);
+
+	gentity->r.currentOrigin[0] = origin[0];
+	gentity->r.currentOrigin[1] = origin[1];
+	gentity->r.currentOrigin[2] = origin[2];
+
+	gentity->spawnflags = spawnflags;
+
+        Q_strncpyz(vehTypeStr, Scr_GetString(2), sizeof(vehTypeStr));
+        Q_strncpyz(vehModel, Scr_GetString(3), sizeof(vehModel));
+
+        G_SetModel(gentity, vehModel);
+
+	SpawnVehicle( gentity, vehTypeStr );
+
+	Scr_AddEntity( gentity );
+}
 
 /*
 void ScrCmd_SetStance(scr_entref_t arg){

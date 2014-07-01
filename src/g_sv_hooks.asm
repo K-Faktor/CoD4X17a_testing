@@ -84,4 +84,4 @@ oG_Spawn dd 0x80cbbe8
 oG_CallSpawnEntity dd 0x80c8af8
 oG_SpawnHelicopter dd 0x80ba8d6
 oSpawnVehicle dd 0x80cd966
-oG_SetModel dd 0x80cae3e
+oG_SetModel dd 0x80cae3a

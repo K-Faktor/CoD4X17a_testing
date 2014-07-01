@@ -54,7 +54,8 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("logstring", (void*)0x80bac06, 0);
 	Scr_AddFunction("getent", (void*)0x80c7c72, 0);
 	Scr_AddFunction("getentarray", (void*)0x80c7b44, 0);
-	Scr_AddFunction("spawn", (void*)0x80bf638 /*GScr_Spawn*/, 0);
+	Scr_AddFunction("spawn", /* (void*)0x80bf638 */ GScr_Spawn, 0);
+	Scr_AddFunction("spawnvehicle", GScr_SpawnVehicle, 0);
 	Scr_AddFunction("spawnplane", (void*)0x80c0fde, 0);
 	Scr_AddFunction("spawnturret", (void*)0x80c0f52, 0);
 	Scr_AddFunction("precacheturret", (void*)0x80bcd46, 0);
