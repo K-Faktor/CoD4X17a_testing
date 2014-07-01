@@ -67,3 +67,11 @@ void __cdecl G_VehSpawner(gentity_t *ent)
     SpawnVehicle( ent, value );
 }
 
+void __cdecl G_VehCollmapSpawner(gentity_t *ent)
+{
+
+    ent->r.contents = 0;
+    ent->s.eType = 15;
+
+}
+

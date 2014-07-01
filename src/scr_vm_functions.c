@@ -2207,7 +2207,7 @@ void GScr_SpawnVehicle()
         G_SetModel(gentity, vehModel);
 
 	SpawnVehicle( gentity, vehTypeStr );
-
+	G_VehCollmapSpawner( gentity );
 	Scr_AddEntity( gentity );
 }
 
