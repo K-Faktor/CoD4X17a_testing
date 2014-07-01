@@ -258,7 +258,10 @@ FS_FCloseAll() function can close everything with one call
 FS_FOpen
 ============================
 Opens a file(name) inside current FS_GameDir. Mode is selectable. It can be either "read", "write", "append".
-It returns on success an integer greater 0. This is the filehandle.
+"read" = Read only
+"write" = Create a new empty file and write. Deletes already existing files with the same name.
+"append" = Appends to the end of an existing file. Behaves like "write" if file doesn't exists.
+It returns on success an integer greater 0. This is the filehandle. You have to check if this functions return value is greater than 0.
 Usage: int = FS_FOpen(string <filename>, string <mode>)
 
 
@@ -272,7 +275,8 @@ Usage: FS_FClose(int <filehandle>)
 FS_FCloseAll
 ============================
 Closes all opened files with one call. Opened files needs to be closed if they are no longer in use
-This function returns nothing. It needs no arguments
+This function returns nothing. It needs no arguments. When all files got closed you can no longer read/write on open files.
+It can be usefull to call after loading a new level when all variables and handles are purged.
 Usage: FS_FCloseAll()
 
 
@@ -287,14 +291,15 @@ FS_ReadLine
 ============================
 This function reads a line from opened file and returns it as a string.
 This function returns undefined if file can not be read (error) or you tried read from end of file.
-Otherwise it just returns the line with the \n character stripped
-Usage: string = FS_ReadFile(int <filehandle>)
+Otherwise it just returns the line with the \n character stripped. Calling this function is the only way to advance to next line inside a file.
+FS_ReadLine can be used only in read-mode.
+Usage: string = FS_ReadLine(int <filehandle>)
 
 
 FS_WriteLine
 ============================
 This function writes/append a line to an opened file.
-
+It does work in append/write mode only. You can not select a line. It will always append to last line.
 
 This function returns true on success, otherwise it just returns false
 Usage: bool = FS_WriteLine(int <filehandle>, string <data>)
