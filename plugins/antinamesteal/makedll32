@@ -1,5 +1,5 @@
 #!/bin/bash
-NAME='antinamestealing'
+NAME='antinamesteal'
 
 #Compiling: release
 echo `gcc -m32 -Wall -O1 -s -fvisibility=hidden -mtune=core2 -c *.c`
