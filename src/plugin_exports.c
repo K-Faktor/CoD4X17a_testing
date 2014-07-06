@@ -90,6 +90,10 @@ P_P_F int Plugin_Cmd_GetInvokerUid()
 {
     return SV_RemoteCmdGetInvokerUid();
 }
+P_P_F int Plugin_Cmd_GetInvokerSlot()
+{
+    return SV_RemoteCmdGetInvokerClnum();
+}
 P_P_F int Plugin_GetPlayerUid(int slot)
 {
     return svs.clients[slot].uid;
