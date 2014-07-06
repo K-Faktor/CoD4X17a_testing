@@ -96,6 +96,7 @@
 
     __cdecl clientScoreboard_t Plugin_GetClientScoreboard(int clientNum);    // Get the scoreboard of a player
     __cdecl int Plugin_Cmd_GetInvokerUid();                                  // Get UID of command invoker
+    __cdecl int Plugin_Cmd_GetInvokerSlot();                                 // Get slot number of command invoker
     __cdecl int Plugin_GetPlayerUid(int slot);                               // Get UID of a plyer
     __cdecl int Plugin_GetSlotCount();                                       // Get number of server slots
     __cdecl qboolean Plugin_IsSvRunning();                                   // Is server running?
