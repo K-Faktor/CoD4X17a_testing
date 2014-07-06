@@ -164,7 +164,7 @@ qboolean Sys_SetupThreadCallback(void* callbackMain,...)
 	}
 	
 	for ( tcb = thread_callbacks, i = 0; i < MAX_CALLBACKS ; i++) {
-		if(Sys_ThreadisSame(tcb->tid));
+		if(Sys_ThreadisSame(tcb->tid))
 		{
 			break;
 		}

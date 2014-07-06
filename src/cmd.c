@@ -316,8 +316,9 @@ void __cdecl Cbuf_Execute_WrapperIW(int arg1, int arg2)
 
 typedef struct cmd_function_s
 {
-	struct cmd_function_s   *next;
-	char                    *name;
+	struct cmd_function_s	*next;
+	const char		*name;
+	const char		*helptext;
 	int			minPower;
 	completionFunc_t	complete;
 	xcommand_t function;
@@ -332,7 +333,7 @@ static cmd_function_t *cmd_functions;
 Cmd_AddCommand
 ============
 */
-qboolean Cmd_AddCommandGeneric( const char *cmd_name, xcommand_t function, qboolean warn ) {
+qboolean Cmd_AddCommandGeneric( const char *cmd_name, const char* helptext, xcommand_t function, qboolean warn ) {
 
 	cmd_function_t  *cmd;
 
@@ -346,9 +347,15 @@ qboolean Cmd_AddCommandGeneric( const char *cmd_name, xcommand_t function, qbool
 			return qfalse;
 		}
 	}
-
 	// use a small malloc to avoid zone fragmentation
-	cmd = S_Malloc( sizeof( cmd_function_t ) + strlen(cmd_name) + 1);
+	if(helptext != NULL)
+	{
+		cmd = S_Malloc( sizeof( cmd_function_t ) + strlen(cmd_name) + 1 + strlen(helptext) + 1);
+		strcpy((char*)(cmd +1) + strlen(cmd_name) +1, helptext);
+		cmd->helptext = (char*)(cmd +1) + strlen(cmd_name) +1;
+	}else{
+		cmd = S_Malloc( sizeof( cmd_function_t ) + strlen(cmd_name) + 1);
+	}
 	strcpy((char*)(cmd +1), cmd_name);
 	cmd->name = (char*)(cmd +1);
 	cmd->function = function;
@@ -359,7 +366,12 @@ qboolean Cmd_AddCommandGeneric( const char *cmd_name, xcommand_t function, qbool
 
 qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function )
 {
-    return Cmd_AddCommandGeneric( cmd_name, function, qtrue );
+    return Cmd_AddCommandGeneric( cmd_name, NULL, function, qtrue );
+}
+
+qboolean Cmd_AddHCommand( const char *cmd_name, const char* helptext, xcommand_t function )
+{
+    return Cmd_AddCommandGeneric( cmd_name, NULL, function, qtrue );
 }
 
 
@@ -687,10 +699,10 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 
 		while ( 1 ) {
 			// skip whitespace
-			while ( *text && *text <= ' ' ) {
+			while ( *text != '\0' && (byte)*text <= ' ' ) {
 				text++;
 			}
-			if ( !*text ) {
+			if ( *text == '\0' ) {
 				return;			// all tokens parsed
 			}
 
@@ -704,7 +716,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 				while ( *text && ( text[0] != '*' || text[1] != '/' ) ) {
 					text++;
 				}
-				if ( !*text ) {
+				if ( *text == '\0') {
 					return;		// all tokens parsed
 				}
 				text += 2;
@@ -718,7 +730,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 		if ( !ignoreQuotes && *text == '"' ) {
 			param->cmd_argv[param->cmd_argc] = textOut;
 			text++;
-			while ( *text && *text != '"' && param->availableBuf > 1) {
+			while ( *text != '\0' && *text != '"' && param->availableBuf > 1) {
 				*textOut++ = *text++;
 				--param->availableBuf;
 			}
@@ -731,7 +743,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 			}
 			param->cmd_argc++;
 			param->cmd_argv[param->cmd_argc] = textOut;
-			if ( !*text ) {
+			if ( *text == '\0') {
 				return;		// all tokens parsed
 			}
 			text++;
@@ -743,7 +755,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 
 
 		// skip until whitespace, quote, or command
-		while ( *text > ' ' && param->availableBuf > 1) {
+		while ( (byte)*text > ' ' && param->availableBuf > 1) {
 			if ( !ignoreQuotes && text[0] == '"' ) {
 				break;
 			}
@@ -773,7 +785,7 @@ static void Cmd_TokenizeStringInternal( const char *text_in, qboolean ignoreQuot
 		param->cmd_argc++;
 		param->cmd_argv[param->cmd_argc] = textOut;
 
-		if ( !*text ) {
+		if ( *text == '\0') {
 			return;		// all tokens parsed
 		}
 	}
@@ -855,9 +867,25 @@ command line completion
 Cmd_CommandCompletion
 ============
 */
-void	Cmd_CommandCompletion( void(*callback)(const char *s) ) {
+void	Cmd_CommandCompletion( void(*callback)(const char *s) , const char* completionstr) {
+
 	cmd_function_t	*cmd;
-	
+
+
+#ifdef PUNKBUSTER
+	char pbcmd[256];
+
+	if(!Q_stricmpn( completionstr, "pb_", 3))
+	{
+		Q_strncpyz(pbcmd, completionstr, sizeof(pbcmd) );
+		PbServerCompleteCommand( pbcmd, sizeof(pbcmd) );
+		if(Q_stricmp( completionstr, pbcmd))
+		{
+			callback( pbcmd );
+		}
+		return;
+	}
+#endif
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next) {
 		callback( cmd->name );
 	}
@@ -951,7 +979,7 @@ static void Cmd_ListPower_f() {
 	i = 0;
 	hidden = 0;
 	for ( cmd = cmd_functions ; cmd ; cmd = cmd->next ) {
-		if ( (match && !Com_Filter( match, cmd->name, qfalse ))) {
+		if ( (match && !Com_Filter( match, (char*)cmd->name, qfalse ))) {
 			continue;
 		}
 		if(cmd->minPower == 100 || cmd->minPower == 0){
@@ -1088,7 +1116,7 @@ static void Cmd_List_f( void ) {
 
 	i = 0;
 	for ( cmd = cmd_functions ; cmd ; cmd = cmd->next ) {
-		if ( (match && !Com_Filter( match, cmd->name, qfalse )) 
+		if ( (match && !Com_Filter( match, (char*)cmd->name, qfalse )) 
 			|| SV_RemoteCmdGetInvokerPower() < cmd->minPower
 			|| ((cmd->minPower == 0) && SV_RemoteCmdGetInvokerPower() != 100))
 		{
@@ -1099,6 +1127,44 @@ static void Cmd_List_f( void ) {
 	}
 	Com_Printf( "%i commands\n", i );
 }
+
+
+/*
+============
+Cmd_Help_f
+============
+*/
+static void Cmd_Help_f( void ) {
+	cmd_function_t  *cmd;
+	char            *cmdname;
+
+	if ( Cmd_Argc() > 1 )
+	{
+		cmdname = Cmd_Argv( 1 );
+	}else{
+		Com_Printf("Displaying common help here\n\n");
+		return;
+	}
+
+	for ( cmd = cmd_functions ; cmd ; cmd = cmd->next ) {
+		if ( Q_stricmp( cmdname, cmd->name ) != 0)
+		{
+			continue;
+		}
+		if(cmd->helptext == NULL)
+		{
+			Com_Printf("For command %s is no help available\n", cmd->name);
+			return;
+		}
+		Com_Printf("Help for %s:\n", cmd->name);
+		Com_Printf("-------------------------------------\n");
+		Com_Printf("%s\n", cmd->helptext);
+		Com_Printf("-------------------------------------\n");
+		return;
+	}
+	Com_Printf( "Help: Couldn't find command: %s\n", cmdname );
+}
+
 
 /*
 ==================
@@ -1121,5 +1187,6 @@ void Cmd_Init( void ) {
 	Cmd_AddCommand( "vstr",Cmd_Vstr_f );
 	Cmd_AddCommand( "echo",Cmd_Echo_f );
 	Cmd_AddCommand( "wait", Cmd_Wait_f );
+	//Cmd_AddCommand( "help", Cmd_Help_f ); Not ready yet
 
 }

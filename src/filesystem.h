@@ -58,8 +58,6 @@
 //#define MAX_OSPATH 256
 #define MAX_FILE_HANDLES 64
 
-typedef int	fileHandle_t;
-
 // mode parm for FS_FOpenFile
 typedef enum {
 	FS_READ,
@@ -234,7 +232,7 @@ void FS_RemoveOSPath(const char *);
 qboolean FS_FileExistsOSPath( const char *ospath );
 void FS_RenameOSPath( const char *from_ospath, const char *to_ospath );
 qboolean FS_SetPermissionsExec(const char* ospath);
-
+__regparm3 void DB_BuildOSPath(const char *filename, int ffdir, int len, char *buff);
 
 #endif
 

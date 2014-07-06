@@ -233,7 +233,7 @@ void SV_RecordClient( client_t* cl, char* basename ) {
 
 
 	cl->demorecording = qtrue;
-	Q_strncpyz( cl->demoName, name, sizeof( cl->name ));
+	Q_strncpyz( cl->demoName, name, sizeof( cl->demoName ));
 
 	// don't start saving messages until a non-delta compressed message is received
 	cl->demowaiting = qtrue;

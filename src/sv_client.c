@@ -333,11 +333,11 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	int			qport;
 	int			challenge;
 	char			*password;
-	const char		*denied;
+	char			denied[MAX_STRING_CHARS];
+	const char		*denied2;
 	qboolean		pluginreject;
-	char			buf[MAX_STRING_CHARS];
+	qboolean		canreserved;
 
-	
 	Q_strncpyz( userinfo, SV_Cmd_Argv(1), sizeof(userinfo) );
 	challenge = atoi( Info_ValueForKey( userinfo, "challenge" ) );
 	qport = atoi( Info_ValueForKey( userinfo, "qport" ) );
@@ -417,9 +417,12 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 
 	Q_strncpyz(nick, Info_ValueForKey( userinfo, "name" ),33);
 
-	denied = SV_PlayerBannedByip(from, buf, sizeof(buf));
-	if(denied){
+	denied[0] = '\0';
+
+	SV_PlayerBannedByip(from, denied, sizeof(denied));
+	if(denied[0]){
             NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied);
+		Com_Printf("Rejecting a connection from a banned network address: %s\n", NET_AdrToString(from));
 	    Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
 	    return;
 	}
@@ -474,8 +477,18 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	//Get new slot for client
 	// check for privateClient password
 	password = Info_ValueForKey( userinfo, "password" );
-	if(!newcl){
-		if ( !strcmp( password, sv_privatePassword->string ) ) {
+	if(!newcl)
+	{
+		if ( !strcmp( password, sv_privatePassword->string ))
+		{ 
+			canreserved = qtrue;
+		}else{
+			canreserved = qfalse;
+		}
+		
+		PHandler_Event(PLUGINS_ONPLAYERWANTRESERVEDSLOT, from, svse.challenges[c].pbguid, userinfo, svse.challenges[c].ipAuthorize, &canreserved);
+		if ( canreserved == qtrue) 
+		{
 			for ( j = 0; j < sv_privateClients->integer ; j++) {
 				cl = &svs.clients[j];
 				if (cl->state == CS_FREE) {
@@ -573,40 +586,32 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
         Q_strncpyz(cl->originguid, svse.challenges[c].pbguid, 33);
         Q_strncpyz(cl->pbguid, svse.challenges[c].pbguid, 33);	// save the pbguid
 
-        if(psvs.useuids != 1){
-
-            if(newcl->authentication != 1 && sv_authorizemode->integer != -1){
-                Com_Memset(newcl->pbguid, '0', 8);
-            }
-
-        }else{
-
-            char ret[33];
-            Com_sprintf(ret,sizeof(ret),"NoGUID*%.2x%.2x%.2x%.2x%.4x",from->ip[0],from->ip[1],from->ip[2],from->ip[3],from->port);
-            Q_strncpyz(newcl->pbguid, ret, sizeof(newcl->pbguid));	// save the pbguid
+        if(newcl->authentication != 1 && sv_authorizemode->integer != -1){
+            Com_Memset(newcl->pbguid, '0', 8);
         }
 
-        denied = NULL;
+        //    char ret[33];
+        //    Com_sprintf(ret,sizeof(ret),"NoGUID*%.2x%.2x%.2x%.2x%.4x",from->ip[0],from->ip[1],from->ip[2],from->ip[3],from->port);
+        //    Q_strncpyz(newcl->pbguid, ret, sizeof(newcl->pbguid));	// save the pbguid
+
+        denied[0] = '\0';
 
         // save the userinfo
-        Q_strncpyz(newcl->userinfo, userinfo, 1024 );
+        Q_strncpyz(newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
-        PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, &denied);
+        PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, denied, sizeof(denied));
 
-        if(!psvs.useuids)
-            denied = SV_PlayerIsBanned(0, newcl->pbguid, from, buf, sizeof(buf));
+        SV_PlayerIsBanned(newcl->uid, newcl->pbguid, from, denied, sizeof(denied));
 
-        else if(newcl->uid != 0)
-            denied = SV_PlayerIsBanned(newcl->uid, NULL, from, buf, sizeof(buf));
-
-        if(denied){
+        if(denied[0]){
                 NET_OutOfBandPrint( NS_SERVER, from, "error\n%s", denied);
-		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
+				Com_Printf("Rejecting a connection from a banned GUID/UID\n");
+				Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
                 svse.connectqueue[i].lasttime = 0;
                 svse.connectqueue[i].firsttime = 0;
                 svse.connectqueue[i].challengeslot = 0;
-		svse.connectqueue[i].attempts = 0;
-		return;
+				svse.connectqueue[i].attempts = 0;
+				return;
         }
 
 #ifdef PUNKBUSTER
@@ -632,11 +637,11 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
     newcl->clscriptid = Scr_AllocArray();
 
 	// get the game a chance to reject this connection or modify the userinfo
-	denied = ClientConnect(clientNum, newcl->clscriptid);
+	denied2 = ClientConnect(clientNum, newcl->clscriptid);
 
-	if ( denied ) {
-		NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied );
-		Com_Printf("Game rejected a connection: %s\n", denied);
+	if ( denied2 ) {
+		NET_OutOfBandPrint( NS_SERVER, from, "error\n%s\n", denied2 );
+		Com_Printf("Game rejected a connection: %s\n", denied2);
 		SV_FreeClientScriptId(newcl);
 		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
 		return;
@@ -831,6 +836,9 @@ void SV_UserinfoChanged( client_t *cl ) {
 	cl->wwwDownload = qfalse;
 	if(Info_ValueForKey(cl->userinfo, "cl_wwwDownload"))
 		cl->wwwDownload = qtrue;
+		
+	PHandler_Event(PLUGINS_ONCLIENTUSERINFOCHANGED, cl);
+
 }
 
 
@@ -911,18 +919,18 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 		drop->state = CS_ZOMBIE;        // become free in a few seconds
 
 		HL2Rcon_EventClientLeave(clientnum);
-		PHandler_Event(PLUGINS_ONPLAYERDC,(void*)drop);	// Plugin event
+		PHandler_Event(PLUGINS_ONPLAYERDC, drop, reason);	// Plugin event
 		return;
 	}
 
 
-/*	if(SEH_StringEd_GetString( reason )){
+	if(SEH_StringEd_GetString( reason )){
 		var_01[0] = 0x14;
 		var_01[1] = 0;
-	}else{*/
+	}else{
 		var_01[0] = 0;
-/*	}
-*/
+	}
+
 	if(!Q_stricmp(reason, "EXE_DISCONNECTED")){
 		dropreason = "EXE_LEFTGAME";
 	} else {
@@ -1118,6 +1126,8 @@ __optimize3 __regparm3 void SV_UserMove( client_t *cl, msg_t *msg, qboolean delt
 		cl->clFrames++;
 
 		SV_ClientThink( cl, &cmds[ i ] );
+	
+		PHandler_Event(PLUGINS_ONCLIENTMOVECOMMAND, cl, &cmds[ i ]);
 
 		if(cl->demorecording && !cl->demowaiting)
 			SV_WriteDemoArchive(cl);
@@ -1162,6 +1172,10 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 		return;
 	}
 	client->enteredWorldTime = svs.time;
+	if(client->connectedTime == 0)
+	{
+		client->connectedTime = svs.time;
+	}
 	//Set gravity, speed... to system default
 	Pmove_ExtendedInitForClient(client);
 
@@ -1500,7 +1514,7 @@ __cdecl void SV_WriteDownloadToClient( client_t *cl, msg_t *msg ) {
 				Com_sprintf( errorMessage, sizeof( errorMessage ), "EXE_AUTODL_FILENOTONSERVER\x15%s", cl->downloadName );
 			}
 			MSG_WriteByte( msg, svc_download );
-			MSG_WriteShort( msg, 0 ); // client is expecting block zero
+			MSG_WriteLong( msg, 0 ); // client is expecting block zero
 			MSG_WriteLong( msg, -1 ); // illegal file size
 			MSG_WriteString( msg, errorMessage );
 

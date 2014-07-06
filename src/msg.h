@@ -67,6 +67,7 @@ void MSG_Copy(msg_t *buf, byte *data, int length, msg_t *src);
 void MSG_WriteByte( msg_t *msg, int c ) ;
 void MSG_WriteShort( msg_t *msg, int c ) ;
 void MSG_WriteLong( msg_t *msg, int c ) ;
+void MSG_WriteFloat( msg_t *msg, float c ) ;
 void MSG_WriteData( msg_t *buf, const void *data, int length ) ;
 void MSG_WriteString( msg_t *sb, const char *s ) ;
 void MSG_WriteBigString( msg_t *sb, const char *s ) ;

@@ -27,6 +27,7 @@
 #include "sys_cod4defs.h"
 #include "sys_patch.h"
 #include "g_sv_shared.h"
+#include "g_shared.h"
 #include "punkbuster.h"
 #include "sys_net.h"
 #include "scr_vm.h"
@@ -37,8 +38,10 @@
 #include "misc.h"
 #include "sys_cod4loader.h"
 #include "sec_update.h"
+#include "sec_crypto.h"
 #include "cmd.h"
 #include "xassets.h"
+
 
 #include <string.h>
 #include <unistd.h>
@@ -56,6 +59,7 @@
 #define DLLMOD_FILESIZE 2281820
 #define ELF_TEXTSECTIONLENGTH 1831332
 
+#define DLLMOD_HASH "cee9b3bebf21090df727a946e2a20d696548457a88a2fe74"
 
 void Sys_CoD4Linker();
 void Com_PatchError(void);
@@ -212,6 +216,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetCall(0x80a68d0, Pmove_GetGravity);
 	SetJump(0x80a7b60, ClientSpawn);
 	SetJump(0x80ae962, G_Say);
+	SetJump(0x80ce1d8, G_VehSpawner);
 	SetJump(0x80adbf2, Cmd_CallVote_f);
 	SetCall(0x80b5a68, G_RegisterCvars);
 	SetJump(0x80c0b5a, GScr_LoadScripts);
@@ -220,6 +225,11 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x810e6ea, PbSvGameQuery);
 	SetJump(0x810e5dc, PbSvSendToClient);
 	SetJump(0x810e5b0, PbSvSendToAddrPort);
+	SetJump(0x810e916, DisablePbSv);
+	SetJump(0x810e952, EnablePbSv);
+#else
+	*(byte*)0x810e916 = 0xc3;
+	*(byte*)0x810e952 = 0xc3;
 #endif
 	SetJump(0x817e988, SV_ClipMoveToEntity);
 	SetJump(0x81d5a14, Sys_Error);
@@ -237,6 +247,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x817a392, SV_WriteSnapshotToClient);
 	SetJump(0x8178da2, SV_Netchan_TransmitNextFragment);
 	SetJump(0x81d76ca, FS_GetBasepath); //Prior: GetCurrentWorkingDir
+	SetJump(0x8203f72, DB_BuildOSPath);
 	SetJump(0x808b764, ClientScr_SetSessionTeam);
 	SetJump(0x80b43c4, G_LogPrintf);
 	SetJump(0x80a8068, ClientUserinfoChanged);
@@ -257,6 +268,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x8177402, SV_SendServerCommand_IW);
 	SetJump(0x818e73c, FS_Restart);
 	SetJump(0x818726c, FS_FCloseFile);
+
 
 	SetJump(0x81a2944, Cvar_RegisterString);
 	SetJump(0x81a2d94, Cvar_RegisterBool);
@@ -300,6 +312,12 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	FS_PatchFileHandleData();
 	Com_PatchError();
 	Cvar_PatchModifiedFlags();
+	/* Override the unknown gametype -> defaulting to dm bug */
+	*(byte*)0x817c7bc = 0xeb;
+	/* Kill the function DB_AddUserMapDir */
+	*(byte*)0x8204bc8 = 0xc3;
+	*(byte*)0x810f6b4 = 0xcc;
+
 }
 
 
@@ -340,9 +358,12 @@ qboolean Sys_LoadImage( ){
 
     byte *fileimage;
     int len;
+    char hash[128];
+    long unsigned sizeofhash;
 
     /* Is this file here ? */
     len = FS_FOpenFileRead(BIN_FILENAME, NULL);
+
     if(len != DLLMOD_FILESIZE)
     {/* Nope !*/
 
@@ -357,17 +378,32 @@ qboolean Sys_LoadImage( ){
     Sec_Update( qfalse );
 
     len = FS_ReadFile(BIN_FILENAME, (void**)&fileimage);
+
+
     if(!fileimage)
     {
 	Com_PrintError("Couldn't open "BIN_FILENAME". CoD4 can not startup.\n");
 	return qfalse;
     }
+
     if(len != DLLMOD_FILESIZE)
     {
-	Com_PrintError(BIN_FILENAME" is corrupted! CoD4 can not startup.\n");
+	Com_PrintError(BIN_FILENAME" has an invalid length! CoD4 can not startup.\n");
 	FS_FreeFile(fileimage);
 	return qfalse;
     }
+
+    sizeofhash = sizeof(hash);
+    Sec_HashMemory(SEC_HASH_TIGER, fileimage, len, hash, &sizeofhash, qfalse);
+
+    if(Q_stricmp(hash ,DLLMOD_HASH))
+    {
+	Com_Printf("Tiger = %s\n", hash);
+	Com_PrintError(BIN_FILENAME" checksum missmatch! CoD4 can not startup.\n");
+	FS_FreeFile(fileimage);
+	return qfalse;
+    }
+
 
     Com_Memcpy(BIN_SECT_TEXT_START, fileimage + BIN_SECT_TEXT_FOFFSET, BIN_SECT_TEXT_LENGTH);
     Com_Memcpy(BIN_SECT_RODATA_START, fileimage + BIN_SECT_RODATA_FOFFSET, BIN_SECT_RODATA_LENGTH);
@@ -382,19 +418,7 @@ qboolean Sys_LoadImage( ){
     {
         return qfalse;
     }
-	/* 4 bytes is gap between .plt end and .text start */
-    if(Sys_MemoryProtectExec(BIN_SECT_PLT_START, BIN_SECT_PLT_LENGTH + BIN_SECT_TEXT_LENGTH + 4) == qfalse)
-    {
-        FS_FreeFile(fileimage);
-        return qfalse;
-    }
-/*
-    if(Sys_MemoryProtectExec(BIN_SECT_TEXT_START, BIN_SECT_TEXT_LENGTH) == qfalse)
-    {
-        FS_FreeFile(fileimage);
-        return qfalse;
-    }
-*/
+	/* The order here is crucial as this sections will overlap */
     if(Sys_MemoryProtectReadonly(BIN_SECT_RODATA_START, BIN_SECT_RODATA_LENGTH) == qfalse)
     {
         FS_FreeFile(fileimage);
@@ -410,7 +434,13 @@ qboolean Sys_LoadImage( ){
         FS_FreeFile(fileimage);
         return qfalse;
     }
-
+	/* 4 bytes is gap between .plt end and .text start */
+    if(Sys_MemoryProtectExec(BIN_SECT_PLT_START, BIN_SECT_PLT_LENGTH + BIN_SECT_TEXT_LENGTH + 4) == qfalse)
+    {
+        FS_FreeFile(fileimage);
+        return qfalse;
+    }
+	
     Sys_ImageRunInitFunctions();
 
     return qtrue;

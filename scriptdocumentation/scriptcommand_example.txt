@@ -38,6 +38,8 @@ Add to _globallogic this function
 Callback_ScriptCommand(command, arguments)
 {
 
+    waittillframeend;
+
     if( isDefined( self.name ) )
         print("Executed by: " + self.name + " Command:" + command + " Args: " + arguments + "\n");
     else

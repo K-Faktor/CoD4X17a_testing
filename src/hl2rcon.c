@@ -315,7 +315,8 @@ qboolean HL2Rcon_AddSourceRconAdminToList(const char* username, const char* pass
 
 
 
-void HL2Rcon_SourceRconDisconnect(netadr_t *from, int socketfd, int connectionId){
+void HL2Rcon_SourceRconDisconnect(netadr_t *from, int connectionId)
+{
 
 	if(connectionId < 0 || connectionId >=  MAX_RCONUSERS){
 		Com_Error(ERR_FATAL, "HL2Rcon_SourceRconDisconnect: bad connectionId: %i", connectionId);
@@ -330,7 +331,7 @@ void HL2Rcon_SourceRconDisconnect(netadr_t *from, int socketfd, int connectionId
 }
 
 
-tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int socketfd, int *connectionId){
+tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int *connectionId){
 
 	int packetlen;
 	int packettype;
@@ -627,7 +628,7 @@ void HL2Rcon_SayToPlayers(int clientnum, int team, const char* chatline)
 }
 
 
-qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int socketfd, int connectionId){
+qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int connectionId){
 
 //    int packetlen;
     int packettype;
@@ -677,7 +678,7 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int socketfd, int c
 		    //Adjust the length
 		    updatelen = (int32_t*)msg2.data;
 		    *updatelen = msg2.cursize - 4;
-		    NET_SendData(socketfd, &msg2);
+		    NET_SendData(from->sock, &msg2);
 		    break;
 
 		case SERVERDATA_EXECCOMMAND:
@@ -809,7 +810,7 @@ void HL2Rcon_EventLevelStart()
 
 void HL2Rcon_EventClientEnterTeam(int cid, int team){
 
-    byte data[2];
+    byte data[4];
 
     data[0] = RCONEVENT_PLAYERENTERTEAM;
     data[1] = cid;

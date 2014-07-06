@@ -379,6 +379,21 @@ int irand()
 
 }
 
+void SV_TrackHuffmanCompression(int compsize, int uncompsize)
+{
+    static int totaluncompbytes = 0;
+    static int totalcompbytes = 0;
+    static int nextnotifybytes = 0;
+
+    totaluncompbytes += uncompsize;
+    totalcompbytes += compsize;
+
+    if(totalcompbytes > nextnotifybytes)
+    {
+	Com_Printf("Huffman compressionrate: %.2f\n", (float)totaluncompbytes / (float)totalcompbytes);
+	nextnotifybytes += 1024*16;
+    }
+}
 
 /*
 =======================
@@ -393,7 +408,11 @@ __cdecl void SV_SendMessageToClient( msg_t *msg, client_t *client ) {
 
 	*(int32_t*)0x13f39080 = *(int32_t*)msg->data;
 
-	len = 4 + MSG_WriteBitsCompress( 0, msg->data + 4 ,(byte*)0x13f39084 ,msg->cursize - 4);
+	len = MSG_WriteBitsCompress( 0, msg->data + 4 ,(byte*)0x13f39084 , msg->cursize - 4);
+	
+//	SV_TrackHuffmanCompression(len, msg->cursize - 4);
+	
+	len += 4;
 
 	if(client->delayDropMsg){
 		SV_DropClient(client, client->delayDropMsg);

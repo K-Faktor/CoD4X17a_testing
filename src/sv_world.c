@@ -40,6 +40,50 @@ typedef struct moveclip_s{
 	int capsule;
 } moveclip_t;
 
+clipHandle_t SV_ClipHandleForEntity(sharedEntity_t *touch)
+{
+	if(!touch->r.bmodel)
+		return CM_TempBoxModel(touch->r.mins, touch->r.maxs, touch->r.contents);
+	else
+		return touch->s.index;
+}
+
+qboolean G_ShouldEntitiesClip(moveclip_t *clip, int touchNum, sharedEntity_t *touch)
+{
+	if(clip->passEntityNum < 64 && clip->contentmask & CONTENTS_PLAYERCLIP){
+
+		if(g_entities[clip->passEntityNum].client->sess.sessionTeam == TEAM_FREE){
+
+			if(!SV_FFAPlayerCanBlock()){
+				if(touchNum < 64)
+				{
+					return qfalse;
+
+				}else if(touch->r.ownerNum -1 < 64 && touch->r.contents & CONTENTS_PLAYERCLIP){
+					return qfalse;
+				}
+			}
+
+		}else if(!SV_FriendlyPlayerCanBlock()){
+
+			if(touchNum < 64)
+			{
+				if(OnSameTeam( &g_entities[clip->passEntityNum], &g_entities[touchNum]))
+				{
+					return qfalse;
+				}
+			}
+			else if( touch->r.ownerNum && touch->r.ownerNum <= 64 && touch->r.contents & CONTENTS_PLAYERCLIP)
+			{
+				if(OnSameTeam( &g_entities[clip->passEntityNum], &g_entities[touch->r.ownerNum -1]))
+				{
+					return qfalse;
+				}
+			}
+		}
+	}
+	return qtrue;
+}
 
 vec3_t vec3_origin = {0,0,0};
 
@@ -65,52 +109,19 @@ __cdecl void SV_ClipMoveToEntity(moveclip_t *clip, svEntity_t *entity, trace_t *
 			return;
 
 		if(touch->r.ownerNum){
-
+		
 			if( touch->r.ownerNum - 1 == clip->passEntityNum )
 			    return;
 
 
 			if( touch->r.ownerNum - 1 == clip->passOwnerNum )
 			    return;
+		
 		}
 
-		if(clip->passEntityNum < 64 && clip->contentmask & CONTENTS_PLAYERCLIP){
+		if(!G_ShouldEntitiesClip(clip, touchNum, touch))
+			return;
 
-			if(g_entities[clip->passEntityNum].client->sess.sessionTeam == TEAM_FREE){
-
-				if(!SV_FFAPlayerCanBlock()){
-					if(touchNum < 64){
-						return;
-
-					}else if(touch->r.ownerNum -1 < 64 && touch->r.contents & CONTENTS_PLAYERCLIP){
-						return;
-					}
-				}
-
-			}else if(!SV_FriendlyPlayerCanBlock()){
-
-				if(touchNum < 64){
-					if(OnSameTeam( &g_entities[clip->passEntityNum], &g_entities[touchNum]))
-						return;
-
-				}else if(touch->r.ownerNum -1 < 64 && touch->r.contents & CONTENTS_PLAYERCLIP){
-
-					if(OnSameTeam( &g_entities[clip->passEntityNum], &g_entities[touch->r.ownerNum -1]))
-						return;
-
-				}
-			}
-		}
-
-/*		if(clip->passEntityNum < 64 && touch->r.ownerNum < 64){
-			char temp1[48];
-			char temp2[48];
-			Q_strncpyz(temp1, Q_BitConv(clip->contentmask), sizeof(temp1));
-			Q_strncpyz(temp2, Q_BitConv(touch->r.contents), sizeof(temp2));
-
-			Com_Printf("EntityNum: %i O. EntityNum: %i Content s.: %s Content o.: %s t.: %i owns. %i owno: %i\n", 
-			clip->passEntityNum , touchNum, temp1, temp2, OnSameTeam( &g_entities[clip->passEntityNum], &g_entities[touch->r.ownerNum]),clip->passOwnerNum ,touch->r.ownerNum -1);
-		}*/
 	}
 
 
@@ -120,10 +131,7 @@ __cdecl void SV_ClipMoveToEntity(moveclip_t *clip, svEntity_t *entity, trace_t *
 	if(CM_TraceBox(clip->start, mins, maxs, trace->fraction))
 		return;
 	
-	if(!touch->r.bmodel)
-		clipHandle = CM_TempBoxModel(touch->r.mins, touch->r.maxs, touch->r.contents);
-	else
-		clipHandle = touch->s.index;
+	clipHandle = SV_ClipHandleForEntity(touch);
 
 	origin = touch->r.currentOrigin;
 	angles = touch->r.currentAngles;

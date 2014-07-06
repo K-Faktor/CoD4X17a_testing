@@ -182,6 +182,18 @@ void MSG_WriteLong( msg_t *msg, int c ) {
 	msg->cursize += sizeof(int32_t);
 }
 
+void MSG_WriteFloat( msg_t *msg, float c ) {
+	float *dst;
+
+	if ( msg->maxsize - msg->cursize < 4 ) {
+		msg->overflowed = qtrue;
+		return;
+	}
+	dst = (float*)&msg->data[msg->cursize];
+	*dst = c;
+	msg->cursize += sizeof(float);
+}
+
 void MSG_WriteData( msg_t *buf, const void *data, int length ) {
 	int i;
 	for(i=0; i < length; i++){
@@ -546,7 +558,7 @@ typedef struct {
 // using the stringizing operator to save typing...
 #define NETF( x ) # x,(int)&( (entityState_t*)0 )->x
 
-netField_t entityStateFields_0[] =
+netField_t entityStateFields[] =
 {
 	{ NETF( eType ), 8, 0},
 	{ NETF( lerp.eFlags ), -98, 0},
@@ -610,7 +622,7 @@ netField_t entityStateFields_0[] =
 };
 
 
-netField_t entityStateFields_1[] =
+netField_t playerEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 1},
 	{ NETF( lerp.pos.trBase[0] ), -92, 2},
@@ -674,7 +686,7 @@ netField_t entityStateFields_1[] =
 };
 
 
-netField_t entityStateFields_2[] =
+netField_t corpseEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 1},
 	{ NETF( lerp.eFlags ), -98, 0},
@@ -738,7 +750,7 @@ netField_t entityStateFields_2[] =
 };
 
 
-netField_t entityStateFields_3[] =
+netField_t itemEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 0},
 	{ NETF( lerp.pos.trBase[2] ), -90, 0},
@@ -802,7 +814,7 @@ netField_t entityStateFields_3[] =
 };
 
 
-netField_t entityStateFields_4[] =
+netField_t missleEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 0},
 	{ NETF( lerp.pos.trBase[1] ), -91, 0},
@@ -866,71 +878,7 @@ netField_t entityStateFields_4[] =
 };
 
 
-netField_t entityStateFields_5[] =
-{
-	{ NETF( eType ), 8, 0},
-	{ NETF( lerp.eFlags ), -98, 0},
-	{ NETF( lerp.pos.trBase[0] ), -92, 0},
-	{ NETF( lerp.pos.trBase[1] ), -91, 0},
-	{ NETF( lerp.pos.trBase[2] ), -90, 0},
-	{ NETF( events[0] ), -94, 0},
-	{ NETF( eventSequence ), 8, 0},
-	{ NETF( weapon ), 7, 0},
-	{ NETF( weaponModel ), 4, 0},
-	{ NETF( eventParms[0] ), -93, 0},
-	{ NETF( surfType ), 8, 0},
-	{ NETF( lerp.u.anonymous.data[0] ), 32, 0},
-	{ NETF( time2 ), -97, 0},
-	{ NETF( index ), 10, 0},
-	{ NETF( solid ), 24, 0},
-	{ NETF( un2 ), 32, 0},
-	{ NETF( groundEntityNum ), -96, 0},
-	{ NETF( un1 ), 8, 0},
-	{ NETF( lerp.apos.trBase[1] ), -100, 0},
-	{ NETF( lerp.apos.trBase[0] ), -100, 0},
-	{ NETF( clientNum ), 7, 0},
-	{ NETF( lerp.pos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[1] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[2] ), 0, 0},
-	{ NETF( events[1] ), -94, 0},
-	{ NETF( events[2] ), -94, 0},
-	{ NETF( eventParms[1] ), -93, 0},
-	{ NETF( eventParms[2] ), -93, 0},
-	{ NETF( lerp.pos.trTime ), -97, 0},
-	{ NETF( lerp.pos.trType ), 8, 0},
-	{ NETF( eventParm ), -93, 0},
-	{ NETF( lerp.apos.trType ), 8, 0},
-	{ NETF( events[3] ), -94, 0},
-	{ NETF( lerp.apos.trBase[2] ), -100, 0},
-	{ NETF( lerp.apos.trTime ), 32, 0},
-	{ NETF( lerp.apos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.apos.trDelta[2] ), 0, 0},
-	{ NETF( eventParms[3] ), -93, 0},
-	{ NETF( lerp.pos.trDuration ), 32, 0},
-	{ NETF( lerp.apos.trDelta[1] ), 0, 0},
-	{ NETF( attackerEntityNum ), 10, 0},
-	{ NETF( fWaistPitch ), 0, 0},
-	{ NETF( fTorsoPitch ), 0, 0},
-	{ NETF( iHeadIcon ), 4, 0},
-	{ NETF( iHeadIconTeam ), 2, 0},
-	{ NETF( lerp.apos.trDuration ), 32, 0},
-	{ NETF( torsoAnim ), 10, 0},
-	{ NETF( legsAnim ), 10, 0},
-	{ NETF( loopSound ), 8, 0},
-	{ NETF( otherEntityNum ), 10, 0},
-	{ NETF( lerp.u.anonymous.data[1] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[2] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[3] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[4] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[5] ), 32, 0},
-	{ NETF( partBits[0] ), 32, 0},
-	{ NETF( partBits[1] ), 32, 0},
-	{ NETF( partBits[2] ), 32, 0},
-	{ NETF( partBits[3] ), 32, 0},
-};
-
-
-netField_t entityStateFields_6[] =
+netField_t scriptMoverStateFields[] =
 {
 	{ NETF( eType ), 8, 0},
 	{ NETF( lerp.pos.trBase[0] ), -92, 0},
@@ -994,7 +942,7 @@ netField_t entityStateFields_6[] =
 };
 
 
-netField_t entityStateFields_7[] =
+netField_t soundBlendEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 1},
 	{ NETF( lerp.pos.trTime ), -97, 0},
@@ -1058,7 +1006,7 @@ netField_t entityStateFields_7[] =
 };
 
 
-netField_t entityStateFields_8[] =
+netField_t fxStateFields[] =
 {
 	{ NETF( eType ), 8, 0},
 	{ NETF( time2 ), -97, 0},
@@ -1122,7 +1070,7 @@ netField_t entityStateFields_8[] =
 };
 
 
-netField_t entityStateFields_9[] =
+netField_t loopFxEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 1},
 	{ NETF( lerp.pos.trTime ), -97, 0},
@@ -1186,135 +1134,7 @@ netField_t entityStateFields_9[] =
 };
 
 
-netField_t entityStateFields_10[] =
-{
-	{ NETF( eType ), 8, 0},
-	{ NETF( lerp.eFlags ), -98, 0},
-	{ NETF( lerp.pos.trBase[0] ), -92, 0},
-	{ NETF( lerp.pos.trBase[1] ), -91, 0},
-	{ NETF( lerp.pos.trBase[2] ), -90, 0},
-	{ NETF( events[0] ), -94, 0},
-	{ NETF( eventSequence ), 8, 0},
-	{ NETF( weapon ), 7, 0},
-	{ NETF( weaponModel ), 4, 0},
-	{ NETF( eventParms[0] ), -93, 0},
-	{ NETF( surfType ), 8, 0},
-	{ NETF( lerp.u.anonymous.data[0] ), 32, 0},
-	{ NETF( time2 ), -97, 0},
-	{ NETF( index ), 10, 0},
-	{ NETF( solid ), 24, 0},
-	{ NETF( un2 ), 32, 0},
-	{ NETF( groundEntityNum ), -96, 0},
-	{ NETF( un1 ), 8, 0},
-	{ NETF( lerp.apos.trBase[1] ), -100, 0},
-	{ NETF( lerp.apos.trBase[0] ), -100, 0},
-	{ NETF( clientNum ), 7, 0},
-	{ NETF( lerp.pos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[1] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[2] ), 0, 0},
-	{ NETF( events[1] ), -94, 0},
-	{ NETF( events[2] ), -94, 0},
-	{ NETF( eventParms[1] ), -93, 0},
-	{ NETF( eventParms[2] ), -93, 0},
-	{ NETF( lerp.pos.trTime ), -97, 0},
-	{ NETF( lerp.pos.trType ), 8, 0},
-	{ NETF( eventParm ), -93, 0},
-	{ NETF( lerp.apos.trType ), 8, 0},
-	{ NETF( events[3] ), -94, 0},
-	{ NETF( lerp.apos.trBase[2] ), -100, 0},
-	{ NETF( lerp.apos.trTime ), 32, 0},
-	{ NETF( lerp.apos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.apos.trDelta[2] ), 0, 0},
-	{ NETF( eventParms[3] ), -93, 0},
-	{ NETF( lerp.pos.trDuration ), 32, 0},
-	{ NETF( lerp.apos.trDelta[1] ), 0, 0},
-	{ NETF( attackerEntityNum ), 10, 0},
-	{ NETF( fWaistPitch ), 0, 0},
-	{ NETF( fTorsoPitch ), 0, 0},
-	{ NETF( iHeadIcon ), 4, 0},
-	{ NETF( iHeadIconTeam ), 2, 0},
-	{ NETF( lerp.apos.trDuration ), 32, 0},
-	{ NETF( torsoAnim ), 10, 0},
-	{ NETF( legsAnim ), 10, 0},
-	{ NETF( loopSound ), 8, 0},
-	{ NETF( otherEntityNum ), 10, 0},
-	{ NETF( lerp.u.anonymous.data[1] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[2] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[3] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[4] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[5] ), 32, 0},
-	{ NETF( partBits[0] ), 32, 0},
-	{ NETF( partBits[1] ), 32, 0},
-	{ NETF( partBits[2] ), 32, 0},
-	{ NETF( partBits[3] ), 32, 0},
-};
-
-
-netField_t entityStateFields_11[] =
-{
-	{ NETF( eType ), 8, 0},
-	{ NETF( lerp.eFlags ), -98, 0},
-	{ NETF( lerp.pos.trBase[0] ), -92, 0},
-	{ NETF( lerp.pos.trBase[1] ), -91, 0},
-	{ NETF( lerp.pos.trBase[2] ), -90, 0},
-	{ NETF( events[0] ), -94, 0},
-	{ NETF( eventSequence ), 8, 0},
-	{ NETF( weapon ), 7, 0},
-	{ NETF( weaponModel ), 4, 0},
-	{ NETF( eventParms[0] ), -93, 0},
-	{ NETF( surfType ), 8, 0},
-	{ NETF( lerp.u.anonymous.data[0] ), 32, 0},
-	{ NETF( time2 ), -97, 0},
-	{ NETF( index ), 10, 0},
-	{ NETF( solid ), 24, 0},
-	{ NETF( un2 ), 32, 0},
-	{ NETF( groundEntityNum ), -96, 0},
-	{ NETF( un1 ), 8, 0},
-	{ NETF( lerp.apos.trBase[1] ), -100, 0},
-	{ NETF( lerp.apos.trBase[0] ), -100, 0},
-	{ NETF( clientNum ), 7, 0},
-	{ NETF( lerp.pos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[1] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[2] ), 0, 0},
-	{ NETF( events[1] ), -94, 0},
-	{ NETF( events[2] ), -94, 0},
-	{ NETF( eventParms[1] ), -93, 0},
-	{ NETF( eventParms[2] ), -93, 0},
-	{ NETF( lerp.pos.trTime ), -97, 0},
-	{ NETF( lerp.pos.trType ), 8, 0},
-	{ NETF( eventParm ), -93, 0},
-	{ NETF( lerp.apos.trType ), 8, 0},
-	{ NETF( events[3] ), -94, 0},
-	{ NETF( lerp.apos.trBase[2] ), -100, 0},
-	{ NETF( lerp.apos.trTime ), 32, 0},
-	{ NETF( lerp.apos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.apos.trDelta[2] ), 0, 0},
-	{ NETF( eventParms[3] ), -93, 0},
-	{ NETF( lerp.pos.trDuration ), 32, 0},
-	{ NETF( lerp.apos.trDelta[1] ), 0, 0},
-	{ NETF( attackerEntityNum ), 10, 0},
-	{ NETF( fWaistPitch ), 0, 0},
-	{ NETF( fTorsoPitch ), 0, 0},
-	{ NETF( iHeadIcon ), 4, 0},
-	{ NETF( iHeadIconTeam ), 2, 0},
-	{ NETF( lerp.apos.trDuration ), 32, 0},
-	{ NETF( torsoAnim ), 10, 0},
-	{ NETF( legsAnim ), 10, 0},
-	{ NETF( loopSound ), 8, 0},
-	{ NETF( otherEntityNum ), 10, 0},
-	{ NETF( lerp.u.anonymous.data[1] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[2] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[3] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[4] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[5] ), 32, 0},
-	{ NETF( partBits[0] ), 32, 0},
-	{ NETF( partBits[1] ), 32, 0},
-	{ NETF( partBits[2] ), 32, 0},
-	{ NETF( partBits[3] ), 32, 0},
-};
-
-
-netField_t entityStateFields_12[] =
+netField_t helicopterEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 1},
 	{ NETF( lerp.pos.trBase[0] ), -92, 0},
@@ -1377,7 +1197,7 @@ netField_t entityStateFields_12[] =
 };
 
 
-netField_t entityStateFields_13[] =
+netField_t planeStateFields[] =
 {
 	{ NETF( eType ), 8, 1},
 	{ NETF( lerp.pos.trBase[0] ), 0, 2},
@@ -1442,7 +1262,7 @@ netField_t entityStateFields_13[] =
 };
 
 
-netField_t entityStateFields_14[] =
+netField_t vehicleEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 1},
 	{ NETF( lerp.pos.trTime ), -97, 0},
@@ -1506,135 +1326,7 @@ netField_t entityStateFields_14[] =
 };
 
 
-netField_t entityStateFields_15[] =
-{
-	{ NETF( eType ), 8, 0},
-	{ NETF( lerp.eFlags ), -98, 0},
-	{ NETF( lerp.pos.trBase[0] ), -92, 0},
-	{ NETF( lerp.pos.trBase[1] ), -91, 0},
-	{ NETF( lerp.pos.trBase[2] ), -90, 0},
-	{ NETF( events[0] ), -94, 0},
-	{ NETF( eventSequence ), 8, 0},
-	{ NETF( weapon ), 7, 0},
-	{ NETF( weaponModel ), 4, 0},
-	{ NETF( eventParms[0] ), -93, 0},
-	{ NETF( surfType ), 8, 0},
-	{ NETF( lerp.u.anonymous.data[0] ), 32, 0},
-	{ NETF( time2 ), -97, 0},
-	{ NETF( index ), 10, 0},
-	{ NETF( solid ), 24, 0},
-	{ NETF( un2 ), 32, 0},
-	{ NETF( groundEntityNum ), -96, 0},
-	{ NETF( un1 ), 8, 0},
-	{ NETF( lerp.apos.trBase[1] ), -100, 0},
-	{ NETF( lerp.apos.trBase[0] ), -100, 0},
-	{ NETF( clientNum ), 7, 0},
-	{ NETF( lerp.pos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[1] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[2] ), 0, 0},
-	{ NETF( events[1] ), -94, 0},
-	{ NETF( events[2] ), -94, 0},
-	{ NETF( eventParms[1] ), -93, 0},
-	{ NETF( eventParms[2] ), -93, 0},
-	{ NETF( lerp.pos.trTime ), -97, 0},
-	{ NETF( lerp.pos.trType ), 8, 0},
-	{ NETF( eventParm ), -93, 0},
-	{ NETF( lerp.apos.trType ), 8, 0},
-	{ NETF( events[3] ), -94, 0},
-	{ NETF( lerp.apos.trBase[2] ), -100, 0},
-	{ NETF( lerp.apos.trTime ), 32, 0},
-	{ NETF( lerp.apos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.apos.trDelta[2] ), 0, 0},
-	{ NETF( eventParms[3] ), -93, 0},
-	{ NETF( lerp.pos.trDuration ), 32, 0},
-	{ NETF( lerp.apos.trDelta[1] ), 0, 0},
-	{ NETF( attackerEntityNum ), 10, 0},
-	{ NETF( fWaistPitch ), 0, 0},
-	{ NETF( fTorsoPitch ), 0, 0},
-	{ NETF( iHeadIcon ), 4, 0},
-	{ NETF( iHeadIconTeam ), 2, 0},
-	{ NETF( lerp.apos.trDuration ), 32, 0},
-	{ NETF( torsoAnim ), 10, 0},
-	{ NETF( legsAnim ), 10, 0},
-	{ NETF( loopSound ), 8, 0},
-	{ NETF( otherEntityNum ), 10, 0},
-	{ NETF( lerp.u.anonymous.data[1] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[2] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[3] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[4] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[5] ), 32, 0},
-	{ NETF( partBits[0] ), 32, 0},
-	{ NETF( partBits[1] ), 32, 0},
-	{ NETF( partBits[2] ), 32, 0},
-	{ NETF( partBits[3] ), 32, 0},
-};
-
-
-netField_t entityStateFields_16[] =
-{
-	{ NETF( eType ), 8, 0},
-	{ NETF( lerp.eFlags ), -98, 0},
-	{ NETF( lerp.pos.trBase[0] ), -92, 0},
-	{ NETF( lerp.pos.trBase[1] ), -91, 0},
-	{ NETF( lerp.pos.trBase[2] ), -90, 0},
-	{ NETF( events[0] ), -94, 0},
-	{ NETF( eventSequence ), 8, 0},
-	{ NETF( weapon ), 7, 0},
-	{ NETF( weaponModel ), 4, 0},
-	{ NETF( eventParms[0] ), -93, 0},
-	{ NETF( surfType ), 8, 0},
-	{ NETF( lerp.u.anonymous.data[0] ), 32, 0},
-	{ NETF( time2 ), -97, 0},
-	{ NETF( index ), 10, 0},
-	{ NETF( solid ), 24, 0},
-	{ NETF( un2 ), 32, 0},
-	{ NETF( groundEntityNum ), -96, 0},
-	{ NETF( un1 ), 8, 0},
-	{ NETF( lerp.apos.trBase[1] ), -100, 0},
-	{ NETF( lerp.apos.trBase[0] ), -100, 0},
-	{ NETF( clientNum ), 7, 0},
-	{ NETF( lerp.pos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[1] ), 0, 0},
-	{ NETF( lerp.pos.trDelta[2] ), 0, 0},
-	{ NETF( events[1] ), -94, 0},
-	{ NETF( events[2] ), -94, 0},
-	{ NETF( eventParms[1] ), -93, 0},
-	{ NETF( eventParms[2] ), -93, 0},
-	{ NETF( lerp.pos.trTime ), -97, 0},
-	{ NETF( lerp.pos.trType ), 8, 0},
-	{ NETF( eventParm ), -93, 0},
-	{ NETF( lerp.apos.trType ), 8, 0},
-	{ NETF( events[3] ), -94, 0},
-	{ NETF( lerp.apos.trBase[2] ), -100, 0},
-	{ NETF( lerp.apos.trTime ), 32, 0},
-	{ NETF( lerp.apos.trDelta[0] ), 0, 0},
-	{ NETF( lerp.apos.trDelta[2] ), 0, 0},
-	{ NETF( eventParms[3] ), -93, 0},
-	{ NETF( lerp.pos.trDuration ), 32, 0},
-	{ NETF( lerp.apos.trDelta[1] ), 0, 0},
-	{ NETF( attackerEntityNum ), 10, 0},
-	{ NETF( fWaistPitch ), 0, 0},
-	{ NETF( fTorsoPitch ), 0, 0},
-	{ NETF( iHeadIcon ), 4, 0},
-	{ NETF( iHeadIconTeam ), 2, 0},
-	{ NETF( lerp.apos.trDuration ), 32, 0},
-	{ NETF( torsoAnim ), 10, 0},
-	{ NETF( legsAnim ), 10, 0},
-	{ NETF( loopSound ), 8, 0},
-	{ NETF( otherEntityNum ), 10, 0},
-	{ NETF( lerp.u.anonymous.data[1] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[2] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[3] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[4] ), 32, 0},
-	{ NETF( lerp.u.anonymous.data[5] ), 32, 0},
-	{ NETF( partBits[0] ), 32, 0},
-	{ NETF( partBits[1] ), 32, 0},
-	{ NETF( partBits[2] ), 32, 0},
-	{ NETF( partBits[3] ), 32, 0},
-};
-
-
-netField_t entityStateFields_17[] =
+netField_t eventEntityStateFields[] =
 {
 	{ NETF( eType ), 8, 0},
 	{ NETF( lerp.pos.trBase[0] ), -92, 0},
@@ -1704,28 +1396,28 @@ typedef struct {
 } netFieldList_t;
 
 //#define NETF( x ) # x,(int)&( (entityState_t*)0 )->x
-#define NETFE( x ) entityStateFields_##x , sizeof(entityStateFields_##x) / sizeof(netField_t)
+#define NETFE( x ) x , sizeof( x ) / sizeof(netField_t)
 
 netFieldList_t netFieldList[] =
 {
-	{NETFE(0)},
-	{NETFE(1)},
-	{NETFE(2)},
-	{NETFE(3)},
-	{NETFE(4)},
-	{NETFE(5)},
-	{NETFE(6)},
-	{NETFE(7)},
-	{NETFE(8)},
-	{NETFE(9)},
-	{NETFE(10)},
-	{NETFE(11)},
-	{NETFE(12)},
-	{NETFE(13)},
-	{NETFE(14)},
-	{NETFE(15)},
-	{NETFE(16)},
-	{NETFE(17)}
+	{NETFE( entityStateFields )},
+	{NETFE( playerEntityStateFields )},
+	{NETFE( corpseEntityStateFields )},
+	{NETFE( itemEntityStateFields )},
+	{NETFE( missleEntityStateFields )},
+	{NETFE( entityStateFields )},
+	{NETFE( scriptMoverStateFields )},
+	{NETFE( soundBlendEntityStateFields )},
+	{NETFE( fxStateFields )},
+	{NETFE( loopFxEntityStateFields )},
+	{NETFE( entityStateFields )},
+	{NETFE( entityStateFields )},
+	{NETFE( helicopterEntityStateFields )},
+	{NETFE( planeStateFields )},
+	{NETFE( vehicleEntityStateFields )},
+	{NETFE( entityStateFields )},
+	{NETFE( entityStateFields )},
+	{NETFE( eventEntityStateFields )}
 };
 
 

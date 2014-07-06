@@ -37,6 +37,7 @@ void PlayerCmd_GetPower(scr_entref_t arg);
 void PlayerCmd_GetUserinfo(scr_entref_t arg);
 void PlayerCmd_GetPing(scr_entref_t arg);
 void PlayerCmd_SetGravity(scr_entref_t arg);
+void PlayerCmd_SetGroundReferenceEnt(scr_entref_t arg);
 void PlayerCmd_SetJumpHeight(scr_entref_t arg);
 void PlayerCmd_SetMoveSpeed(scr_entref_t arg);
 void PlayerCmd_GetGeoLocation(scr_entref_t arg);
@@ -66,6 +67,9 @@ void PlayerCmd_spawn(scr_entref_t arg);
 void GScr_NewHudElem();
 void GScr_NewClientHudElem();
 void HECmd_SetText(scr_entref_t entnum);
+void GScr_Spawn();
+void GScr_SpawnVehicle();
+void GScr_SpawnHelicopter();
 
 __cdecl void ClientScr_SetSessionTeam(gclient_t* gcl, client_fields_t* gfl);
 

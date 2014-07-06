@@ -73,6 +73,7 @@ extern cvar_t* com_developer;
 extern cvar_t* com_useFastfiles;
 extern cvar_t* com_animCheck;
 extern cvar_t* com_version;
+extern qboolean com_securemode;
 
 int Com_IsDeveloper();
 qboolean Com_LoadBinaryImage();
@@ -85,6 +86,10 @@ qboolean Com_LoadBinaryImage();
 
 #define	PACKET_BACKUP		32
 #define PACKET_MASK ( PACKET_BACKUP - 1 )
+
+
+
+#define Q3CONFIG_CFG "q3config_server.cfg"
 
 
 #endif

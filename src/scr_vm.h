@@ -281,7 +281,7 @@ char* __cdecl Scr_GetString( unsigned int );
 gentity_t* __cdecl Scr_GetEntity( unsigned int );
 short __cdecl Scr_GetConstString( unsigned int );
 unsigned int __cdecl Scr_GetType( unsigned int );
-void __cdecl Scr_GetVector( unsigned int, vec3_t* );
+void __cdecl Scr_GetVector( unsigned int, float* );
 void __cdecl Scr_Error( const char *string);
 void __cdecl Scr_SetLoading( qboolean );
 void __cdecl Scr_ParamError( int, const char *string);
@@ -319,6 +319,7 @@ void __cdecl Scr_SetClassMap( unsigned int );
 void __cdecl Scr_AddFields( unsigned int, const char*, unsigned int );
 void __cdecl Scr_SetGenericField( void*, fieldtype_t, int );
 void __cdecl Scr_GetGenericField( void*, fieldtype_t, int );
+void __cdecl Scr_SetString(unsigned short *strindexptr, unsigned const stringindex);
 /*
 void __cdecl GScr_AddFieldsForEntity( void );
 tGScr_AddFieldsForEntity GScr_AddFieldsForEntity = (tGScr_AddFieldsForEntity(0x80c7808);
@@ -376,6 +377,7 @@ qboolean Scr_CloseScriptFile( fileHandle_t fh);
 int Scr_FS_Read( void *buffer, int len, fileHandle_t f );
 int Scr_FS_Write( const void *buffer, int len, fileHandle_t h );
 int Scr_FS_Seek( fileHandle_t f, long offset, int origin );
+qboolean Scr_FileExists( const char* filename );
 
 void GScr_MakeCvarServerInfo(void);
 void GScr_SetCvar();

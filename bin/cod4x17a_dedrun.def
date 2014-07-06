@@ -2,6 +2,7 @@ LIBRARY cod4x17a_dedrun.exe
 EXPORTS
 PHandler_Error
 Plugin_AddCommand
+Plugin_BanClient
 Plugin_BoldPrintf
 Plugin_ChatPrintf
 Plugin_ClientToSlot
@@ -28,6 +29,7 @@ Plugin_Cvar_VariableStringBuffer
 Plugin_Cvar_VariableValue
 Plugin_DPrintf
 Plugin_DoesServerUseUids
+Plugin_DropClient
 Plugin_Error
 Plugin_ExportFunction
 Plugin_FS_FCloseFile

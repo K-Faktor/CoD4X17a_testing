@@ -127,8 +127,8 @@ typedef struct playerState_s {
 	int		viewmodelIndex;  // 260
 
 	vec3_t		viewangles;  // 264
-	int		viewHeightTarget;  // 276
-	int		viewHeightCurrent;  // 280
+	float		viewHeightTarget;  // 276
+	float		viewHeightCurrent;  // 280
 	int		viewHeightLerpTime;  // 284
 	int		viewHeightLerpTarget;  // 288
 	int		viewHeightLerpDown;  // 292
@@ -199,8 +199,8 @@ typedef struct playerState_s {
 	int		dofNearEnd;  // 1596
 	int		dofFarStart;  // 1600
 	int		dofFarEnd;  // 1604
-	int		dofNearBlur;  // 1608
-	int		dofFarBlur;  // 1612
+	float		dofNearBlur;  // 1608
+	float		dofFarBlur;  // 1612
 	int		dofViewmodelStart;  // 1616
 	int		dofViewmodelEnd;  // 1620
 
@@ -305,22 +305,14 @@ typedef struct {
 // usercmd_t is sent to the server each client frame
 typedef struct usercmd_s {//Not Known
 	int			serverTime;
-/*
-	byte			u0;
-	byte			u1;
-	byte			u2;
-	float			angle1;
-	float			angle2;
-	float			angle3;
-
-	byte			u3;
-*/
-	int			unk4[4];
-
-	byte			weapon;     // weapon
-	byte			offHandIndex;
-	signed char	forwardmove, rightmove, upmove;
-	byte			unk[7];
+	int			buttons;
+	int			angles[3];
+	byte weapon;
+	byte offHandIndex;
+	byte field_16;
+	byte field_17;
+	int field_18;
+	int field_1C;
 } usercmd_t;
 
 

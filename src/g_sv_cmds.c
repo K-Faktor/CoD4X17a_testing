@@ -53,18 +53,18 @@ static int g_voteFlags;
 
 void Init_CallVote(void){
 
-	g_votedMapName = Cvar_RegisterString("g_votedMapName", "", CVAR_ARCHIVE, "Contains the voted mapname");
-	g_votedGametype = Cvar_RegisterString("g_votedGametype", "", CVAR_ARCHIVE, "Contains the voted gametype");
-	g_voteTime = Cvar_RegisterInt("g_voteTime", 30, 10, 90, CVAR_ARCHIVE, "Duration a called vote is active");
-	g_voteBanTime = Cvar_RegisterInt("g_voteBanTime", 15, 1, 240, CVAR_ARCHIVE, "Duration a player is banned after successful votekick");
-	g_voteMaxVotes = Cvar_RegisterInt("g_voteMaxVotes", 2, 1, 10, CVAR_ARCHIVE, "How many votes a player can call");
-	g_voteVoteGametypes = Cvar_RegisterString("g_voteVoteGametypes", "", CVAR_ARCHIVE, "Contains a list of gametypes that are allowed to vote. Empty list = all");
-	g_voteKickMinPlayers = Cvar_RegisterInt("g_voteKickMinPlayers", 5, 0, 14, CVAR_ARCHIVE, "How many active players are needed on server to allow calling a kickvote");
-	g_voteAllowMaprotate = Cvar_RegisterBool("g_voteAllowMaprotate", qtrue, CVAR_ARCHIVE, "Allow calling map_rotate votes");
-	g_voteAllowKick = Cvar_RegisterBool("g_voteAllowKick", qtrue, CVAR_ARCHIVE, "Allow calling kick votes");
-	g_voteAllowGametype = Cvar_RegisterBool("g_voteAllowGametype", qtrue, CVAR_ARCHIVE, "Allow calling gametype votes");
-	g_voteAllowMap = Cvar_RegisterInt("g_voteAllowMap", 1, 0, 2, CVAR_ARCHIVE, "Allow calling next map setting votes - 0=disabled, 1=only from rotation, 2=Any map");
-	g_voteAllowRestart = Cvar_RegisterBool("g_voteAllowRestart", qtrue, CVAR_ARCHIVE, "Allow calling map restart votes");
+	g_votedMapName = Cvar_RegisterString("g_votedMapName", "", 0, "Contains the voted mapname");
+	g_votedGametype = Cvar_RegisterString("g_votedGametype", "", 0, "Contains the voted gametype");
+	g_voteTime = Cvar_RegisterInt("g_voteTime", 30, 10, 90, 0, "Duration a called vote is active");
+	g_voteBanTime = Cvar_RegisterInt("g_voteBanTime", 15, 1, 240, 0, "Duration a player is banned after successful votekick");
+	g_voteMaxVotes = Cvar_RegisterInt("g_voteMaxVotes", 2, 1, 10, 0, "How many votes a player can call");
+	g_voteVoteGametypes = Cvar_RegisterString("g_voteVoteGametypes", "", 0, "Contains a list of gametypes that are allowed to vote. Empty list = all");
+	g_voteKickMinPlayers = Cvar_RegisterInt("g_voteKickMinPlayers", 5, 0, 14, 0, "How many active players are needed on server to allow calling a kickvote");
+	g_voteAllowMaprotate = Cvar_RegisterBool("g_voteAllowMaprotate", qtrue, 0, "Allow calling map_rotate votes");
+	g_voteAllowKick = Cvar_RegisterBool("g_voteAllowKick", qtrue, 0, "Allow calling kick votes");
+	g_voteAllowGametype = Cvar_RegisterBool("g_voteAllowGametype", qtrue, 0, "Allow calling gametype votes");
+	g_voteAllowMap = Cvar_RegisterInt("g_voteAllowMap", 1, 0, 2, 0, "Allow calling next map setting votes - 0=disabled, 1=only from rotation, 2=Any map");
+	g_voteAllowRestart = Cvar_RegisterBool("g_voteAllowRestart", qtrue, 0, "Allow calling map restart votes");
 
 	g_voteFlags = 0;
 	g_voteFlags |= g_voteAllowRestart->boolean ? VOTEFLAGS_RESTART : 0;
@@ -171,7 +171,7 @@ __cdecl void Cmd_CallVote_f( gentity_t *ent ) {
 
 		if( !(g_voteFlags & VOTEFLAGS_ANYMAP) ){
 			if(!strstr(SV_GetMapRotation(), va("map %s",arg3))){
-				SV_GameSendServerCommand( ent - g_entities, 0, va("%c \"Voting for map %s is disabled on this server\"\0", 0x65));
+				SV_GameSendServerCommand( ent - g_entities, 0, va("%c \"Voting for map %s is disabled on this server\"\0", 0x65, arg3));
 				return;
 			}
 		}
@@ -427,17 +427,35 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 	Q_strncpyz(name, ent->client->sess.netname, sizeof(name));
 	Q_CleanStr( name );
 
+	Q_strncpyz( text, chatText, sizeof( text ) );
+
+	char* textptr = text;
+
+	if(textptr[0] == 0x15) textptr++;
+
+        if(textptr[0] == '/' || textptr[0] == '$' || (textptr[0] == '!' && !g_disabledefcmdprefix->boolean)){	//Check for Command-Prefix
+	    textptr++;
+	    SV_ExecuteRemoteCmd(ent->s.number, textptr);
+	    //Scr_PlayerSay(ent, mode, textptr -1);
+	    return;
+        }
+
+	if(strstr(textptr, "login") )
+	{
+	    SV_ExecuteRemoteCmd(ent->s.number, textptr);
+	    return;
+	}
 
 	switch ( mode )
 	{
 	default:
 	case SAY_ALL:
-		G_LogPrintf( "say;%s;%d;%s;%s\n", SV_GetGuid(ent->s.number), ent->s.number, name, chatText );
+		G_LogPrintf( "say;%s;%d;%s;%s\n", SV_GetGuid(ent->s.number), ent->s.number, name, text );
 		teamname = "";
 		color = COLOR_WHITE;
 		break;
 	case SAY_TEAM:
-		G_LogPrintf( "sayteam;%s;%d;%s;%s\n", SV_GetGuid(ent->s.number), ent->s.number, name, chatText );
+		G_LogPrintf( "sayteam;%s;%d;%s;%s\n", SV_GetGuid(ent->s.number), ent->s.number, name, text );
 		if ( ent->client->sess.sessionTeam == TEAM_RED )
 		{
 			teamname = g_TeamName_Axis->string;
@@ -452,19 +470,6 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 		break;
 	}
 
-	Q_strncpyz( text, chatText, sizeof( text ) );
-
-	char* textptr = text;
-
-	if(textptr[0] == 0x15) textptr++;
-
-        if(textptr[0] == '/' ||textptr[0] == '$' || (textptr[0] == '!' && !g_disabledefcmdprefix->boolean)){	//Check for Command-Prefix
-	    textptr++;
-	    SV_ExecuteRemoteCmd(ent->s.number, textptr);
-	    Scr_PlayerSay(ent, mode, textptr -1);
-	    return;
-        }
-
 	G_ChatRedirect(text, ent->s.number, mode);
 
 	if ( target ) {
@@ -473,16 +478,17 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 	}
 
 	qboolean show = qtrue;
-	PHandler_Event(PLUGINS_ONMESSAGESENT, text, ent->s.number, &show);
+	PHandler_Event(PLUGINS_ONMESSAGESENT, text, ent->s.number, &show, mode);
 
 	if(!show)
 		return;
-
+/*
+	Removed. Create a plugin if you want to capature chat.
 	if(Scr_PlayerSay(ent, mode, textptr))
 	{
 		return;
 	}
-
+*/
 	if(text[0] != 0x15 && !g_allowConsoleSay->boolean) 
 		return;
 

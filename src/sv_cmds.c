@@ -640,17 +640,18 @@ static void Cmd_BanPlayer_f() {
     char banreason[256];
     char dropmsg[MAX_STRING_CHARS];
 
-    if ( Cmd_Argc() < 3) {
-        if(Q_stricmp(Cmd_Argv(0), "banUser") || Q_stricmp(Cmd_Argv(0), "banClient")){
-            if(Cmd_Argc() < 2){
-                Com_Printf( "Usage: banUser <user>\n" );
-				Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
-				Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
-				Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
-                return;
-            }
-
-        }else{
+    if(!Q_stricmp(Cmd_Argv(0), "banUser") || !Q_stricmp(Cmd_Argv(0), "banClient"))
+	{
+        if(Cmd_Argc() < 2){
+            Com_Printf( "Usage: banUser <user>\n" );
+			Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
+			Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
+			Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
+            return;
+        }
+	
+	}else{
+	    if ( Cmd_Argc() < 3) {
             Com_Printf( "Usage: permban <user> <Reason for this ban (max 126 chars)>\n" );
 			Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
 			Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
@@ -686,7 +687,7 @@ gothandle:
 	{
 		Com_Printf("Error: This player has no valid ID and got banned by IP only\n");
 		SV_DropClient(cl.cl, "Invalid ID\n");
-		SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, "INVALID USER", 0, "INVALID", 0, 0x7FFFFFFF);
+		SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, "INVALID USER", 0, "INVALID", 0, -1);
 		return;
 	}
 	
@@ -712,17 +713,17 @@ gothandle:
 		//Messages and kick
 		if(cl.uid > 0){
 			Com_Printf( "Banrecord added for player: %s uid: %i\n", cl.cl->name, cl.uid);
-			SV_PrintAdministrativeLog( "banned player: %s uid: %i with the following reason: %s", cl.cl->name, cl.uid, banreason);
+			SV_PrintAdministrativeLog( "banned player: %s uid: %i IP: %s with the following reason: %s", cl.cl->name, cl.uid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), banreason);
 			Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour ban will %s expire\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
 				"never", cl.uid, SV_RemoteCmdGetInvokerUid(), banreason);
 		}else{
 			Com_Printf( "Banrecord added for player: %s guid: %s\n", cl.cl->name, cl.cl->pbguid);
-			SV_PrintAdministrativeLog( "banned player: %s guid: %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, banreason);
+			SV_PrintAdministrativeLog( "banned player: %s guid: %s IP: %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), banreason);
 			Com_sprintf(dropmsg, sizeof(dropmsg), "You have been permanently banned on this server\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
 				cl.cl->pbguid, SV_RemoteCmdGetInvokerUid(), banreason);			
 			
 			if(cl.cl->authentication < 1)
-				SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, banreason, 0, cl.cl->pbguid, 0, 0x7FFFFFFF);
+				SV_PlayerAddBanByip(&cl.cl->netchan.remoteAddress, banreason, 0, cl.cl->pbguid, 0, -1);
 		}
 		SV_DropClient(cl.cl, dropmsg);
 
@@ -767,7 +768,7 @@ static void Cmd_TempBanPlayer_f() {
     if ( Cmd_Argc() < 4) {
 		Com_Printf( "Usage: tempban <user> <time> <Reason for this ban (max. 126 chars)>\n" );
 		Com_Printf( "Where user is one of the following: online-playername | online-playerslot | guid | uid\n" );
-		Com_Printf( "Where time is one of the following: mXX | hXX | dXX\n" );
+		Com_Printf( "Where time is one of the following: XXm | XXh | XXd\n" );
 		Com_Printf( "Where reason for this ban is contains a description without the letters: \" ; %% / \\ \n" );		
 		Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
 		Com_Printf( "guid is an hex decimal string with length of 8 characters\n" );
@@ -864,14 +865,14 @@ gothandle:
 		if( cl.uid > 0 ){
 
 			Com_Printf( "Banrecord added for player: %s uid: %i\n", cl.cl->name, cl.uid);
-			SV_PrintAdministrativeLog( "temporarily banned player: %s uid: %i until %s with the following reason: %s", cl.cl->name, cl.uid, endtime, banreason);
+			SV_PrintAdministrativeLog( "temporarily banned player: %s uid: %i IP: %s until %s with the following reason: %s", cl.cl->name, cl.uid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
 			Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a temporarily ban onto this gameserver\nYour ban will expire on: %s UTC\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
 				endtime, cl.uid, SV_RemoteCmdGetInvokerUid(), banreason);
 			SV_DropClient(cl.cl, dropmsg);
 
 		}else{
 			Com_Printf( "Banrecord added for player: %s guid: %s\n", cl.cl->name, cl.cl->pbguid);
-			SV_PrintAdministrativeLog( "temporarily banned player: %s guid: %s until %s with the following reason: %s", cl.cl->name, cl.cl->pbguid, endtime, banreason);
+			SV_PrintAdministrativeLog( "temporarily banned player: %s guid: %s IP: %s until %s with the following reason: %s", cl.cl->name, cl.cl->pbguid,NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
 			Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a temporarily ban onto this gameserver\nYour ban will expire on: %s UTC\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
 				endtime, cl.cl->pbguid, SV_RemoteCmdGetInvokerUid(), banreason);
 
@@ -1119,16 +1120,25 @@ static void Cmd_ExecuteTranslatedCommand_f(){
                 cmdstring += 4;
             }else if(!Q_strncmp(cmdstring, "$arg", 4)){
                 if(!*Cmd_Argv(i)){
-                    Com_Printf("Not enought arguments to this command\n");
-                    return;
+                    cmdstring += 4;
+                    if(*cmdstring == ':' && *(cmdstring + 1) != ' '){ // Default argument in place!
+                        ++cmdstring; // Just advance the pointer and read in the argument as any other part of the string
+                    }else{
+                        Com_Printf("Not enough arguments to this command\n");
+                        return;
+                    }
+                } else{
+                    cmdstring += 4;
+                    if(*cmdstring == ':') // Skip default arg (if any)
+                        while(*cmdstring != ' ' && *cmdstring != ';' && *cmdstring) ++cmdstring;
+                	
+                    if(strchr(Cmd_Argv(i), ';') || strchr(Cmd_Argv(i), '\n')){
+                        return;
+                    }
+                    Com_sprintf(tmp, sizeof(outstr) - (tmp - outstr), "%s", Cmd_Argv(i));
+                    tmp += strlen(tmp);
+                   i++;
                 }
-                if(strchr(Cmd_Argv(i), ';') || strchr(Cmd_Argv(i), '\n')){
-                    return;
-                }
-                Com_sprintf(tmp, sizeof(outstr) - (tmp - outstr), "%s", Cmd_Argv(i));
-                cmdstring += 4;
-                tmp += strlen(tmp);
-                i++;
             }
         }
 
@@ -1159,7 +1169,7 @@ static void Cmd_AddTranslatedCommand_f() {
     int i;
 
     if ( Cmd_Argc() != 3) {
-        Com_Printf( "Usage: addCommand <commandname> <\"string to execute\"> String can contain: $uid $clnum $pow $arg\n" );
+        Com_Printf( "Usage: addCommand <commandname> <\"string to execute\"> String can contain: $uid $clnum $pow $arg $arg:default\n" );
         return;
     }
 

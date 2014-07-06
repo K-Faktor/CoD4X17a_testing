@@ -1347,7 +1347,7 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep )
 char* Q_BitConv(int val){
 
 	int i, j;
-	static char buf[39];
+	static char buf[40];
 	memset(buf,'?',sizeof(buf));
 
 	for(j = 0, i = 38; i >= 0; i--){

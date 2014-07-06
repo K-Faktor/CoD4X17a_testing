@@ -906,6 +906,266 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 }
 
 
+void SVC_SourceEngineQuery_Info( netadr_t* from )
+{
+
+	msg_t msg;
+	int i, humans, bots;
+	byte buf[MAX_INFO_STRING];
+
+
+
+	// Allow getstatus to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit( &querylimit.infoBucket, 100, 100000 ) ) {
+	//	Com_DPrintf( "SVC_Info: overall rate limit exceeded, dropping request\n" );
+		return;
+	}
+
+	// Prevent using getstatus as an amplifier
+	if ( SVC_RateLimitAddress( from, 4, sv_queryIgnoreTime->integer*1000 )) {
+	//	Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( *from ) );
+		return;
+	}
+
+	MSG_Init(&msg, buf, sizeof(buf));
+	MSG_WriteLong(&msg, -1);
+	MSG_WriteByte(&msg, 'I');
+	MSG_WriteByte(&msg, sv_protocol->integer);
+	MSG_WriteString(&msg, sv_hostname->string);
+	MSG_WriteString(&msg, sv_mapname->string);
+	if(fs_gameDirVar->string[0] == '\0'){
+		MSG_WriteString(&msg, "main");
+	}else{
+		MSG_WriteString(&msg, fs_gameDirVar->string);
+	}
+	MSG_WriteString(&msg, "Call of Duty 4 - Modern Warfare");
+	MSG_WriteShort(&msg, 7940);
+
+	// don't count privateclients
+	bots = humans = 0;
+	for ( i = 0 ; i < sv_maxclients->integer ; i++ )
+	{
+		if ( svs.clients[i].state >= CS_CONNECTED )
+		{
+			if (svs.clients[i].netchan.remoteAddress.type != NA_BOT) {
+				humans++;
+			}else{
+				bots++;
+			}
+		}
+	}
+
+	MSG_WriteByte(&msg, humans);
+	MSG_WriteByte(&msg, sv_maxclients->integer - sv_privateClients->integer);
+	MSG_WriteByte(&msg, bots);
+	MSG_WriteByte(&msg, 'd');
+
+#ifdef _WIN32
+	MSG_WriteByte(&msg, 'w');
+#else
+    #ifdef MACOS_X
+	MSG_WriteByte(&msg, 'm');
+    #else
+	MSG_WriteByte(&msg, 'l');
+    #endif
+#endif
+
+        if(*sv_password->string){
+		MSG_WriteByte(&msg, 1);
+	}else{
+		MSG_WriteByte(&msg, 0);
+	}
+	MSG_WriteByte(&msg, 0);
+	MSG_WriteString(&msg, "1.7a");
+
+	NET_SendPacket(NS_SERVER, msg.cursize, msg.data, from);
+
+}
+
+
+void SVC_SourceEngineQuery_Challenge( netadr_t* from )
+{
+	msg_t msg;
+	byte buf[MAX_INFO_STRING];
+
+	MSG_Init(&msg, buf, sizeof(buf));
+
+	MSG_WriteLong(&msg, -1);
+
+	MSG_WriteByte(&msg, 'A');
+
+	MSG_WriteLong(&msg, NET_CookieHash(from));
+
+	NET_SendPacket(NS_SERVER, msg.cursize, msg.data, from);
+}
+
+#define SPLIT_SIZE 1248
+
+void SVC_SourceEngineQuery_SendSplitMessage( netadr_t* from, msg_t* longmsg )
+{
+	msg_t msg;
+	static int seq;
+	byte buf[SPLIT_SIZE + 100];
+	int i, numpackets;
+
+	seq++;
+
+	/* In case this packet is short enough */
+	if(longmsg->cursize <= SPLIT_SIZE)
+	{
+		NET_SendPacket(NS_SERVER, longmsg->cursize, longmsg->data, from);
+		return;
+	}
+	/* This will become a split response */
+	
+	MSG_Init(&msg, buf, sizeof(buf));
+
+	numpackets = 1 + (longmsg->cursize / SPLIT_SIZE);
+
+	for(i = 0; i < numpackets; i++)
+	{
+		MSG_Clear(&msg);
+		/* writing the split header */
+		MSG_WriteLong(&msg, -2);
+		/* An unique number */
+		MSG_WriteLong(&msg, seq);
+		/* Total number of packets */
+		MSG_WriteByte(&msg, numpackets);
+		/* Packetnumber */
+		MSG_WriteByte(&msg, i);
+		/* Splitsize */
+		MSG_WriteShort(&msg, SPLIT_SIZE);
+
+		if(longmsg->cursize - longmsg->readcount > SPLIT_SIZE)
+		{
+			Com_Memcpy(&msg.data[msg.cursize], &longmsg->data[longmsg->readcount], SPLIT_SIZE);
+			longmsg->readcount += SPLIT_SIZE;
+			msg.cursize += SPLIT_SIZE;
+		}else{
+			Com_Memcpy(&msg.data[msg.cursize], &longmsg->data[longmsg->readcount], longmsg->cursize - longmsg->readcount);
+			msg.cursize += (longmsg->cursize - longmsg->readcount);
+			longmsg->readcount = longmsg->cursize;
+		}
+		NET_SendPacket(NS_SERVER, msg.cursize, msg.data, from);
+	}
+
+}
+
+void SVC_SourceEngineQuery_Player( netadr_t* from, msg_t* recvmsg )
+{
+
+	msg_t playermsg;
+	byte pbuf[MAX_MSGLEN];
+
+	int i, numClients, challenge;
+	client_t    *cl;
+	gclient_t *gclient;
+
+
+	/* 1st check the challenge */
+	MSG_BeginReading(recvmsg);
+	/* OOB-Header */
+	MSG_ReadLong(recvmsg);
+	/* Command Header */
+	MSG_ReadByte(recvmsg);
+	/* Challenge */
+	challenge = MSG_ReadLong(recvmsg);
+
+	if(NET_CookieHash(from) != challenge)
+	{
+		SVC_SourceEngineQuery_Challenge( from );
+		return;
+	}
+
+
+	MSG_Init(&playermsg, pbuf, sizeof(pbuf));
+	/* Write the OOB-Header */
+	MSG_WriteLong(&playermsg, -1);
+	/* Write the Command-Header */
+	MSG_WriteByte(&playermsg, 'D');
+	/* numClients is 0 for now */
+	MSG_WriteByte(&playermsg, 0);
+
+	for ( i = 0, cl = svs.clients, gclient = level.clients, numClients = 0; i < sv_maxclients->integer ; i++, gclient++, cl++) {
+
+		if ( cl->state >= CS_CONNECTED ) {
+
+			MSG_WriteByte(&playermsg, i);
+			MSG_WriteString(&playermsg, cl->name);
+			MSG_WriteLong(&playermsg, gclient->pers.scoreboard.score);
+			MSG_WriteFloat(&playermsg, ((float)(svs.time - cl->connectedTime))/1000);
+			numClients++;
+		}
+	}
+	/* update the playercount */
+	playermsg.data[5] = numClients;
+
+	SVC_SourceEngineQuery_SendSplitMessage( from, &playermsg );
+
+}
+
+struct sourceEngineCvars_s
+{
+	msg_t* msg;
+	int num;
+};
+
+void	SVC_SourceEngineQuery_WriteCvars(cvar_t const* cvar, void *var ){
+    struct sourceEngineCvars_s *data = var;
+
+    if(cvar->flags & (CVAR_SERVERINFO | CVAR_NORESTART) )
+    {
+        MSG_WriteString(data->msg, cvar->name);
+        MSG_WriteString(data->msg, Cvar_DisplayableValue(cvar));
+        data->num++;
+    }
+}
+
+
+void SVC_SourceEngineQuery_Rules( netadr_t* from, msg_t* recvmsg )
+{
+	msg_t msg;
+	byte buf[MAX_MSGLEN];
+	struct sourceEngineCvars_s data;
+	int numvars, challenge;
+
+	/* 1st check the challenge */
+	MSG_BeginReading(recvmsg);
+	/* OOB-Header */
+	MSG_ReadLong(recvmsg);
+	/* Command Header */
+	MSG_ReadByte(recvmsg);
+	/* Challenge */
+	challenge = MSG_ReadLong(recvmsg);
+
+	if(NET_CookieHash(from) != challenge)
+	{
+		SVC_SourceEngineQuery_Challenge( from );
+		return;
+	}
+
+	numvars = 0;
+
+	MSG_Init(&msg, buf, sizeof(buf));
+	/* Write the OOB header */
+	MSG_WriteLong(&msg, -1);
+	/* Write the Command-Header */
+	MSG_WriteByte(&msg, 'E');
+	/* Number of rules = 0 for now */
+	MSG_WriteShort(&msg, numvars);
+	/* Write each cvar */
+	data.msg = &msg;
+	data.num = 0;
+	Cvar_ForEach( SVC_SourceEngineQuery_WriteCvars, &data );
+
+	*(short*)&msg.data[5] = data.num;
+
+	SVC_SourceEngineQuery_SendSplitMessage( from, &msg );
+
+}
+
+
 /*
 ================
 SVC_FlushRedirect
@@ -1036,6 +1296,33 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 
         } else if (!Q_stricmp(c, "rcon")) {
 		SVC_RemoteCommand( from, msg );
+	} else if (!Q_stricmp(c, "connect")) {
+		SV_DirectConnect( from );
+
+	} else if (!Q_stricmp(c, "ipAuthorize")) {
+		SV_AuthorizeIpPacket( from );
+
+	} else if (!Q_stricmp(c, "stats")) {
+		SV_ReceiveStats(from, msg);
+
+        } else if (!Q_stricmp(c, "rcon")) {
+		SVC_RemoteCommand( from, msg );
+
+	} else if (!Q_stricmp(c, "getchallenge")) {
+		SV_GetChallenge(from);
+		
+	} else if (!strcmp(c, "v")) {
+		SV_GetVoicePacket(from, msg);
+
+	} else if (!Q_strncmp("TSource Engine Query", (char *) &msg->data[4], 20)) {
+		SVC_SourceEngineQuery_Info( from );
+	} else if(msg->data[4] == 'V'){
+		SVC_SourceEngineQuery_Rules( from, msg );
+	} else if(msg->data[4] == 'U'){
+		SVC_SourceEngineQuery_Player( from, msg );
+	} else if(msg->data[4] == 'W'){
+		SVC_SourceEngineQuery_Challenge( from );
+
 #ifdef PUNKBUSTER
 	} else if (!Q_strncmp("PB_", (char *) &msg->data[4], 3)) {
 
@@ -1066,24 +1353,6 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 		PbSvAddEvent(13, clnum, msg->cursize-4, (char *)&msg->data[4]);
 		return;
 #endif
-	} else if (!Q_stricmp(c, "connect")) {
-		SV_DirectConnect( from );
-
-	} else if (!Q_stricmp(c, "ipAuthorize")) {
-		SV_AuthorizeIpPacket( from );
-
-	} else if (!Q_stricmp(c, "stats")) {
-		SV_ReceiveStats(from, msg);
-
-        } else if (!Q_stricmp(c, "rcon")) {
-		SVC_RemoteCommand( from, msg );
-
-	} else if (!Q_stricmp(c, "getchallenge")) {
-		SV_GetChallenge(from);
-		
-	} else if (!Q_stricmp(c, "v")) {
-		SV_GetVoicePacket(from, msg);
-		
 	} else {
 		Com_DPrintf ("bad connectionless packet from %s\n", NET_AdrToString (from));
 	}
@@ -1415,19 +1684,19 @@ before Sys_Quit or Sys_Error
 
 __cdecl void SV_Shutdown( const char *finalmsg ) {
 
-	qboolean var_01;
-
 	if ( !com_sv_running || !com_sv_running->integer ) {
 		return;
 	}
 
 	Com_Printf( "----- Server Shutdown -----\n" );
 	Com_Printf( "\nWith the reason: %s\n", finalmsg );
-        if(SEH_StringEd_GetString(finalmsg)){
-            var_01 = qtrue;
-        }
+	if(SEH_StringEd_GetString(finalmsg)){
+		SV_FinalMessage( finalmsg, qtrue );
+	}else {
+		SV_FinalMessage( finalmsg, qfalse );
+	}
 
-	SV_FinalMessage( finalmsg, var_01 );
+
 
 //	SV_RemoveOperatorCommands();
 	SV_MasterShutdown();
@@ -1513,6 +1782,8 @@ void	serverStatus_Write(){
             }else{
                 XML_OpenTag(&xmlbase,"Data",2, "Name", "pswrd", "Value", "0");
             }
+            XML_CloseTag(&xmlbase);
+			XML_OpenTag(&xmlbase,"Data",2, "Name", "sv_type", "Value", va("%d", sv_authorizemode->integer));
             XML_CloseTag(&xmlbase);
         XML_CloseTag(&xmlbase);
 
@@ -1746,31 +2017,31 @@ void SV_InitCvarsOnce(void){
 
 	Cvar_RegisterBool("clientSideEffects", qtrue, 0x80, "Enable loading _fx.gsc files on the client");
 
-	sv_modStats = Cvar_RegisterBool("ModStats", qtrue, CVAR_ARCHIVE, "Flag whether to use stats of mod (when running a mod) or to use stats of the Cod4 coregame");
+	sv_modStats = Cvar_RegisterBool("ModStats", qtrue, 0, "Flag whether to use stats of mod (when running a mod) or to use stats of the Cod4 coregame");
 	sv_authorizemode = Cvar_RegisterInt("sv_authorizemode", 1, -1, 1, CVAR_ARCHIVE, "How to authorize clients, 0=acceptall(No GUIDs) 1=accept no one with invalid GUID");
-	sv_showasranked = Cvar_RegisterBool("sv_showasranked", qfalse, CVAR_ARCHIVE, "List the server in serverlist of ranked servers even when it is modded");
+	sv_showasranked = Cvar_RegisterBool("sv_showasranked", qfalse, 0, "List the server in serverlist of ranked servers even when it is modded");
 	sv_statusfile = Cvar_RegisterString("sv_statusfilename", "serverstatus.xml", CVAR_ARCHIVE, "Filename to write serverstatus to disk");
 	g_mapstarttime = Cvar_RegisterString("g_mapStartTime", "", CVAR_SERVERINFO | CVAR_ROM, "Time when current map has started");
-	g_friendlyPlayerCanBlock = Cvar_RegisterBool("g_friendlyPlayerCanBlock", qfalse, CVAR_ARCHIVE, "Flag whether friendly players can block each other");
-	g_FFAPlayerCanBlock = Cvar_RegisterBool("g_FFAPlayerCanBlock", qtrue, CVAR_ARCHIVE, "Flag whether players in non team based games can block each other");
+	g_friendlyPlayerCanBlock = Cvar_RegisterBool("g_friendlyPlayerCanBlock", qfalse, 0, "Flag whether friendly players can block each other");
+	g_FFAPlayerCanBlock = Cvar_RegisterBool("g_FFAPlayerCanBlock", qtrue, 0, "Flag whether players in non team based games can block each other");
 	sv_password = Cvar_RegisterString("g_password", "", CVAR_ARCHIVE, "Password which is required to join this server");
 	g_motd = Cvar_RegisterString("g_motd", "", CVAR_ARCHIVE, "Message of the day, which getting shown to every player on his 1st spawn");
 	sv_uptime = Cvar_RegisterString("uptime", "", CVAR_SERVERINFO | CVAR_ROM, "Time the server is running since last restart");
-	sv_autodemorecord = Cvar_RegisterBool("sv_autodemorecord", qfalse, CVAR_ARCHIVE, "Automatically start from each connected client a demo.");
-	sv_demoCompletedCmd = Cvar_RegisterString("sv_demoCompletedCmd", "", CVAR_ARCHIVE, "This program will be executed when a demo has been completed. The demofilename will be passed as argument.");
+	sv_autodemorecord = Cvar_RegisterBool("sv_autodemorecord", qfalse, 0, "Automatically start from each connected client a demo.");
+	sv_demoCompletedCmd = Cvar_RegisterString("sv_demoCompletedCmd", "", com_securemode ? CVAR_INIT : 0 , "This program will be executed when a demo has been completed. The demofilename will be passed as argument.");
 	sv_consayname = Cvar_RegisterString("sv_consayname", "^2Server: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 	sv_contellname = Cvar_RegisterString("sv_contellname", "^5Server^7->^5PM: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 
-	sv_master[0] = Cvar_RegisterString("sv_master1", "", CVAR_ARCHIVE, "A masterserver name");
-	sv_master[1] = Cvar_RegisterString("sv_master2", "", CVAR_ARCHIVE, "A masterserver name");
-	sv_master[2] = Cvar_RegisterString("sv_master3", "", CVAR_ARCHIVE, "A masterserver name");
-	sv_master[3] = Cvar_RegisterString("sv_master4", "", CVAR_ARCHIVE, "A masterserver name");
-	sv_master[4] = Cvar_RegisterString("sv_master5", "", CVAR_ARCHIVE, "A masterserver name");
+	sv_master[0] = Cvar_RegisterString("sv_master1", "", 0, "A masterserver name");
+	sv_master[1] = Cvar_RegisterString("sv_master2", "", 0, "A masterserver name");
+	sv_master[2] = Cvar_RegisterString("sv_master3", "", 0, "A masterserver name");
+	sv_master[3] = Cvar_RegisterString("sv_master4", "", 0, "A masterserver name");
+	sv_master[4] = Cvar_RegisterString("sv_master5", "", 0, "A masterserver name");
 
 	if(sv_authorizemode->integer < 1)
 		sv_master[5] = Cvar_RegisterString("sv_master6", "cod.iw4play.de", CVAR_ROM, "A masterserver name");
 	else
-		sv_master[5] = Cvar_RegisterString("sv_master6", "", CVAR_ARCHIVE, "A masterserver name");
+		sv_master[5] = Cvar_RegisterString("sv_master6", "", 0, "A masterserver name");
 
 	sv_master[6] = Cvar_RegisterString("sv_master7", MASTER_SERVER_NAME, CVAR_ROM, "Default masterserver name");
 	sv_master[7] = Cvar_RegisterString("sv_master8", MASTER_SERVER_NAME2, CVAR_ROM, "Default masterserver name");
@@ -2687,7 +2958,7 @@ __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 	// send a heartbeat to the master if needed
 	SV_MasterHeartbeat( HEARTBEAT_GAME );
 #ifdef PUNKBUSTER
-	PbServerProcessEvents();
+	PbServerProcessEvents( 0 );
 #endif
 	// if time is about to hit the 32nd bit, kick all clients
 	// and clear sv.time, rather
@@ -2798,9 +3069,9 @@ __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 		m = uptime/60;
 
 		if(h < 4)
-			Cvar_SetString(sv_uptime, va("%i minutes", m+h*60));
+			Cvar_SetString(sv_uptime, va("%i minutes", m));
 		else if(d < 3)
-			Cvar_SetString(sv_uptime, va("%i hours", h+d*24));
+			Cvar_SetString(sv_uptime, va("%i hours", h));
 		else
 			Cvar_SetString(sv_uptime, va("%i days", d));
 

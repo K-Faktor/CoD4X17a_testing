@@ -54,12 +54,13 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("logstring", (void*)0x80bac06, 0);
 	Scr_AddFunction("getent", (void*)0x80c7c72, 0);
 	Scr_AddFunction("getentarray", (void*)0x80c7b44, 0);
-	Scr_AddFunction("spawn", (void*)0x80bf638, 0);
+	Scr_AddFunction("spawn", /* (void*)0x80bf638 */ GScr_Spawn, 0);
+	Scr_AddFunction("spawnvehicle", GScr_SpawnVehicle, 0);
 	Scr_AddFunction("spawnplane", (void*)0x80c0fde, 0);
 	Scr_AddFunction("spawnturret", (void*)0x80c0f52, 0);
 	Scr_AddFunction("precacheturret", (void*)0x80bcd46, 0);
 	Scr_AddFunction("spawnstruct", (void*)0x815f09a, 0);
-	Scr_AddFunction("spawnhelicopter", (void*)0x80c0e54, 0);
+	Scr_AddFunction("spawnhelicopter", GScr_SpawnHelicopter, 0);
 	Scr_AddFunction("assert", (void*)0x80bb0fc, 1);
 	Scr_AddFunction("assertex", (void*)0x80bb2e0, 1);
 	Scr_AddFunction("assertmsg", (void*)0x80bb2b4, 1);
@@ -429,6 +430,7 @@ void Scr_AddStockMethods(){
 //	Scr_AddMethod("setstance", ScrCmd_SetStance, 0);
 	Scr_AddMethod("setjumpheight", PlayerCmd_SetJumpHeight, 0);
 	Scr_AddMethod("setgravity", PlayerCmd_SetGravity, 0);
+	Scr_AddMethod("setgroundreferenceent", PlayerCmd_SetGroundReferenceEnt, 0);
 	Scr_AddMethod("setmovespeed", PlayerCmd_SetMoveSpeed, 0);
 	Scr_AddMethod("setcursorhint", (void*)0x80c6348, 0);
 	Scr_AddMethod("sethintstring", (void*)0x80c619e, 0);
@@ -603,9 +605,23 @@ void GScr_LoadGameTypeScript(void){
 /**************** Mandatory *************************/
     char gametype_path[64];
 
+    Cvar_RegisterString("g_gametype", "dm", CVAR_LATCH | CVAR_SERVERINFO, "Current game type");
+
     Com_sprintf(gametype_path, sizeof(gametype_path), "maps/mp/gametypes/%s", sv_g_gametype->string);
 
-    g_scr_data.gametype = GScr_LoadScriptAndLabel(gametype_path, "main", 1);
+    /* Don't raise a fatal error when we couldn't find this gametype script */
+    g_scr_data.gametype = GScr_LoadScriptAndLabel(gametype_path, "main", 0);
+    if(g_scr_data.gametype == 0)
+    {
+        Com_PrintError("Could not find script: %s\n", gametype_path);
+        Com_Printf("The gametype %s is not available! Will load gametype dm\n", sv_g_gametype->string);
+
+        Cvar_SetString(sv_g_gametype, "dm");
+        Com_sprintf(gametype_path, sizeof(gametype_path), "maps/mp/gametypes/%s", sv_g_gametype->string);
+        /* If we can not find gametype dm a fatal error gets raised */
+        g_scr_data.gametype = GScr_LoadScriptAndLabel(gametype_path, "main", 1);
+    }
+
     g_scr_data.startgametype = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_StartGameType", 1);
     g_scr_data.playerconnect = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerConnect", 1);
     g_scr_data.playerdisconnect = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerDisconnect", 1);

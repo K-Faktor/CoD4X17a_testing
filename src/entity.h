@@ -212,7 +212,19 @@ struct gentity_s {
 
 	qboolean inuse;
 
-	byte unknown[0x110]; //0x164
+	int vehicle;
+
+	int field_168;
+	int field_16C;
+
+	int constClassname;
+
+	int field_174;
+	int field_178;
+
+	int spawnflags;
+
+	char unknown[244];
 
 
 /*
@@ -480,8 +492,9 @@ struct gentity_s {
 #define PLAYER_SOLIDMASK	0x00600000
 
 
-
-
+gentity_t* G_Spawn();
+void G_SpawnHelicopter( gentity_t* vehent, gentity_t* ownerent, const char* type, const char* model );
+qboolean G_CallSpawnEntity( gentity_t* ent );
 
 
 #endif

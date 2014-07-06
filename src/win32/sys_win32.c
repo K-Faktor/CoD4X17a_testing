@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <io.h>
 
 void Sys_ShowErrorDialog(const char* functionName);
 
@@ -181,7 +182,7 @@ qboolean Sys_MemoryProtectWrite(void* startoffset, int len)
 {
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_READWRITE, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READWRITE, &oldProtect) == 0)
 	{
 	        Sys_ShowErrorDialog("Sys_MemoryProtectWrite");
             return qfalse;
@@ -195,7 +196,7 @@ qboolean Sys_MemoryProtectExec(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_EXECUTE_READ, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_EXECUTE_READ, &oldProtect) == 0)
 	{
             Sys_ShowErrorDialog("Sys_MemoryProtectExec");
             return qfalse;
@@ -209,7 +210,7 @@ qboolean Sys_MemoryProtectReadonly(void* startoffset, int len)
 
 	DWORD oldProtect;
 
-	if(VirtualProtect((LPVOID)startoffset, len + Sys_GetPageSize(), PAGE_READONLY, &oldProtect) == 0)
+	if(VirtualProtect((LPVOID)startoffset, len, PAGE_READONLY, &oldProtect) == 0)
 	{
 	        Sys_ShowErrorDialog("Sys_MemoryProtectReadonly");
             return qfalse;
@@ -546,6 +547,7 @@ Win32 specific initialisation
 */
 void Sys_PlatformInit( void )
 {
+#if 0
 	void *allocptr = (void*)0x8040000;  /* Image base of cod4_lnxded-bin */ 
 	void *received_mem;
 	int commitsize;
@@ -563,7 +565,7 @@ void Sys_PlatformInit( void )
 	commitsize += 0x9454; /* Size of .data */
 	commitsize += 0x2c; /* Offset of .bss */
 	commitsize += 0xc182240; /* Size of .bss */
-	
+	/* .= 0xc3b6c40 */
 	pagesize = Sys_GetPageSize();
 	
 	delta = commitsize % pagesize;
@@ -576,7 +578,7 @@ void Sys_PlatformInit( void )
 		Sys_ShowErrorDialog(errormsg);
 		exit(1);
 	}
-
+#endif
 	Sys_SetFloatEnv( );
 }
 
@@ -812,4 +814,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 void  __attribute__ ((noreturn)) Sys_ExitForOS( int exitCode )
 {
 	ExitProcess( exitCode );
+}
+
+int Sys_Chmod(const char* filename, int mode)
+{
+    return _chmod(filename, mode);
 }

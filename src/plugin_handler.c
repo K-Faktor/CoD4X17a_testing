@@ -25,6 +25,7 @@
 #include "q_platform.h"
 #include "sys_main.h"
 #include "objfile_parser.h"
+#include "sec_crypto.h"
 
 /*=========================================*
  *                                         *
@@ -60,8 +61,10 @@ char PHandler_Events[PLUGINS_ITEMCOUNT][32]={
     "OnSpawnServer",
     "OnPreFastRestart",
     "OnPostFastRestart",
-    "OnPlayerConnectAuthFail"
-
+    "OnPlayerConnectAuthFail",
+	"OnClientUserinfoChanged",
+    "OnClientMoveCommand",
+	"OnPlayerWantReservedSlot"
 };
 
 void PHandler_Init() // Initialize the Plugin Handler's data structures and add commands
@@ -179,11 +182,18 @@ void PHandler_CloseTempFile(char* filepath)
 }
 
 
+#define PLUGINCENSOR_HASH "bfb496df0acc1bd01a0789b8d35d8081143db883297206aa"
+#define PLUGINANTISPAM_HASH "7fc95f3902bd809a1e50a783fbb482044f67ad8927259a36"
+#define PLUGINGAMERANGER_HASH "25feab2d90616aa1ddf507cc9a4e4093050fc777f6c16c4c"
+
+
 void PHandler_Load(char* name) // Load a plugin, safe for use
 {
     int i,j;
     char* realpath;
-	char filepathbuf[MAX_OSPATH];
+    char filepathbuf[MAX_OSPATH];
+    char hash[128];
+    long unsigned sizeofhash;
     void *lib_handle;
 
     pluginInfo_t info;
@@ -220,6 +230,24 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
     }
 
     Com_DPrintf("Loading the plugin .so...\n");
+
+
+    if(com_securemode)
+    {
+	hash[0] = '\0';
+	sizeofhash = sizeof(hash);
+
+	Sec_HashFile(SEC_HASH_TIGER, realpath, hash, &sizeofhash, qfalse);
+
+	if(Q_stricmp(hash ,PLUGINGAMERANGER_HASH) && Q_stricmp(hash ,PLUGINCENSOR_HASH) && Q_stricmp(hash ,PLUGINANTISPAM_HASH))
+	{
+		Com_Printf("Tiger = %s\n", hash);
+		Com_PrintError("%s checksum missmatch! This plugin will not be loaded in securemode.\n", realpath);
+		return;
+	}
+
+    }
+
     lib_handle = Sys_LoadLibrary(realpath);
     if (!lib_handle)
 	{
@@ -279,13 +307,13 @@ void PHandler_Load(char* name) // Load a plugin, safe for use
 			
             if(info.handlerVersion.major != PLUGIN_HANDLER_VERSION_MAJOR || (info.handlerVersion.minor - info.handlerVersion.minor %100) != (PLUGIN_HANDLER_VERSION_MINOR - PLUGIN_HANDLER_VERSION_MINOR %100))
 			{
-                Com_PrintError("^7This plugin might not be compatible with this server version! Requested plugin handler version: %d.%d, server's plugin handler version: %d.%d. Unloading the plugin...\n",info.handlerVersion.major,info.handlerVersion.minor, PLUGIN_HANDLER_VERSION_MAJOR,PLUGIN_HANDLER_VERSION_MINOR);
+                Com_PrintError("This plugin might not be compatible with this server version! Requested plugin handler version: %d.%d, server's plugin handler version: %d.%d. Unloading the plugin...\n",info.handlerVersion.major,info.handlerVersion.minor, PLUGIN_HANDLER_VERSION_MAJOR,PLUGIN_HANDLER_VERSION_MINOR);
                 PHandler_Unload(i);
                 return;
             }
         }
         else{
-            Com_Printf("^7function OnInfoRequest not found in the plugin file. Unloading...\n");
+            Com_PrintError("function OnInfoRequest not found in the plugin file. Unloading...\n");
             PHandler_Unload(i);
             return;
 
@@ -398,4 +426,3 @@ void PHandler_Event(int eventID,...) // Fire a plugin event, safe for use
         }
     }
 }
-

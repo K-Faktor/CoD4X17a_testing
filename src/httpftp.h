@@ -45,10 +45,19 @@ typedef struct
 	ftprotocols_t protocol;
 }ftRequest_t;
 
+typedef enum
+{
+	HTTP_GET,
+	HTTP_POST,
+	HTTP_HEAD
+}httpMethod_t;
+
+
 void FileDownloadFreeRequest(ftRequest_t* request);
 ftRequest_t* FileDownloadRequest( const char* url);
 int FileDownloadSendReceive( ftRequest_t* request );
 const char* FileDownloadGenerateProgress( ftRequest_t* request );
+void HTTPServer_Init();
 
 
 #endif

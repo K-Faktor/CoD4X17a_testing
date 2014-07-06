@@ -49,7 +49,8 @@ void Cbuf_AddText(const char* text);
 void Cbuf_InsertText( const char *text );
 
 qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function );
-qboolean Cmd_AddCommandGeneric( const char *cmd_name, xcommand_t function, qboolean warn );
+qboolean Cmd_AddHCommand( const char *cmd_name, const char *helptext, xcommand_t function );
+qboolean Cmd_AddCommandGeneric( const char *cmd_name, const char *helptext, xcommand_t function, qboolean warn );
 qboolean Cmd_RemoveCommand( const char *cmd_name );
 qboolean Cmd_SetPower(const char *cmd_name, int power);
 int Cmd_GetPower(const char *cmd_name);
@@ -73,7 +74,7 @@ char	*Cmd_Argv( int arg );
 char	*Cmd_Args( char* buff, int bufsize );
 char	*Cmd_Argsv( int arg, char* buff, int bufsize );
 void	Cmd_ArgvBuffer( int arg, char *buffer, int bufferLength );
-void	Cmd_CommandCompletion( void(*callback)(const char *s) );
+void	Cmd_CommandCompletion( void(*callback)(const char *s), const char* curstring );
 void	Cmd_CompleteArgument( const char *command, char *args, int argNum );
 void	Cmd_SetCommandCompletionFunc( const char *command, completionFunc_t complete );
 void	Cmd_AddCommands(void);

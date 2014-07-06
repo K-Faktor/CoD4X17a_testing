@@ -33,7 +33,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-__cdecl void ClientSpawn(gentity_t* ent, vec3_t* px, vec3_t* py)
+__cdecl void ClientSpawn(gentity_t* ent, float* px, float* py)
 {
 
 //    ent->client->ps.gravity = 800;//(int)g_gravity->value;

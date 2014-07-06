@@ -3,11 +3,11 @@
 
 echo Compiling C-code...
 cd bin
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_win32.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/win_syscon.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_cod4linker_win32.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/pe32_parser.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=prescott -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/*.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_win32.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/win_syscon.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_cod4linker_win32.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/pe32_parser.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/*.c
 cd ../
 
 echo Compiling NASM...
@@ -24,7 +24,7 @@ nasm -f coff src/msg_hooks.asm             --prefix _ -o bin/msg_hooks.o
 nasm -f coff src/pluginexports.asm -dWin32 --prefix _ -o bin/pluginexports.o
 
 echo Linking...
-gcc -g -o bin/cod4x17a_dedrun bin/*.o src/win32/win_cod4.res -Llib/ -ltomcrypt_win32 -ltommath_win32 -lm -lws2_32 -lwsock32 -lgdi32 -mwindows -lwinmm
+gcc -g -Wl,--nxcompat,--image-base,0x8040000 -Tlinkerscript_win32.ld -o bin/cod4x17a_dedrun bin/*.o src/win32/win_cod4.res -Llib/ -ltomcrypt_win32 -ltommath_win32 -lm -lws2_32 -lwsock32 -lgdi32 -mwindows -lwinmm
 echo Cleaning up...
 cd bin
 del *.o

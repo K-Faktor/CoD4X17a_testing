@@ -243,6 +243,10 @@ global Scr_ConstructMessageString
 Scr_ConstructMessageString:
 	jmp dword [oScr_ConstructMessageString]
 
+global Scr_SetString
+Scr_SetString:
+	jmp dword [oScr_SetString]
+
 SECTION .rodata
 
 oScr_InitVariables dd 0x815288a
@@ -300,3 +304,4 @@ oScr_AddHudElem dd 0x80c7746
 oScr_FreeHudElem dd 0x80c778e
 oScr_EndLoadScripts dd 0x814bcee
 oScr_ConstructMessageString dd 0x80c02aa
+oScr_SetString dd 0x81512fc

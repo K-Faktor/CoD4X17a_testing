@@ -238,7 +238,7 @@ void Field_CompleteCommand( char *cmd, qboolean doCommands, qboolean doCvars )
 		}
 
 		if( doCommands )
-			Cmd_CommandCompletion( FindMatches );
+			Cmd_CommandCompletion( FindMatches, completionString );
 
 		if( doCvars )
 			Cvar_CommandCompletion( FindMatches );
@@ -247,7 +247,7 @@ void Field_CompleteCommand( char *cmd, qboolean doCommands, qboolean doCvars )
 		{
 			// run through again, printing matches
 			if( doCommands )
-				Cmd_CommandCompletion( PrintMatches );
+				Cmd_CommandCompletion( PrintMatches, completionString );
 
 			if( doCvars )
 				Cvar_CommandCompletion( PrintCvarMatches );

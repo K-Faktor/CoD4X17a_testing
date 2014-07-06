@@ -74,12 +74,13 @@ void PlayerCmd_GetUid(scr_entref_t arg){
         Scr_Error("Usage: self getUid()\n");
     }
 
-    if(!SV_UseUids()){
+    uid = SV_GetUid(entityNum);
+
+    if(uid < 1)
+    {
         Scr_AddInt(-1);
         return;
     }
-
-    uid = SV_GetUid(entityNum);
 
     Scr_AddInt(uid);
 }
@@ -258,6 +259,67 @@ void PlayerCmd_SetGravity(scr_entref_t arg){
 
 }
 
+/*
+============
+PlayerCmd_SetGroundReferenceEnt
+
+The ground entity's rotation will be added onto the player's view. 
+In particular, this will cause the player's yaw to rotate around the 
+entity's z-axis instead of the world z-axis. You only need to call 
+this function once. After that, any rotation that the reference entity 
+undergoes will affect the player. Setting it back to 0 (worldspawn)
+should disable all further effects.
+
+Usage:	self SetGroundReferenceEnt( <other entity id> );
+		self SetGroundReferenceEnt( other GetEntityNumber() );
+============
+*/
+void PlayerCmd_SetGroundReferenceEnt(scr_entref_t arg)
+{
+	gentity_t* gentity, *groundRefEnt;
+    int entityNum = 0;
+	int otherEntityNum = 0;
+	mvabuf;
+
+    if(HIWORD(arg)){
+        Scr_ObjectError("Not an entity");
+        return;
+
+    }else{
+        entityNum = LOWORD(arg);
+        gentity = &g_entities[entityNum];
+
+        if(!gentity->client){
+            Scr_ObjectError(va("Entity: %i is not a player", entityNum));
+            return;
+        }
+    }
+
+    if(Scr_GetNumParam() != 1){
+        Scr_Error("Usage: self SetGroundReferenceEnt( <entity id> )\n");
+    }
+
+	otherEntityNum = Scr_GetInt(0);
+    if( otherEntityNum >= 1024 || otherEntityNum < 0 ){
+        Scr_Error( "SetGroundReferenceEnt must be in range 0-1023\n" );
+        return;
+    }
+
+	groundRefEnt = &g_entities[entityNum];
+	if( groundRefEnt->client ){
+		Scr_ObjectError(va("player entity %i can not be a ground reference entity", otherEntityNum));
+		return;
+	}
+
+/*
+	if( !groundRefEnt->inuse ){
+		Scr_ObjectError(va("SetGroundReferenceEnt: entity %i does not exist", otherEntityNum));
+		return;
+	}
+*/
+
+	gentity->s.groundEntityNum = otherEntityNum;
+}
 
 /*
 ============
@@ -1208,12 +1270,9 @@ void GScr_FS_TestFile(){
         Scr_Error("Usage: FS_TestFile(<filename>)\n");
 
     char* filename = Scr_GetString(0);
-    fileExists = FS_FOpenFileRead(filename, NULL);
+    fileExists = Scr_FileExists( filename );
 
-    if(fileExists == qtrue)
-        Scr_AddBool(qtrue);
-    else
-        Scr_AddBool(qfalse);
+    Scr_AddBool(fileExists);
 }
 
 
@@ -1623,10 +1682,10 @@ void PlayerCmd_spawn(scr_entref_t arg){
         }
     }
 
-    Scr_GetVector(0, &position);
-    Scr_GetVector(1, &direction);
+    Scr_GetVector(0, position);
+    Scr_GetVector(1, direction);
 
-    ClientSpawn(gentity, &position, &direction);
+    ClientSpawn(gentity, position, direction);
 
 }
 
@@ -1678,7 +1737,7 @@ void GScr_NewHudElem(){
         element->movestarttime = 0;
         element->movingtime = 0;
         element->fontscale = 0;
-        element->archived = 0;
+        element->archived = 1;
         element->var_14 = 0;
         element->var_15 = 0;
         element->var_16 = 0;
@@ -1758,7 +1817,7 @@ void GScr_NewClientHudElem(){
         element->movestarttime = 0;
         element->movingtime = 0;
         element->fontscale = 0;
-        element->archived = 0;
+        element->archived = 1;
         element->var_14 = 0;
         element->var_15 = 0;
         element->var_16 = 0;
@@ -2029,9 +2088,127 @@ void GScr_AddScriptCommand()
         return;
     }
 
-    Cmd_AddCommandGeneric(command, GScr_ScriptCommandCB, qfalse);
+    Cmd_AddCommandGeneric(command, NULL, GScr_ScriptCommandCB, qfalse);
     Cmd_SetPower(command, defaultpower);
 
+}
+
+
+
+void GScr_Spawn()
+{
+
+	int spawnflags;
+	int strindex;
+	gentity_t *gentity;
+	vec3_t origin;
+	mvabuf;
+
+	strindex = Scr_GetConstString( 0 );
+
+	Scr_GetVector(1, origin);
+
+	if ( Scr_GetNumParam() > 2 )
+		spawnflags = Scr_GetInt(2);
+	else
+		spawnflags = 0;
+
+	gentity = G_Spawn();
+
+	Scr_SetString((unsigned short*)&gentity->constClassname, (unsigned short)strindex);
+
+	gentity->r.currentOrigin[0] = origin[0];
+	gentity->r.currentOrigin[1] = origin[1];
+	gentity->r.currentOrigin[2] = origin[2];
+
+	gentity->spawnflags = spawnflags;
+
+	if ( G_CallSpawnEntity( gentity ) )
+	{
+		Scr_AddEntity( gentity );
+	}
+	else
+	{
+
+		Scr_Error( va("unable to spawn \"%s\" entity", SL_ConvertToString(strindex) ));
+	}
+}
+
+
+void GScr_SpawnHelicopter()
+{
+  const char *type;
+  const char *model;
+  gentity_t *newent;
+  gentity_t *ownerent;
+  vec3_t rotation;
+  vec3_t position;
+
+  ownerent = Scr_GetEntity(0);
+
+  if ( !ownerent->client )
+  {
+    Scr_ParamError(0, "Owner entity is not a player");
+  }
+  Scr_GetVector(1, position);
+  Scr_GetVector(2, rotation);
+  type = Scr_GetString(3);
+  model = Scr_GetString(4);
+
+  newent = G_Spawn();
+
+  Scr_SetString((unsigned short*)&newent->constClassname, (unsigned short)stringIndex.script_vehicle);
+
+  newent->r.currentOrigin[0] = position[0];
+  newent->r.currentOrigin[1] = position[1];
+  newent->r.currentOrigin[2] = position[2];
+  newent->r.currentAngles[0] = rotation[0];
+  newent->r.currentAngles[1] = rotation[1];
+  newent->r.currentAngles[2] = rotation[2];
+
+  G_SpawnHelicopter(newent, ownerent, type, model);
+
+  Scr_AddEntity(newent);
+}
+
+
+void GScr_SpawnVehicle()
+{
+
+	int spawnflags;
+	gentity_t *gentity;
+	vec3_t origin;
+	char vehTypeStr[MAX_QPATH];
+	char vehModel[MAX_QPATH];
+
+	Scr_GetVector(0, origin);
+
+	if ( Scr_GetNumParam() != 4 )
+	{
+		Scr_Error("Usage: spawnvehicle <origin>, <spawnflags>, <vehicletype>, <xmodel>");
+		return;
+	}
+
+	spawnflags = Scr_GetInt(1);
+
+	gentity = G_Spawn();
+
+	Scr_SetString((unsigned short*)&gentity->constClassname, (unsigned short)stringIndex.script_vehicle);
+
+	gentity->r.currentOrigin[0] = origin[0];
+	gentity->r.currentOrigin[1] = origin[1];
+	gentity->r.currentOrigin[2] = origin[2];
+
+	gentity->spawnflags = spawnflags;
+
+        Q_strncpyz(vehTypeStr, Scr_GetString(2), sizeof(vehTypeStr));
+        Q_strncpyz(vehModel, Scr_GetString(3), sizeof(vehModel));
+
+        G_SetModel(gentity, vehModel);
+
+	SpawnVehicle( gentity, vehTypeStr );
+	G_VehCollmapSpawner( gentity );
+	Scr_AddEntity( gentity );
 }
 
 /*

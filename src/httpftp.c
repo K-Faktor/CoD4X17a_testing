@@ -14,6 +14,8 @@
 #include "netchan.h"
 #include "msg.h"
 #include "sys_main.h"
+#include "net_game.h"
+#include "net_game_conf.h"
 
 #include <string.h>
 #include <stdint.h>
@@ -78,17 +80,21 @@ static ftRequest_t* FT_CreateRequest(const char* address, const char* url)
 	request->finallen = -1;
 	request->socket = -1;
 	request->transfersocket = -1;
-	Q_strncpyz(request->address, address, sizeof(request->address));
 	
-	/* Open the connection */
-	request->socket = NET_TcpClientConnect(request->address);
+	if(address != NULL)
+	{
+		Q_strncpyz(request->address, address, sizeof(request->address));
+		/* Open the connection */
+		request->socket = NET_TcpClientConnect(request->address);
 	
-    if(request->socket < 0)
-	{	
-		request->socket = -1;
-		FT_FreeRequest(request);
-		return NULL;
-    }
+	    if(request->socket < 0)
+		{	
+			request->socket = -1;
+			FT_FreeRequest(request);
+			return NULL;
+		}
+		
+	}
 
 	buf = Z_Malloc(INITIAL_BUFFERLEN);
 	if( buf == NULL)
@@ -106,7 +112,10 @@ static ftRequest_t* FT_CreateRequest(const char* address, const char* url)
 	}
 	MSG_Init(&request->sendmsg, buf, INITIAL_BUFFERLEN);
 	
-	Q_strncpyz(request->url, url, sizeof(request->url));
+	if(url != NULL)
+	{
+		Q_strncpyz(request->url, url, sizeof(request->url));
+	}
 	
 	request->startTime = Sys_Milliseconds();
 	return request;
@@ -980,28 +989,222 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 							HTTP-Server
  =====================================================================
 */
-#if 0
-void NET_TCPAddEventType(qboolean (*tcpevent)(netadr_t* from, msg_t* msg, int socketfd, int connectionId),
-			 tcpclientstate_t (*tcpauthevent)(netadr_t* from, msg_t* msg, int socketfd, int *connectionId),
-					void (*tcpconncloseevent)(netadr_t* from, int socketfd, int connectionId),
-			int serviceId);
 
-
-qboolean HTTPServer_Event(netadr_t* from, msg_t* msg, int socketfd, int connectionId)
+int HTTPServer_ReadMessage(netadr_t* from, msg_t* msg, ftRequest_t* request)
 {
-	ftRequest_t* request = (ftRequest_t*)connectionId;
+	
+	char stringlinebuf[MAX_STRING_CHARS];
+	byte* newbuf;
+	char* line;
+	int newsize, i;
+	qboolean gotheader;
+	
+	if (request->recvmsg.maxsize - request->recvmsg.cursize < msg->cursize) 
+	{
+		if(request->finallen != -1)
+		{
+			newsize = request->finallen;
+		}else {
+			newsize = 2 * request->recvmsg.maxsize + msg->cursize;
+		}
+		
+		newbuf = Z_Malloc(newsize);
+		if(newbuf == NULL)
+		{
+			return -1;
+		}
+		
+		Com_Memcpy(newbuf, request->recvmsg.data, request->recvmsg.cursize);
+		
+		Z_Free(request->recvmsg.data);
+		request->recvmsg.data = newbuf;
+		request->recvmsg.maxsize = newsize;
+		
+	}
+
+	Com_Memcpy(&request->recvmsg.data[request->recvmsg.cursize], msg->data, msg->cursize);
+
+	request->recvmsg.cursize += msg->cursize;
 
 	/* Is header complete ? */
+	if(request->finallen == -1)
+	{
+		gotheader = qfalse;
+		/* 1st check if the header is complete */
+		while ((line = MSG_ReadStringLine(&request->recvmsg, stringlinebuf, sizeof(stringlinebuf))) && line[0] != '\0' )
+		{
+			if(line[0] == '\r')
+			{
+				gotheader = qtrue;
+				break;
+			}
+		}
+		if(gotheader == qfalse)
+		{
+			return 0;
+		}
+		MSG_BeginReading(&request->recvmsg);
+		
+		line = MSG_ReadStringLine(&request->recvmsg, stringlinebuf, sizeof(stringlinebuf));
+		if (!Q_strncmp(line, "HEAD", 4)) {
+			request->mode = HTTP_HEAD;
+			line += 5;
+		}else if (!Q_strncmp(line, "POST", 4)) {
+			request->mode = HTTP_POST;
+			line += 5;
+		}else if (!Q_strncmp(line, "GET", 3)) {
+			request->mode = HTTP_GET;
+			line += 4;
+		}else {
+			Com_DPrintf("Invalid HTTP method from %s\n", NET_AdrToString(from));
+			return -1;
+		}
+		
+		i = 0;
+		while (*line != ' ' && *line != '\r' && *line)
+		{
+			request->url[i] = *line;
+			i++;
+			line++;
+		}
+		
+		if(*line == ' ')
+		{
+			line++;
+		}
+		
+		if(Q_stricmpn(line,"HTTP/1.",7) || isInteger(line + 7, 2) == qfalse || isInteger(line + 9, 4) == qfalse)
+		{
+			Com_PrintError("HTTP_ReceiveData: Packet is corrupt!\nDebug: %s\n", line);
+			
+			return -1;
+		}
+		
+		request->version = atoi(line + 7);
+		if (request->version != 0 && request->version != 1)
+		{
+			Com_PrintError("HTTP_ReceiveData: Packet has unknown HTTP version 1.%d !\n", request->version);
+			
+			return -1;			
+		}
+		
+		
+		request->contentLength = 0;
+		
+		while ((line = MSG_ReadStringLine(&request->recvmsg, stringlinebuf, sizeof(stringlinebuf))) && line[0] != '\0' && line[0] != '\r')
+		{
+			if(!Q_stricmpn("Content-Length:", line, 15))
+			{
+				if(isInteger(line + 15, 0) == qfalse)
+				{
+					Com_PrintError("Sec_GetHTTPPacket: Packet is corrupt!\nDebug: %s\n", line);
+					return -1;
+				}
+				request->contentLength = atoi(line + 15);
+				if(request->contentLength < 0)
+				{
+					request->contentLength = 0;
+					return -1;
+				}
+			}
+			
+		}
+		if(line[0] == '\0')
+			return -1;
+		
+		request->headerLength = request->recvmsg.readcount;		
+		request->finallen = request->contentLength + request->headerLength;
+		
+		if(request->finallen > 1024*1024*640)
+		{
+			request->finallen = request->headerLength;
+		}
+		
+	}
+	if(request->recvmsg.maxsize == request->finallen)
+	request->transferactive = qtrue;
+
+
+	if (request->recvmsg.cursize < request->finallen) {
+		/* Still needing bytes... */
+		return 0;
+	}
+//	Com_Printf("^6HTTP-Message is complete!\n");
+//	Com_Printf("^6Received: Version: HTTP/1.%d   Method: %d   Content-Length: %d   URL: %s\n", request->version, request->mode, request->contentLength, request->url);
+	return 1;
+}
+
+void HTTPServer_BuildMessage( ftRequest_t* request, char* status, char* message, int len)
+{
+	int headerlen;
+	char header[MAX_STRING_CHARS];
+	headerlen = Com_sprintf(header, sizeof(header),
+					  "HTTP/1.0 %s\r\n"
+					  "Connection: close\r\n"
+					  "Content-Length: %d\r\n"
+					  "Access-Control-Allow-Origin: none\r\n"
+					  "Content-Type: text/html\r\n"
+					  "\r\n", status, len);
+	
+	MSG_WriteData(&request->sendmsg, header, headerlen);
+	MSG_WriteData(&request->sendmsg, message, len);
+}
+
+
+qboolean HTTPServer_WriteMessage( ftRequest_t* request, netadr_t* from)
+{
+	int bytes;
+	
+	bytes = NET_TcpSendData(from->sock, request->sendmsg.data + request->sentBytes, request->sendmsg.cursize - request->sentBytes);
+	
+	if(bytes < 0 || bytes > (request->sendmsg.cursize - request->sentBytes))
+	{
+		return qtrue;
+	}
+	request->sentBytes += bytes;
+	return qfalse;
+}
+
+
+void HTTPServer_BuildResponse(ftRequest_t* request)
+{
+	char response[MAX_MSGLEN];
+	
+	Com_sprintf(response, sizeof(response), "<body>Your dir was: %s</body", request->url);
 	
 	
+	HTTPServer_BuildMessage( request, "200 OK", response, strlen(response));
+
+}
+
+qboolean HTTPServer_Event(netadr_t* from, msg_t* msg, int connectionId)
+{
+	
+	ftRequest_t* request = (ftRequest_t*)connectionId;
+	int ret;
 	
 	
+	if (request->finallen == -1 || request->recvmsg.cursize < request->finallen) {
+		ret = HTTPServer_ReadMessage(from, msg, request);
+		if(ret  == -1)
+		{
+			return qtrue;
+		}else if (ret == 0) {
+			return qfalse;
+		}
+	}
+	HTTPServer_BuildResponse( request );
+	if(request->sendmsg.cursize == 0){
+	}
+	return HTTPServer_WriteMessage(request, from);
+	/* Received full message */
+//	return qtrue;
 	
 	
 }
 
 /* Detecting the clientside protocol and process the 1st chunk of data if it is a http client */
-tcpclientstate_t HTTPServer_AuthEvent(netadr_t* from, msg_t* msg, int socketfd, int *connectionId)
+tcpclientstate_t HTTPServer_AuthEvent(netadr_t* from, msg_t* msg, int *connectionId)
 {
 	
 	ftRequest_t* request;
@@ -1014,14 +1217,17 @@ tcpclientstate_t HTTPServer_AuthEvent(netadr_t* from, msg_t* msg, int socketfd, 
 	
 	line = MSG_ReadStringLine(msg, protocol, sizeof(protocol));
 	if (line != NULL) {
-		if(Q_stricmpn(line, "HTTP/1.0", 8) && Q_stricmpn(line, "HTTP/1.1",8))
+		if ( Q_strncmp(line, "GET", 3) && Q_strncmp(line, "POST", 4) && Q_strncmp(line, "HEAD", 4) ) {
+			return TCP_AUTHNOTME;
+		}
+		if( strstr(line, "HTTP/1.0") == NULL && strstr(line, "HTTP/1.1") == NULL )
 		{
 			/* Is not a HTTP client */
 			return TCP_AUTHNOTME;
 		}
 	}
 	
-	request = FT_CreateRequest("", "");
+	request = FT_CreateRequest(NULL, NULL);
 	
 	if(request == NULL)
 		return TCP_AUTHBAD;
@@ -1029,7 +1235,7 @@ tcpclientstate_t HTTPServer_AuthEvent(netadr_t* from, msg_t* msg, int socketfd, 
 	*connectionId = (int)request;
 
 	
-	if (HTTPServer_Event(from, msg, socketfd, *connectionId) == qtrue)
+	if (HTTPServer_Event(from, msg, *connectionId) == qtrue)
 	{
 		return TCP_AUTHBAD;
 	}	
@@ -1038,16 +1244,28 @@ tcpclientstate_t HTTPServer_AuthEvent(netadr_t* from, msg_t* msg, int socketfd, 
 }
 
 
+void HTTPServer_Disconnect(netadr_t* from, int connectionId)
+{
+	ftRequest_t* request;
+	if(connectionId)
+	{
+		request = (ftRequest_t*)connectionId;
+		FT_FreeRequest(request);
+
+	}
+}
 
 void HTTPServer_Init()
 {
+	char magic[] = { 'h','t','t','p' };
+	
 	/* Register the events */
-	NET_TCPAddEventType( HTTPServer_Event, HTTPServer_AuthEvent, HTTPServer_Disconnect, 'h''t''t''p');
+	NET_TCPAddEventType( HTTPServer_Event, HTTPServer_AuthEvent, HTTPServer_Disconnect, *(int*)magic);
 
 	
 	
 }
-#endif
+
 /*
  =====================================================================
  User called File-Transfer functions intended to use in external files

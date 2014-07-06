@@ -59,7 +59,7 @@ void G_ShowMotd(unsigned int clnum);
 void QDECL G_LogPrintf( const char *fmt, ... );
 void G_PrintRedirect(char* msg, int len);
 void G_PrintAddRedirect(void (*rd_dest)( const char *, int));
-__cdecl void ClientSpawn(gentity_t* ent, vec3_t* px, vec3_t* py);
+__cdecl void ClientSpawn(gentity_t* ent, float* px, float* py);
 __cdecl void ClientUserinfoChanged( int clientNum );
 
 

@@ -76,7 +76,7 @@ game_hudelem_t* G_GetNewHudElem(unsigned int clientnum){
         element->movestarttime = 0;
         element->movingtime = 0;
         element->fontscale = 1.4;
-        element->archived = 0;
+        element->archived = 1;
         element->var_14 = 0;
         element->var_15 = 0;
         element->movex = 0;

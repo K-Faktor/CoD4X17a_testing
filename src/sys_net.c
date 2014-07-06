@@ -167,20 +167,21 @@ qboolean NET_TCPPacketEvent(netadr_t* remote, byte* bufData, int cursize, int* s
 static int networkingEnabled = 0;
 
 cvar_t		*net_enabled;
-
+/*
 static cvar_t	*net_socksEnabled;
 static cvar_t	*net_socksServer;
 static cvar_t	*net_socksPort;
 static cvar_t	*net_socksUsername;
 static cvar_t	*net_socksPassword;
-
+*/
 cvar_t	*net_ip;
 cvar_t	*net_ip6;
 cvar_t	*net_port;
 cvar_t	*net_port6;
+/*
 static cvar_t	*net_mcast6addr;
 static cvar_t	*net_mcast6iface;
-
+*/
 static cvar_t	*net_dropsim;
 
 
@@ -802,7 +803,7 @@ __optimize3 __regparm3 int NET_GetPacket(netadr_t *net_from, void *net_message, 
 			err = socketError;
 
 			if( err != EAGAIN && err != ECONNRESET ){
-				Com_PrintWarningNoRedirect( "NET_GetPacket on (%s): %s\n", NET_AdrToString(NET_SockToAdr(socket)), NET_ErrorString() );
+				Com_PrintWarningNoRedirect( "NET_GetPacket on (%s - %d): %s\n", NET_AdrToString(NET_SockToAdr(socket)), socket , NET_ErrorString() );
 			}
 		}
 		else
@@ -878,23 +879,73 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 
 	} else {*/
 
+#ifdef SOCKET_DEBUG
+    char tmpstr[64];
+#endif
 	if(to->sock != 0)
 	{
-		if(addr.ss_family == AF_INET)
+		if( to->type == NA_IP || to->type == NA_BROADCAST )
 			ret = sendto( to->sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
-		else if(addr.ss_family == AF_INET6)
+		else if( to->type == NA_IP6 || to->type == NA_MULTICAST6 )
 			ret = sendto( to->sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
+		
+#ifdef SOCKET_DEBUG
+			
+			int err2;
+			
+			if(ret == SOCKET_ERROR)
+			{
+				err2 = socketError;
+				if(err2 != EAGAIN)
+				{
+					Q_strncpyz( tmpstr, NET_AdrToString(NET_SockToAdr(to->sock)), sizeof(tmpstr));
+					Com_PrintError( "Sys_SendPacket: socket %d Conn: %s ==> %s failed with: %s\n", to->sock, tmpstr, NET_AdrToString(to), NET_ErrorString() );
+				}
+			}
+#endif
+		
 	}else{//Send this packet to any available socket
 
 		for(i = 0; i < numIP; i++)
 		{
+			ret = 0;
+
 			if(ip_socket[i].sock == INVALID_SOCKET)
 				break;
 
-			if(addr.ss_family == AF_INET && ip_socket[i].type == NA_IP)
+			if( to->type != ip_socket[i].type )
+				continue;
+
+			if( to->type == NA_IP )
+			{
+				if(ip_socket[i].ip[0] == 127)
+				{
+					continue;
+				}
 				ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in) );
-			else if(addr.ss_family == AF_INET6 && ip_socket[i].type == NA_IP6)
+			}
+			else if( to->type == NA_IP6 )
+			{
 				ret = sendto( ip_socket[i].sock, data, length, 0, (struct sockaddr *) &addr, sizeof(struct sockaddr_in6) );
+			}
+#ifdef SOCKET_DEBUG
+			int err2;
+			
+			if(ret == SOCKET_ERROR)
+			{
+				err2 = socketError;
+				if(err2 != EAGAIN)
+				{
+					Q_strncpyz( tmpstr, NET_AdrToString(&ip_socket[i]), sizeof(tmpstr));
+					Com_PrintError( "Sys_SendPacket: socket %d Conn: %s ==> %s failed with: %s\n", ip_socket[i].sock, tmpstr, NET_AdrToString(to), NET_ErrorString() );
+				}
+			}else{
+				Q_strncpyz( tmpstr, NET_AdrToString(&ip_socket[i]), sizeof(tmpstr));
+				Com_Printf( "^2Sys_SendPacket: socket %d Conn: %s ==> %s successfully sent\n", ip_socket[i].sock, tmpstr, NET_AdrToString(to) );
+			}
+#endif
+			
+			
 		}
 	}
 
@@ -911,8 +962,9 @@ qboolean Sys_SendPacket( int length, const void *data, netadr_t *to ) {
 		if( ( err == EADDRNOTAVAIL ) && ( ( to->type == NA_BROADCAST ) ) ) {
 			return qfalse;
 		}
-
+#ifndef SOCKET_DEBUG
 		Com_PrintWarningNoRedirect( "NET_SendPacket: %s\n", NET_ErrorString() );
+#endif
 		return qfalse;
 	}
 	return qtrue;
@@ -1118,7 +1170,28 @@ int NET_IPSocket( char *net_interface, int port, int *err, qboolean tcp) {
 			return INVALID_SOCKET;
 		}
 	}
+#ifdef SOCKET_DEBUG
+	if(!tcp)
+	{
+		char dummybuf[32];
+		int ret;
+		int err2;
+				
+		ret = recv(newsocket, dummybuf, sizeof(dummybuf), 0);
+		
+		err2 = socketError;
 
+		
+		if(ret == SOCKET_ERROR && err2 != EAGAIN)
+		{
+			Com_PrintError( "NET_IPSocket reading from open socket %d failed with: %s\n", newsocket,  NET_ErrorString() );
+		}else {
+			Com_Printf( "NET_IPSocket opening of socket %d was successful\n", newsocket );
+			
+		}
+	}
+#endif
+	
 	return newsocket;
 }
 
@@ -1227,7 +1300,27 @@ int NET_IP6Socket( char *net_interface, int port, struct sockaddr_in6 *bindto, i
 			return INVALID_SOCKET;
 		}
 	}
-
+#ifdef SOCKET_DEBUG
+	if(!tcp)
+	{
+		char dummybuf[32];
+		int ret;
+		int err2;
+		
+		ret = recv(newsocket, dummybuf, sizeof(dummybuf), 0);
+		
+		err2 = socketError;
+		
+		
+		if(ret == SOCKET_ERROR && err2 != EAGAIN)
+		{
+			Com_PrintError( "NET_IP6Socket reading from open socket %d failed with: %s\n", newsocket,  NET_ErrorString() );
+		}else {
+			Com_Printf( "NET_IP6Socket opening of socket %d was successful\n", newsocket );
+			
+		}
+	}
+#endif
 	return newsocket;
 }
 
@@ -1237,6 +1330,7 @@ NET_SetMulticast
 Set the current multicast group
 ====================
 */
+/*
 void NET_SetMulticast6(void)
 {
 	struct sockaddr_in6 addr;
@@ -1269,7 +1363,7 @@ void NET_SetMulticast6(void)
 	else
 		curgroup.ipv6mr_interface = 0;
 }
-
+*/
 /*
 ====================
 NET_JoinMulticast
@@ -1935,7 +2029,7 @@ static qboolean NET_GetCvars( void ) {
 	net_port6 = Cvar_RegisterInt( "net_port6", 0, 0, 65535, CVAR_LATCH, "IPv6 Network Port Server will listen on" );
 	modified += net_port6->modified;
 	net_port6->modified = qfalse;
-
+/*
 	// Some cvars for configuring multicast options which facilitates scanning for servers on local subnets.
 	net_mcast6addr = Cvar_RegisterString( "net_mcast6addr", NET_MULTICAST_IP6, CVAR_LATCH | CVAR_ARCHIVE,  "IPv6 Network multicast address");
 	modified += net_mcast6addr->modified;
@@ -1946,6 +2040,7 @@ static qboolean NET_GetCvars( void ) {
 #else
 	net_mcast6iface = Cvar_RegisterString( "net_mcast6iface", "", CVAR_LATCH | CVAR_ARCHIVE ,  "IPv6 Network multicast interface");
 #endif
+
 	modified += net_mcast6iface->modified;
 	net_mcast6iface->modified = qfalse;
 
@@ -1968,7 +2063,7 @@ static qboolean NET_GetCvars( void ) {
 	net_socksPassword = Cvar_RegisterString( "net_socksPassword", "", CVAR_LATCH | CVAR_ARCHIVE , "Net socks proxyserver password");
 	modified += net_socksPassword->modified;
 	net_socksPassword->modified = qfalse;
-
+*/
 	net_dropsim = Cvar_RegisterInt("net_dropsim", 0,0,100, CVAR_TEMP, "Net enable packetloss simulation");
 	return modified ? qtrue : qfalse;
 }
@@ -2167,7 +2262,7 @@ void NET_TcpCloseSocket(int socket)
 			if(conn->state >= TCP_AUTHSUCCESSFULL)
 			{
 				tcpServer.activeConnectionCount--;
-				NET_TCPConnectionClosed(&conn->remote, conn->remote.sock, conn->connectionId, conn->serviceId);
+				NET_TCPConnectionClosed(&conn->remote, conn->connectionId, conn->serviceId);
 			}
 			conn->remote.sock = INVALID_SOCKET;
 			NET_TcpServerRebuildFDList();
@@ -2337,7 +2432,7 @@ void NET_TcpServerPacketEventLoop()
 	}
 
 	fdr = tcpServer.fdr;
-	activefd = select(tcpServer.highestfd + 1, &fdr, NULL, NULL, &timeout);
+	activefd = select(tcpServer.highestfd + 1, &fdr, &fdr, NULL, &timeout);
 
 
 	if(activefd < 0)
@@ -2366,21 +2461,18 @@ void NET_TcpServerPacketEventLoop()
 
                         cursize = 0;
 
-                        while( cursize < 2048 )
-                        {
-                            ret = NET_TcpServerGetPacket(conn, bufData + cursize, sizeof(bufData) - cursize, qfalse);
+						ret = NET_TcpServerGetPacket(conn, bufData, sizeof(bufData), qfalse);
 
-                            if(ret < 1)
-								break;
-                            else
-                                cursize += ret;
+						if(ret > 0)
+						{
+							cursize = ret;
                         }
 
 						if(conn->lastMsgTime == 0 || conn->remote.sock < 1)
 						{
 							break; //Connection closed unexpected
 						//Close connection, we don't want to process huge messages as auth-packet or want to quit if the login was bad
-						}else if(cursize > 2048 || (conn->state = NET_TCPAuthPacketEvent(&conn->remote, bufData, cursize, conn->remote.sock, &conn->connectionId, &conn->serviceId)) == TCP_AUTHBAD){
+						}else if( (conn->state = NET_TCPAuthPacketEvent(&conn->remote, bufData, cursize, &conn->connectionId, &conn->serviceId)) == TCP_AUTHBAD){
 							NET_TcpCloseSocket(conn->remote.sock);
 
 						}else if(conn->state == TCP_AUTHSUCCESSFULL){
@@ -2397,21 +2489,20 @@ void NET_TcpServerPacketEventLoop()
 					case TCP_AUTHSUCCESSFULL:
 
 						cursize = 0;
-						do{
-                            ret = NET_TcpServerGetPacket(conn, bufData + cursize, sizeof(bufData) - cursize, qtrue);
-                            if(ret < 1)
-                                break;
-                            else
-                                cursize += ret;
-
-                        }while(cursize < sizeof(bufData));
-
-						if(cursize >= sizeof(bufData))
+						
+                        ret = NET_TcpServerGetPacket(conn, bufData, sizeof(bufData), qtrue);
+                        if(ret > 0)
 						{
-							Com_PrintWarningNoRedirect( "NET_TcpServerPacketEventLoop: Oversize packet from %s\n", NET_AdrToString (&conn->remote));
+							cursize = ret;	
+						}
+
+
+						if(cursize > sizeof(bufData))
+						{
+							Com_PrintWarningNoRedirect( "NET_TcpServerPacketEventLoop: Oversize packet from %s. Must not happen!\n", NET_AdrToString (&conn->remote));
 							cursize = sizeof(bufData);
 						}
-						NET_TCPPacketEvent(&conn->remote, bufData, cursize, conn->remote.sock, conn->connectionId, conn->serviceId);
+						NET_TCPPacketEvent(&conn->remote, bufData, cursize, conn->connectionId, conn->serviceId);
 						break;
 				}
 
@@ -2465,7 +2556,7 @@ void NET_TcpServerOpenConnection( netadr_t *from )
 		if(tcpServer.activeConnectionCount > MAX_TCPCONNECTIONS / 3 && oldestTimeAccepted + MAX_TCPCONNECTEDTIMEOUT < NET_TimeGetTime()){
 				conn = &tcpServer.connections[oldestAccepted];
 				tcpServer.activeConnectionCount--; //As this connection is going to be closed decrease the counter
-				NET_TCPConnectionClosed(&conn->remote, conn->remote.sock, conn->connectionId, conn->serviceId);
+				NET_TCPConnectionClosed(&conn->remote, conn->connectionId, conn->serviceId);
 
 		}else if(oldestTime + MIN_TCPAUTHWAITTIME < NET_TimeGetTime()){
 				conn = &tcpServer.connections[oldest];
@@ -2514,9 +2605,10 @@ __optimize3 __regparm3 qboolean NET_TcpServerConnectRequest(netadr_t* net_from, 
 
 	struct sockaddr_storage from;
 	socklen_t	fromlen;
-	int		err;
+	int		conerr;
 	net_from->sock = INVALID_SOCKET;
 	int socket;
+	ioctlarg_t	_true = 1;
 	
 	if(tcp_socket != INVALID_SOCKET && FD_ISSET(tcp_socket, fdr))
 	{
@@ -2525,15 +2617,21 @@ __optimize3 __regparm3 qboolean NET_TcpServerConnectRequest(netadr_t* net_from, 
 		socket = accept(tcp_socket, (struct sockaddr *) &from, &fromlen);
 		if (socket == SOCKET_ERROR)
 		{
-			err = socketError;
+			conerr = socketError;
 
-			if( err != EAGAIN && err != ECONNRESET )
+			if( conerr != EAGAIN && conerr != ECONNRESET )
 				Com_PrintWarning( "NET_TcpServerConnectRequest: %s\n", NET_ErrorString() );
 
 			return qfalse;
 		}
 		else
 		{
+			if( ioctlsocket( socket, FIONBIO, &_true ) == SOCKET_ERROR ) {
+				Com_PrintWarning( "NET_TcpServerConnectRequest: ioctl FIONBIO: %s\n", NET_ErrorString() );
+				conerr = socketError;
+				closesocket( socket );
+				return qfalse;
+			}
 			SockadrToNetadr( (struct sockaddr *) &from, net_from, qtrue, socket);
 			return qtrue;
 		}
@@ -2546,15 +2644,21 @@ __optimize3 __regparm3 qboolean NET_TcpServerConnectRequest(netadr_t* net_from, 
 		
 		if (socket == SOCKET_ERROR)
 		{
-			err = socketError;
+			conerr = socketError;
 
-			if( err != EAGAIN && err != ECONNRESET )
+			if( conerr != EAGAIN && conerr != ECONNRESET )
 				Com_PrintWarning( "NET_TcpServerConnectRequest: %s\n", NET_ErrorString() );
 
 			return qfalse;
 		}
 		else
 		{
+			if( ioctlsocket( socket, FIONBIO, &_true ) == SOCKET_ERROR ) {
+				Com_PrintWarning( "NET_TcpServerConnectRequest: ioctl FIONBIO: %s\n", NET_ErrorString() );
+				conerr = socketError;
+				closesocket( socket );
+				return qfalse;
+			}
 			SockadrToNetadr((struct sockaddr *) &from, net_from, qtrue, socket);
 			return qtrue;
 		}
@@ -2719,7 +2823,7 @@ int NET_TcpClientConnect( const char *remoteAdr ) {
 
 				socklen_t so_len = sizeof(err);
 
-				if(getsockopt(newsocket, SOL_SOCKET, SO_ERROR, (char*) &err, &so_len) == 0);
+				if(getsockopt(newsocket, SOL_SOCKET, SO_ERROR, (char*) &err, &so_len) == 0)
 				{
 					return newsocket;
 				}
@@ -2831,7 +2935,7 @@ __optimize3 __regparm1 qboolean NET_Sleep(unsigned int usec)
 	qboolean netabort = qfalse; //This will be true if we had to process more than 666 packets on one single interface
 				  //Usually this marks an ongoing floodattack onto this CoD4 server
 
-	if(usec < 0 || usec > 999999)
+	if( usec > 999999 )
 		usec = 0;
 
 	FD_ZERO(&fdr);
