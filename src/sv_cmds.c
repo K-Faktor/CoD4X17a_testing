@@ -1023,7 +1023,7 @@ static void SV_MiniStatus_f( void ) {
 		strncpy(sguid, fguid+24, 8);
 		
 		if(cl->uid > 0){
-			Com_Printf ("%9i ", cl->uid );
+			Com_Printf ("@%9i ", cl->uid );
 		}else{
 			Com_Printf ("%s", sguid);
 		}
