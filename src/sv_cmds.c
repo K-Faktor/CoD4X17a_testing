@@ -1018,11 +1018,14 @@ static void SV_MiniStatus_f( void ) {
 			Com_Printf ("%4i ", ping);
 		}
 
-
+		char sguid[9];
+		char* fguid = cl->pbguid;
+		strncpy(sguid, fguid+24, 8);
+		
 		if(cl->uid > 0){
 			Com_Printf ("%9i ", cl->uid );
 		}else{
-			Com_Printf ("      N/A ");
+			Com_Printf ("%s", sguid);
 		}
 
 		Com_Printf ("%s", cl->name);
