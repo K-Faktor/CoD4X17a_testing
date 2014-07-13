@@ -44,7 +44,7 @@ NET
 #define	PORT_ANY		-1
 
 #ifndef _WIN32
-	#define SOCKET_DEBUG
+	//#define SOCKET_DEBUG
 #endif
 
 typedef enum {

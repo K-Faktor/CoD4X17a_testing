@@ -1783,7 +1783,7 @@ static void SV_ShowConfigstring_f()
 
     index = atoi(Cmd_Argv(1));
     SV_GetConfigstring(index, buffer, sizeof(buffer));
-    Com_Printf("Configstring is: %s\n", buffer);
+    Com_Printf("CS len is %d CS is: %s\n", strlen(buffer), buffer);
 }
 
 

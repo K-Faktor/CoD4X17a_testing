@@ -671,7 +671,7 @@ void Com_InitGamefunctions()
 
         Mem_BeginAlloc("$init", qtrue);
     }
-    Con_InitChannels();
+//    Con_InitChannels();
 
     if(!com_useFastfiles->integer) SEH_UpdateLanguageInfo();
 

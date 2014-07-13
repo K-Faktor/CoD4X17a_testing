@@ -55,7 +55,7 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("getent", (void*)0x80c7c72, 0);
 	Scr_AddFunction("getentarray", (void*)0x80c7b44, 0);
 	Scr_AddFunction("spawn", /* (void*)0x80bf638 */ GScr_Spawn, 0);
-	Scr_AddFunction("spawnvehicle", GScr_SpawnVehicle, 0);
+//	Scr_AddFunction("spawnvehicle", GScr_SpawnVehicle, 0);
 	Scr_AddFunction("spawnplane", (void*)0x80c0fde, 0);
 	Scr_AddFunction("spawnturret", (void*)0x80c0f52, 0);
 	Scr_AddFunction("precacheturret", (void*)0x80bcd46, 0);
@@ -127,6 +127,7 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("vectornormalize", (void*)0x80c69aa, 0);
 	Scr_AddFunction("vectortoangles", (void*)0x80be762, 0);
 	Scr_AddFunction("vectorlerp", (void*)0x80be6da, 0);
+	Scr_AddFunction("vectoradd", GScr_VectorAdd, 0);
 	Scr_AddFunction("anglestoup", (void*)0x80be8ea, 0);
 	Scr_AddFunction("anglestoright", (void*)0x80be8a0, 0);
 	Scr_AddFunction("anglestoforward", (void*)0x80be856, 0);
@@ -794,7 +795,7 @@ typedef struct{
 
 
 #define scrStruct (*((scrStruct_t*)(SCRSTRUCT_ADDR)))
-
+#define MAX_CALLSCRIPTSTACKDEPTH 200
 
 __cdecl unsigned int Scr_LoadScript(const char* scriptname, PrecacheEntry *precache, int iarg_02){
 
@@ -810,11 +811,30 @@ __cdecl unsigned int Scr_LoadScript(const char* scriptname, PrecacheEntry *preca
 	unsigned int variable;
 	unsigned int object;
 
+	int i;
+	static unsigned int callScriptStackPtr = 0;
+	static char callScriptStackNames[MAX_QPATH * (MAX_CALLSCRIPTSTACKDEPTH + 1)];
+
+	Q_strncpyz(&callScriptStackNames[MAX_QPATH * callScriptStackPtr], scriptname, MAX_QPATH);
+
+	if(callScriptStackPtr >= MAX_CALLSCRIPTSTACKDEPTH)
+	{
+		Com_Printf("Called too many scripts in chain\nThe scripts are:\n");
+		for(i = MAX_CALLSCRIPTSTACKDEPTH; i >= 0 ; --i)
+		{
+			Com_Printf("*%d: %s\n", i, &callScriptStackNames[MAX_QPATH * i]);
+		}
+		Com_Error(ERR_FATAL, "CallscriptStack overflowed");
+		return 0;
+	}
+
+	++callScriptStackPtr;
 
 	handle = Scr_CreateCanonicalFilename(scriptname);
 
 	if(FindVariable(scrStruct.var_03, handle))
 	{
+		--callScriptStackPtr;
 
 		SL_RemoveRefToString(handle);
 		variable = FindVariable(scrStruct.var_04, handle);
@@ -851,6 +871,7 @@ __cdecl unsigned int Scr_LoadScript(const char* scriptname, PrecacheEntry *preca
 
 		if(!scr_buffer_handle)
 		{
+			--callScriptStackPtr;
 			return 0;
 		}
 
@@ -871,6 +892,8 @@ __cdecl unsigned int Scr_LoadScript(const char* scriptname, PrecacheEntry *preca
 		scrStruct.var_12 = old_var12;
 		scrStruct.var_08 = old_var08;
 		
+		--callScriptStackPtr;
+
 		return object;
 	}
 }

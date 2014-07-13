@@ -254,9 +254,6 @@ static char lastValidGame[MAX_OSPATH];
 #define FS_FreeFileList Sys_FreeFileList
 
 /*
-typedef int (__cdecl *tFS_ReadFile)(const char* qpath, void **buffer);
-tFS_ReadFile FS_ReadFile = (tFS_ReadFile)(0x818bb8c);
-
 typedef void (__cdecl *tFS_WriteFile)(const char* qpath, const void *buffer, int size);
 tFS_WriteFile FS_WriteFile = (tFS_WriteFile)(0x818a58c);
 
@@ -271,9 +268,6 @@ tFS_Write FS_Write = (tFS_Write)(0x8186ec4);
 
 typedef int (__cdecl *tFS_Read)(void const* data,int length, fileHandle_t);
 tFS_Read FS_Read = (tFS_Read)(0x8186f64);
-
-typedef int (__cdecl *tFS_FOpenFileByMode)(const char *qpath, fileHandle_t *f, fsMode_t mode);
-tFS_FOpenFileByMode FS_FOpenFileByMode = (tFS_FOpenFileByMode)(0x818ba98);
 */
 
 
@@ -1332,7 +1326,7 @@ Used for streaming data out of either a
 separate file or a ZIP file.
 ===========
 */
-long FS_FOpenFileRead(const char *filename, fileHandle_t *file)
+long FS_FOpenFileReadForThread(const char *filename, fileHandle_t *file, int fsThread)
 {
 	searchpath_t *search;
 	long len;
@@ -1345,7 +1339,7 @@ long FS_FOpenFileRead(const char *filename, fileHandle_t *file)
 	
 	for(search = fs_searchpaths; search; search = search->next)
 	{
-	        len = FS_FOpenFileReadDir(filename, search, file, 0, qfalse, 0);
+	        len = FS_FOpenFileReadDir(filename, search, file, 0, qfalse, fsThread);
 	
 	        if(file == NULL)
 	        {
@@ -1374,8 +1368,23 @@ long FS_FOpenFileRead(const char *filename, fileHandle_t *file)
 
         if(file)
         	*file = 0;
-        	
+
 	return -1;
+}
+
+long FS_FOpenFileRead(const char *filename, fileHandle_t *file)
+{
+    return FS_FOpenFileReadForThread(filename, file, 0);
+}
+
+long FS_FOpenFileReadThread1(const char *filename, fileHandle_t *file)
+{
+    return FS_FOpenFileReadForThread(filename, file, 1);
+}
+
+long FS_FOpenFileReadThread2(const char *filename, fileHandle_t *file)
+{
+    return FS_FOpenFileReadForThread(filename, file, 2);
 }
 
 
@@ -1505,95 +1514,6 @@ void FS_Dir_f( void ) {
 }
 
 
-/*
-========================================================================================
-
-Handle based file calls for virtual machines
-
-========================================================================================
-*/
-/*
-int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
-	int		r;
-	qboolean	sync;
-
-	sync = qfalse;
-
-	switch( mode ) {
-	case FS_READ:
-		r = FS_FOpenFileRead( qpath, f );
-		break;
-	case FS_READ_LOCK:
-		r = FS_FOpenFileRead( qpath, f );
-		if(fcntl(fileno(fsh[*f].handleFiles.file.o),F_SETLKW,file_lock(F_WRLCK, SEEK_SET)) == -1){
-		    FS_FCloseFile(*f);
-		    r = -1;
-		}else{
-		    fsh[*f].locked = qtrue;
-		}
-		break;
-	case FS_WRITE:
-		*f = FS_FOpenFileWrite( qpath );
-		r = 0;
-		if (*f == 0) {
-			r = -1;
-		}
-		break;
-	case FS_WRITE_LOCK:
-		*f = FS_FOpenFileWrite( qpath );
-		r = 0;
-		if (*f == 0) {
-			r = -1;
-		}else if(fcntl(fileno(fsh[*f].handleFiles.file.o),F_SETLKW,file_lock(F_WRLCK, SEEK_SET)) == -1){
-		    FS_FCloseFile(*f);
-		    r = -1;
-		}else{
-		    fsh[*f].locked = qtrue;
-		}
-		break;
-	case FS_APPEND_SYNC:
-		sync = qtrue;
-	case FS_APPEND:
-		*f = FS_FOpenFileAppend( qpath );
-		r = 0;
-		if (*f == 0) {
-			r = -1;
-		}
-		break;
-	case FS_APPEND_LOCK:
-		*f = FS_FOpenFileAppend( qpath );
-		r = 0;
-		if (*f == 0) {
-			r = -1;
-		}else if(fcntl(fileno(fsh[*f].handleFiles.file.o),F_SETLKW,file_lock(F_WRLCK, SEEK_SET)) == -1){
-		    FS_FCloseFile(*f);
-		    r = -1;
-		}else{
-		    fsh[*f].locked = qtrue;
-		}
-		break;
-	default:
-		Com_Error( ERR_FATAL, "FSH_FOpenFile: bad mode" );
-		return -1;
-	}
-
-	if (!f) {
-		return r;
-	}
-
-	if ( *f ) {
-		fsh[*f].baseOffset = ftell(fsh[*f].handleFiles.file.o);
-		fseek(fsh[*f].handleFiles.file.o,0,SEEK_END);
-		fsh[*f].fileSize = ftell(fsh[*f].handleFiles.file.o);
-		fseek(fsh[*f].handleFiles.file.o,0,SEEK_SET);
-		fsh[*f].streamed = qfalse;
-
-	}
-	fsh[*f].handleSync = sync;
-
-	return r;
-}
-*/
 int	FS_FTell( fileHandle_t f ) {
 	int pos;
 		pos = ftell(fsh[f].handleFiles.file.o);
@@ -2596,6 +2516,11 @@ void FS_SetDirSep(cvar_t* fs_dir)
   Q_strncpyz(buf, fs_dir->string, sizeof(buf));
   length = strlen(buf);
 
+  if( length == 0 )
+  {
+    return;
+  }
+
   for (i = 0; length >= i; i++)
   {
     if ( buf[i] == '\\' )
@@ -2763,6 +2688,8 @@ void FS_Startup(const char* gameName)
   fs_basegame = Cvar_RegisterString("fs_basegame", "", 16, "Base game name");
   fs_gameDirVar = Cvar_RegisterString("fs_game", "", 28, "Game data directory. Must be \"\" or a sub directory of 'mods/'.");
   fs_ignoreLocalized = Cvar_RegisterBool("fs_ignoreLocalized", qfalse, 160, "Ignore localized files");
+
+  fs_packFiles = 0;
 
   homePath = (char*)Sys_DefaultHomePath();
   if ( !homePath || !homePath[0] )
@@ -3246,7 +3173,7 @@ void FS_PatchFileHandleData()
 	*(qboolean**)0x818BB1C = &fsh[0].handleSync;
 	*(qboolean**)0x818BE0B = &fsh[0].handleSync;
 
-	*(int**)0x818BAF6 = &fsh[0].baseOffset;
+	*(int**)0x818BAF6 = &fsh[0].fileSize;
 
 	*(int**)0x818760F = &fsh[0].zipFilePos;
 	*(int**)0x8187729 = &fsh[0].zipFilePos;
@@ -3301,8 +3228,8 @@ void FS_PatchFileHandleData()
 	*(fileHandleData_t**)0x818BE4B = &fsh[1];
 	*(fileHandleData_t**)0x818BE9B = &fsh[1];
 
-	*(int**)0x8187360 = &fsh[1].baseOffset;
-	*(int**)0x818E766 = &fsh[1].baseOffset;
+	*(int**)0x8187360 = &fsh[1].fileSize;
+	*(int**)0x818E766 = &fsh[1].fileSize;
 
 	*(int**)0x818699A = &fsh[1].zipFilePos;
 	*(int**)0x8187B98 = &fsh[1].zipFilePos;
@@ -3631,7 +3558,7 @@ FS_FOpenFileAppend
 
 ===========
 */
-fileHandle_t FS_FOpenFileAppend( const char *filename ) {
+fileHandle_t __cdecl FS_FOpenFileAppend( const char *filename ) {
 	char            ospath[MAX_OSPATH];
 	fileHandle_t f;
 	mvabuf;
@@ -3643,7 +3570,13 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
-	f = FS_HandleForFile();
+	if(Sys_IsMainThread())
+	{
+		f = FS_HandleForFileForThread(0);
+	}else{
+		f = FS_HandleForFileForThread(3);
+	}
+
 	if(f == 0){
 		Sys_LeaveCriticalSection(CRIT_FILESYSTEM);
 		return 0;
@@ -3787,3 +3720,88 @@ __regparm3 void DB_BuildOSPath(const char *filename, int ffdir, int len, char *b
             return;
     }
 }
+
+
+
+/*
+========================================================================================
+
+Handle based file calls for virtual machines
+
+========================================================================================
+*/
+
+int     FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
+	int r;
+	qboolean sync;
+
+	sync = qfalse;
+
+	switch ( mode ) {
+	case FS_READ:
+		r = FS_FOpenFileRead( qpath, f );
+		break;
+	case FS_WRITE:
+/*
+#ifdef __MACOS__    //DAJ MacOS file typing
+		{
+			extern _MSL_IMP_EXP_C long _fcreator, _ftype;
+			_ftype = 'WlfB';
+			_fcreator = 'WlfM';
+		}
+#endif
+*/
+		*f = FS_FOpenFileWrite( qpath );
+		r = 0;
+		if ( *f == 0 ) {
+			r = -1;
+		}
+		break;
+	case FS_APPEND_SYNC:
+		sync = qtrue;
+	case FS_APPEND:
+/*
+#ifdef __MACOS__    //DAJ MacOS file typing
+		{
+			extern _MSL_IMP_EXP_C long _fcreator, _ftype;
+			_ftype = 'WlfB';
+			_fcreator = 'WlfM';
+		}
+#endif
+*/
+		*f = FS_FOpenFileAppend( qpath );
+		r = 0;
+		if ( *f == 0 ) {
+			r = -1;
+		}
+		break;
+	default:
+		Com_Error( ERR_FATAL, "FSH_FOpenFile: bad mode" );
+		return -1;
+	}
+
+	if ( !f ) {
+		return r;
+	}
+
+	if ( *f ) {
+
+		fsh[*f].fileSize = r;
+		fsh[*f].streamed = qfalse;
+
+		// uncommenting this makes fs_reads
+		// use the background threads --
+		// MAY be faster for loading levels depending on the use of file io
+		// q3a not faster
+		// wolf not faster
+
+//		if (mode == FS_READ) {
+//			Sys_BeginStreamedFile( *f, 0x4000 );
+//			fsh[*f].streamed = qtrue;
+//		}
+	}
+	fsh[*f].handleSync = sync;
+
+	return r;
+}
+

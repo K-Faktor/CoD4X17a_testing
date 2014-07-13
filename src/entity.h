@@ -217,7 +217,7 @@ struct gentity_s {
 	int field_168;
 	int field_16C;
 
-	int constClassname;
+	int classname;
 
 	int field_174;
 	int field_178;

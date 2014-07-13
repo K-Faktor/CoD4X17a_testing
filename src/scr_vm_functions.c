@@ -2115,7 +2115,7 @@ void GScr_Spawn()
 
 	gentity = G_Spawn();
 
-	Scr_SetString((unsigned short*)&gentity->constClassname, (unsigned short)strindex);
+	Scr_SetString((unsigned short*)&gentity->classname, (unsigned short)strindex);
 
 	gentity->r.currentOrigin[0] = origin[0];
 	gentity->r.currentOrigin[1] = origin[1];
@@ -2157,7 +2157,7 @@ void GScr_SpawnHelicopter()
 
   newent = G_Spawn();
 
-  Scr_SetString((unsigned short*)&newent->constClassname, (unsigned short)stringIndex.script_vehicle);
+  Scr_SetString((unsigned short*)&newent->classname, (unsigned short)stringIndex.script_vehicle);
 
   newent->r.currentOrigin[0] = position[0];
   newent->r.currentOrigin[1] = position[1];
@@ -2171,7 +2171,7 @@ void GScr_SpawnHelicopter()
   Scr_AddEntity(newent);
 }
 
-
+/*
 void GScr_SpawnVehicle()
 {
 
@@ -2193,7 +2193,7 @@ void GScr_SpawnVehicle()
 
 	gentity = G_Spawn();
 
-	Scr_SetString((unsigned short*)&gentity->constClassname, (unsigned short)stringIndex.script_vehicle);
+	Scr_SetString((unsigned short*)&gentity->classname, (unsigned short)stringIndex.script_vehicle);
 
 	gentity->r.currentOrigin[0] = origin[0];
 	gentity->r.currentOrigin[1] = origin[1];
@@ -2205,11 +2205,40 @@ void GScr_SpawnVehicle()
         Q_strncpyz(vehModel, Scr_GetString(3), sizeof(vehModel));
 
         G_SetModel(gentity, vehModel);
-
+//	G_VehCollmapSpawner( gentity );
 	SpawnVehicle( gentity, vehTypeStr );
-	G_VehCollmapSpawner( gentity );
+//	gentity->s.eType = 12;
+//	gentity->r.contents = 0x2080;
 	Scr_AddEntity( gentity );
 }
+*/
+
+void GScr_VectorAdd()
+{
+
+	vec3_t vec;
+	float x, y, z;
+
+	if ( Scr_GetNumParam() != 4 )
+	{
+		Scr_Error("Usage: vectoradd <vector>, <x>, <y>, <z>");
+		return;
+	}
+
+	Scr_GetVector(0, vec);
+	x = Scr_GetFloat(1);
+	y = Scr_GetFloat(2);
+	z = Scr_GetFloat(3);
+
+	vec[0] += x;
+	vec[1] += y;
+	vec[2] += z;
+
+	Scr_AddVector( vec );
+}
+
+
+
 
 /*
 void ScrCmd_SetStance(scr_entref_t arg){

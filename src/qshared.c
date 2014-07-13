@@ -1505,7 +1505,10 @@ qboolean isInteger(const char* string, int size)
             sign = qtrue;
             continue;
         }
-        if(*ptr < '0' || *ptr > '9') return qfalse;
+        if(*ptr < '0' || *ptr > '9')
+	{
+		return qfalse;
+	}
     }
     return qtrue;
 }
@@ -1533,6 +1536,12 @@ qboolean isVector(const char* string, int size, int dim)
         {
             ptr++; i++;
         }
+
+        if(*ptr != ' ')
+        {
+            break;
+        }
+
     }
     if(dim != 0)
         return qfalse;
@@ -1561,6 +1570,13 @@ qboolean strToVect(const char* string, float *vect, int dim)
         {
             ptr++;
         }
+
+
+        if(*ptr != ' ')
+        {
+            break;
+        }
+
     }
     if(i != dim)
         return qfalse;

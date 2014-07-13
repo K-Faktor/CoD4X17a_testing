@@ -268,7 +268,14 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x8177402, SV_SendServerCommand_IW);
 	SetJump(0x818e73c, FS_Restart);
 	SetJump(0x818726c, FS_FCloseFile);
-
+	SetJump(0x818ba54, FS_FOpenFileRead);
+	SetJump(0x818ba70, FS_FOpenFileReadThread1);
+	SetJump(0x818ba98, FS_FOpenFileByMode);
+	SetJump(0x818bb8c, FS_ReadFile);
+	SetJump(0x8187430, FS_FreeFile);
+	SetJump(0x8186f64, FS_Read);
+	SetJump(0x818a6cc, FS_FOpenFileAppend);
+	SetJump(0x818a96e, FS_FOpenFileWrite);
 
 	SetJump(0x81a2944, Cvar_RegisterString);
 	SetJump(0x81a2d94, Cvar_RegisterBool);

@@ -31,9 +31,11 @@
 #include <time.h>
 #include <string.h>
 
-#ifndef MAXPRINTMSG
-#define MAXPRINTMSG 1024
+#ifdef MAXPRINTMSG
+#undef MAXPRINTMSG
 #endif
+
+#define MAXPRINTMSG 8*1024
 
 static fileHandle_t logfile;
 static fileHandle_t adminlogfile;

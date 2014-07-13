@@ -70,6 +70,7 @@ void HECmd_SetText(scr_entref_t entnum);
 void GScr_Spawn();
 void GScr_SpawnVehicle();
 void GScr_SpawnHelicopter();
+void GScr_VectorAdd();
 
 __cdecl void ClientScr_SetSessionTeam(gclient_t* gcl, client_fields_t* gfl);
 

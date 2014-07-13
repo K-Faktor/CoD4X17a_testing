@@ -61,11 +61,8 @@
 // mode parm for FS_FOpenFile
 typedef enum {
 	FS_READ,
-	FS_READ_LOCK,
 	FS_WRITE,
-	FS_WRITE_LOCK,
 	FS_APPEND,
-	FS_APPEND_LOCK,
 	FS_APPEND_SYNC
 } fsMode_t;
 
@@ -131,7 +128,7 @@ typedef struct {
 		void*		writebuffer;
 	};
 	union{
-		int		baseOffset;
+		int		fileSize;
 		int		bufferSize;
 	};
 	union{
@@ -163,6 +160,8 @@ extern cvar_t*	fs_gameDirVar;
 void FS_CopyFile(char* FromOSPath,char* ToOSPath);
 int FS_Read(void* data, int length, fileHandle_t);
 long FS_FOpenFileRead(const char* filename, fileHandle_t* returnhandle);
+long FS_FOpenFileReadThread1(const char* filename, fileHandle_t* returnhandle);
+long FS_FOpenFileReadThread2(const char* filename, fileHandle_t* returnhandle);
 fileHandle_t FS_FOpenFileWrite(const char* filename);
 fileHandle_t FS_FOpenFileAppend(const char* filename);
 qboolean FS_Initialized();
@@ -233,6 +232,6 @@ qboolean FS_FileExistsOSPath( const char *ospath );
 void FS_RenameOSPath( const char *from_ospath, const char *to_ospath );
 qboolean FS_SetPermissionsExec(const char* ospath);
 __regparm3 void DB_BuildOSPath(const char *filename, int ffdir, int len, char *buff);
-
+int     FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
 #endif
 

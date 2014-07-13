@@ -234,7 +234,7 @@ void PbSvUnload()
     pbsv.hLibModule = 0;
 }
 
-void PbSvBuildBasePath(char* ospath)
+void PbSvBuildHomePath(char* ospath)
 {
 	ospath[0] = '\0';
 	char pathsep[2];
@@ -267,7 +267,7 @@ void PbSvBuildBasePath(char* ospath)
 }
 
 
-void PbSvBuildHomePath(char* ospath)
+void PbSvBuildBasePath(char* ospath)
 {
 	ospath[0] = '\0';
 	char pathsep[2];
@@ -296,41 +296,43 @@ void PbSvBuildHomePath(char* ospath)
 
 
 
-void PbSvMakeHomepathCopy(const char *modulename, char *homepath)
+void PbSvMakeHomepathCopy(const char *modulename, char *basepath)
 {
 	char dstpath[512];
 	char srcpath[512];
 	
-	Q_strncpyz(srcpath, pbsv.pbPath, sizeof( srcpath ) );
+	Q_strncpyz(dstpath, pbsv.pbPath, sizeof( dstpath ) );
 	Q_strcat( dstpath, sizeof(dstpath), modulename );
+
+	Q_strncpyz(srcpath, basepath, sizeof( srcpath ) );
+	Q_strcat( srcpath, sizeof(srcpath), modulename );	
+
 	/* File exists ? */
 	if ( FS_FileExistsOSPath( dstpath ) == qtrue )
 	{
 		return;
 	}
 	/* Does not exist! Copy it from basepath */
-	Q_strncpyz(srcpath, homepath, sizeof( srcpath ) );
-	Q_strcat( srcpath, sizeof(srcpath), modulename );	
-	Q_strcat( dstpath, sizeof(dstpath), modulename );
+
 	FS_CopyFile( srcpath, dstpath );
 }
 
 const char* PbSv6makefn(char *outmodname, char *modulename)
 {
-	char homepath[MAX_OSPATH];
+	char basepath[MAX_OSPATH];
 
 	if ( !pbsv.pbPath[0] )
 	{
-		PbSvBuildBasePath( pbsv.pbPath );
-		PbSvBuildHomePath( homepath );
+		PbSvBuildHomePath( pbsv.pbPath );
+		PbSvBuildBasePath( basepath );
 
-		if ( Q_stricmp(homepath, pbsv.pbPath) && homepath[0] && pbsv.pbPath[0] )
+		if ( Q_stricmp(basepath, pbsv.pbPath) && basepath[0] && pbsv.pbPath[0] )
 		{
 		  Sys_Mkdir( pbsv.pbPath );
-		  Sys_Mkdir( homepath );
-		  PbSvMakeHomepathCopy("pbsv" DLL_EXT, homepath);
-		  PbSvMakeHomepathCopy("pbcl" DLL_EXT, homepath);
-		  PbSvMakeHomepathCopy("pbag" DLL_EXT, homepath);
+		  Sys_Mkdir( basepath );
+		  PbSvMakeHomepathCopy("pbsv" DLL_EXT, basepath);
+		  PbSvMakeHomepathCopy("pbcl" DLL_EXT, basepath);
+		  PbSvMakeHomepathCopy("pbag" DLL_EXT, basepath);
 		}
 	}
 	Q_strncpyz(outmodname, pbsv.pbPath, MAX_OSPATH);
