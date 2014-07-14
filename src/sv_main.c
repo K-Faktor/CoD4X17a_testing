@@ -2050,7 +2050,7 @@ void SV_InitCvarsOnce(void){
 	sv_mapname = Cvar_RegisterString("mapname", "", CVAR_ROM | CVAR_SERVERINFO, "Current map name");
 	sv_maxclients = Cvar_RegisterInt("sv_maxclients", 16, 1, 64, CVAR_INIT | CVAR_SERVERINFO, "Maximum number of clients that can connect to a server");
 	sv_clientSideBullets = Cvar_RegisterBool("sv_clientSideBullets", qtrue, 8, "If true, clients will synthesize tracers and bullet impacts");
-	sv_maxRate = Cvar_RegisterInt("sv_maxRate", 100000, 0, 100000, 5, "Maximum allowed bitrate per client");
+	sv_maxRate = Cvar_RegisterInt("sv_maxRate", 100000, 2500, 100000, 5, "Maximum allowed bitrate per client");
 	sv_floodProtect = Cvar_RegisterInt("sv_floodprotect", 4, 0, 100000, 5, "Prevent malicious lagging by flooding the server with commands. Is the number of client commands allowed to process");
 	sv_showcommands = Cvar_RegisterBool("sv_showcommands", qfalse, 0, "Print all client commands");
 	sv_iwds = Cvar_RegisterString("sv_iwds", "", 0x48, "IWD server checksums");
