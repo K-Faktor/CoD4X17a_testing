@@ -45,7 +45,7 @@ PCL int OnInit(){	// Funciton called on server initiation
 		return;
 	}
 	
-	Plugin_Printf("Debug from plugin %s", buffer);
+	//Plugin_Printf("Debug from plugin %s", buffer);
 	
 	fclose (file);
 	return 0;
