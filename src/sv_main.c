@@ -296,6 +296,10 @@ void __cdecl SV_AddServerCommand(client_t *client, int type, const char *cmd)
   int index;
   char string[64];
 
+    if(client->netchan.remoteAddress.type == NA_BOT)
+    {
+        return;
+    }
 	if ( client->canNotReliable )
 		return;
 	
@@ -2531,7 +2535,12 @@ void SV_PreLevelLoad(){
 
 	Cvar_SetString(g_mapstarttime, timestr);
 
-	PHandler_Event(PLUGINS_ONEXITLEVEL, NULL);
+	if(!onExitLevelExecuted)
+	{
+		PHandler_Event(PLUGINS_ONEXITLEVEL, NULL);
+	}
+	onExitLevelExecuted = qfalse;
+
 	SV_RemoveAllBots();
 	SV_ReloadBanlist();
 
@@ -3088,6 +3097,9 @@ __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 				if(client->state != CS_ACTIVE)
 					continue;
 			
+				if(client->netchan.remoteAddress.type == NA_BOT)
+					continue;
+
 				G_PrintRuleForPlayer(client);
 				G_PrintAdvertForPlayer(client);
 			}

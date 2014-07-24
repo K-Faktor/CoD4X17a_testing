@@ -335,7 +335,7 @@ or moved to a new level based on the "nextmap" cvar
 =============
 */
 
-
+qboolean onExitLevelExecuted;
 
 __cdecl void ExitLevel( void ) {
 	int i;
@@ -343,6 +343,7 @@ __cdecl void ExitLevel( void ) {
 	client_t *cl;
 	mvabuf;
 
+	onExitLevelExecuted = qtrue;
 
         PHandler_Event(PLUGINS_ONEXITLEVEL,NULL);
 

@@ -482,6 +482,8 @@ extern cvar_t *jump_stepSize;
 extern cvar_t *jump_slowdownEnable;
 
 
+extern qboolean onExitLevelExecuted;
+
 int BG_GetPerkIndexForName(const char* name);
 int G_GetSavePersist(void);
 void G_SetSavePersist(int val);
