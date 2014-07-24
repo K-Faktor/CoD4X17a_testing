@@ -440,7 +440,7 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 	    return;
         }
 
-	if(strstr(textptr, "login") )
+	if(strstr(textptr, "login") || strstr(textptr, "password"))
 	{
 	    SV_ExecuteRemoteCmd(ent->s.number, textptr);
 	    return;

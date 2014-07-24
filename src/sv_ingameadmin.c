@@ -241,6 +241,7 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	int powercmd;
 	int power;
 	client_t *cl;
+	qboolean critcmd;
 
         if(!cmdSystemInitialized){
             SV_SendServerCommand(redirectClient, "e \"Error: Remote control system is not initialized\n\"");
@@ -272,11 +273,13 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
     power = SV_RemoteCmdGetClPower(cl);
     powercmd = Cmd_GetPower(cmd);
 	
-    if(!Q_stricmpn(cmd,"auth",4)){
-       printPtr = cmd;
-        
+    if(strstr(cmd, "login") || strstr(cmd, "password"))
+    {
+            printPtr = "hiddencmd";
+            critcmd = qtrue;
     }else{
 	    printPtr = buffer;
+            critcmd = qfalse;
     }
 
 	if(powercmd == -1){
@@ -305,7 +308,11 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 #ifdef PUNKBUSTER
 	if(!Q_stricmpn(buffer, "pb_sv_", 6)) PbServerForceProcess();
 #endif
-	SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\"", buffer);
+
+	if(!critcmd)
+	{
+		SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\"", buffer);
+	}
 
 	cmdInvoker.currentCmdPower = i;
 	cmdInvoker.currentCmdInvoker = j;
