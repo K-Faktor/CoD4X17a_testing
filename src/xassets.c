@@ -372,3 +372,99 @@ void DB_LoadXAssets_Hook(XZoneInfo *zoneinfo, unsigned int assetscount)
 	BG_FillInAllWeaponItems();
 
 }
+
+
+
+/*
+
+void __cdecl DB_ReferencedFastFiles(char* g_zoneSumList, char* g_zoneNameList, int maxsize)
+{
+	int i;
+	g_zones_struct *zone;
+	char fileName[MAX_OSPATH];
+	int v4;
+	int filesize;
+	char ospath[MAX_OSPATH];
+	char checkSum[64];
+
+	g_zoneSumList[0] = 0;
+	g_zoneNameList[0] = 0;
+
+	for(i = 0, zone = g_zones; i < 32; i++, ++zone;)
+	{
+		if ( zone->fastfilename[0] == '\0' || !Q_strncmp(zone->fastfilename, "localized_", 10) )
+		{
+			continue;
+		}
+		if ( g_zoneSumList[0] )
+		{
+			Q_strncat(g_zoneSumList, maxsize, " ");
+		}
+		if ( g_zoneNameList[0] )
+		{
+			Q_strncat(g_zoneNameList, maxsize, " ");
+		}
+		itoa(zone->checkSum, checkSum, 10);
+		Q_strncat(g_zoneSumList, maxsize, checkSum);
+		
+		if ( zone->ff_dir == 1 )
+		{
+          Q_strncat(g_zoneNameList, maxsize, fs_gameDirVar->string);
+          Q_strncat(g_zoneNameList, maxsize, "/");
+          Q_strncat(g_zoneNameList, maxsize, zone->fastfilename);  
+		  continue;
+		}		
+		if ( zone->ff_dir != 2 )
+		{
+			Q_strncat(g_zoneNameList, maxsize, zone->fastfilename);  
+			continue;
+		}
+			
+		if ( !(com_dedicated->integer) )
+		{
+			continue;
+		}
+        
+		Com_sprintf(fileName, sizeof(fileName), "%s_load", zone->fastfilename);
+        DB_BuildOSPath(fileName, 2, sizeof(ospath), ospath);
+        v4 = CreateFileA(ospath);
+        
+		if ( v4 == -1 )
+        {
+			continue;
+		}
+		
+        filesize = GetFileSize(v4, 0);
+        CloseHandle(v4);
+        if ( !filesize )
+        {
+			continue;
+		}
+		Q_strncat(g_zoneSumList, maxsize, " ");
+        itoa(filesize, checkSum, 10);
+        Q_strncat(g_zoneSumList, maxsize, checkSum);
+
+	    Q_strncat(g_zoneNameList, maxsize, " ");
+		Q_strncat(g_zoneNameList, maxsize, "usermaps");
+		Q_strncat(g_zoneNameList, maxsize, "/");
+		Q_strncat(g_zoneNameList, maxsize, zone->fastfilename);
+		Q_strncat(g_zoneNameList, maxsize, "_load");
+
+	}
+}
+
+char zoneSumList[MAX_STRING_CHARS];
+char zoneFileList[MAX_STRING_CHARS];
+
+const char* DB_ReferencedFFChecksums()
+{
+	DB_ReferencedFastFiles(zoneSumList, zoneFileList, sizeof(zoneFileList));
+	return zoneSumList;
+}
+
+const char* DB_ReferencedFFNameList()
+{
+	DB_ReferencedFastFiles(zoneSumList, zoneFileList, sizeof(zoneFileList));
+	return zoneFileList;
+}
+*/

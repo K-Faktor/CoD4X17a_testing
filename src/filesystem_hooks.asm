@@ -21,14 +21,6 @@
 
 SECTION .text
 
-global FS_ShutdownIwdPureCheckReferences
-FS_ShutdownIwdPureCheckReferences:
-    jmp dword [oFS_ShutdownIwdPureCheckReferences]
-
-global FS_ShutdownServerIwdNames
-FS_ShutdownServerIwdNames:
-    jmp dword [oFS_ShutdownServerIwdNames]
-
 global FS_ShutdownServerReferencedIwds
 FS_ShutdownServerReferencedIwds:
     jmp dword [oFS_ShutdownServerReferencedIwds]

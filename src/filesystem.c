@@ -250,6 +250,11 @@ static char lastValidBase[MAX_OSPATH];
 static char lastValidGame[MAX_OSPATH];
 
 
+static int fs_numServerIwds;
+static int fs_serverIwds[1024];
+static char *fs_serverIwdNames[1024];
+
+
 #define FS_ListFiles( dir, extension, nfiles ) Sys_ListFiles(dir, extension, 0, nfiles, 0)
 #define FS_FreeFileList Sys_FreeFileList
 
@@ -1089,6 +1094,8 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 	int		err;
 	unz_file_info	file_info;
 	mvabuf;
+	char *noReferenceExts[] = { "cod4_lnxded-bin", ".so", ".dll", ".hlsl", ".txt", ".cfg", ".levelshots", ".menu", ".arena", ".str", NULL };
+	char **testExt;
 
 
 	if(filename == NULL)
@@ -1218,18 +1225,20 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 					// from every pk3 file.. 
 					len = strlen(filename);
 
+
 					if (!(pak->referenced & FS_GENERAL_REF))
 					{
-						if(!FS_IsExt(filename, ".shader", len) &&
-						   !FS_IsExt(filename, ".txt", len) &&
-						   !FS_IsExt(filename, ".cfg", len) &&
-						   !FS_IsExt(filename, ".config", len) &&
-						   !FS_IsExt(filename, ".bot", len) &&
-						   !FS_IsExt(filename, ".arena", len) &&
-						   !FS_IsExt(filename, ".menu", len) &&
-						   !strstr(filename, "levelshots"))
+						for(testExt = noReferenceExts; *testExt; ++testExt)
+						{
+							if(FS_IsExt(filename, *testExt, len))
+							{
+								break;
+							}
+						}
+						if(*testExt == NULL)
 						{
 							pak->referenced |= FS_GENERAL_REF;
+							FS_AddIwdPureCheckReference(search);
 						}
 					}
 
@@ -3299,6 +3308,12 @@ void FS_PatchFileHandleData()
 	*(int**)0x8187435 = &fs_loadStack;
 	*(int**)0x818BBCE = &fs_loadStack;
 
+	*(int**)0x818819d = &fs_numServerIwds;
+	*(int**)0x81885fc = &fs_numServerIwds;
+
+	*(int**)0x81881b8 = fs_serverIwds;
+	*(int**)0x81881c7 = fs_serverIwds;
+
 }
 
 
@@ -3612,68 +3627,6 @@ fileHandle_t __cdecl FS_FOpenFileAppend( const char *filename ) {
 	return f;
 }
 
-/*
-=====================
-FS_PureServerSetLoadedPaks
-
-If the string is empty, all data sources will be allowed.
-If not empty, only pk3 files that match one of the space
-separated checksums will be checked for files, with the
-exception of .cfg and .dat files.
-=====================
-*/
-/*
-
-void FS_PureServerSetLoadedPaks( const char *pakSums, const char *pakNames ) {
-	int i, c, d;
-
-	Cmd_TokenizeString( pakSums );
-
-	c = Cmd_Argc();
-	if ( c > MAX_SEARCH_PATHS ) {
-		c = MAX_SEARCH_PATHS;
-	}
-
-	fs_numServerPaks = c;
-
-	for ( i = 0 ; i < c ; i++ ) {
-		fs_serverPaks[i] = atoi( Cmd_Argv( i ) );
-	}
-
-	if ( fs_numServerPaks ) {
-		Com_DPrintf( "Connected to a pure server.\n" );
-	} else
-	{
-		if ( fs_reordered ) {
-			// show_bug.cgi?id=540
-			// force a restart to make sure the search order will be correct
-			Com_DPrintf( "FS search reorder is required\n" );
-			FS_Restart( fs_checksumFeed );
-			return;
-		}
-	}
-
-	for ( i = 0 ; i < c ; i++ ) {
-		if ( fs_serverPakNames[i] ) {
-			Z_Free( fs_serverPakNames[i] );
-		}
-		fs_serverPakNames[i] = NULL;
-	}
-	if ( pakNames && *pakNames ) {
-		Cmd_TokenizeString( pakNames );
-
-		d = Cmd_Argc();
-		if ( d > MAX_SEARCH_PATHS ) {
-			d = MAX_SEARCH_PATHS;
-		}
-
-		for ( i = 0 ; i < d ; i++ ) {
-			fs_serverPakNames[i] = CopyString( Cmd_Argv( i ) );
-		}
-	}
-}
-
-*/
 
 qboolean FS_SetPermissionsExec(const char* ospath)
 {
@@ -3803,5 +3756,279 @@ int     FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) 
 	fsh[*f].handleSync = sync;
 
 	return r;
+}
+
+
+
+
+
+typedef struct fsPureSums_s
+{
+
+  struct fsPureSums_s *next;
+  int checksum;
+  char baseName[MAX_OSPATH];
+  char gameName[MAX_OSPATH];
+
+}fsPureSums_t;
+
+static fsPureSums_t *fs_iwdPureChecks;
+
+
+void __cdecl FS_AddIwdPureCheckReference(searchpath_t *search)
+{
+	
+    fsPureSums_t *checks;
+    fsPureSums_t *newCheck;
+
+    if( search->localized )
+    {
+	return;
+    }
+
+    for(checks = fs_iwdPureChecks; checks != NULL ; checks = checks->next)
+    {
+        if ( checks->checksum == search->pack->checksum )
+        {
+          if ( !Q_stricmp(checks->baseName, search->pack->pakBasename) )
+	  {
+			return;
+	  }
+        }
+    }
+    newCheck = (fsPureSums_t *)Z_Malloc(sizeof(fsPureSums_t));
+    newCheck->next = NULL;
+    newCheck->checksum = search->pack->checksum;
+    Q_strncpyz(newCheck->baseName, search->pack->pakBasename, sizeof(newCheck->baseName));
+    Q_strncpyz(newCheck->gameName, search->pack->pakGamename, sizeof(newCheck->gameName));
+
+    if(fs_iwdPureChecks == NULL)
+    {
+        fs_iwdPureChecks = newCheck;
+	return;
+    }
+	
+    for( checks = fs_iwdPureChecks; checks->next != NULL; checks = checks->next );
+	
+    checks->next = newCheck;
+}
+
+
+void __cdecl FS_ShutdownIwdPureCheckReferences()
+{
+  fsPureSums_t *cur;
+  fsPureSums_t *next;
+
+  cur = fs_iwdPureChecks;
+
+  while( cur )
+  {
+    next = cur->next;
+    Z_Free( cur );
+    cur = next;
+  }
+  fs_iwdPureChecks = 0;
+}
+
+
+
+void __cdecl FS_ReferencedIwds(char **outChkSums, char **outPathNames)
+{
+  fsPureSums_t *puresum;
+  searchpath_t *search;
+
+  static char chkSumString[8192];
+  static char pathString[8192];
+  char chksum[1024];
+  
+  chkSumString[0] = 0;
+  pathString[0] = 0;
+  
+  for ( puresum = fs_iwdPureChecks; puresum; puresum = puresum->next )
+  {
+	Com_sprintf(chksum, sizeof(chksum), "%i ", puresum->checksum);
+	Q_strcat(chkSumString, sizeof(chkSumString), chksum);
+	if ( pathString[0] )
+	{
+		Q_strcat(pathString, sizeof(pathString), " ");
+	}
+	Q_strcat(pathString, sizeof(pathString), puresum->gameName);
+    Q_strcat(pathString, sizeof(pathString), "/");
+    Q_strcat(pathString, sizeof(pathString), puresum->baseName);
+  }
+  
+  if ( !fs_gameDirVar->string[0] )
+  {
+		*outChkSums = chkSumString;
+		*outPathNames = pathString;
+		return;
+  }
+  
+  for ( search = fs_searchpaths; search; search = search->next )
+  {
+        if ( search->pack && !search->localized )
+        {
+	    if ( !(search->pack->referenced & FS_GENERAL_REF) &&
+		(!Q_stricmp(search->pack->pakGamename, fs_gameDirVar->string) || !Q_stricmpn(search->pack->pakGamename, "usermaps", 8))
+	    )
+	    {
+		Com_sprintf(chksum, sizeof(chksum), "%i ", search->pack->checksum);
+		Q_strcat(chkSumString, sizeof(chkSumString), chksum);
+		if ( pathString[0] )
+		{
+			Q_strcat(pathString, sizeof(pathString), " ");
+		}
+		Q_strcat(pathString, sizeof(pathString), search->pack->pakGamename);
+		Q_strcat(pathString, sizeof(pathString), "/");
+		Q_strcat(pathString, sizeof(pathString), search->pack->pakBasename);
+	    }
+        }
+  }
+  *outChkSums = chkSumString;
+  *outPathNames = pathString;
+}
+
+void __cdecl FS_ShutdownReferencedFiles(int *numFiles, char **names)
+{
+  int i;
+
+  for(i = 0; i < *numFiles; i++)
+  {
+    if ( names[i] )
+    {
+	Z_Free(names[i]);
+        names[i] = NULL;
+    }
+	*numFiles = 0;
+  }
+}
+
+
+void FS_ShutdownServerIwdNames()
+{
+    FS_ShutdownReferencedFiles(&fs_numServerIwds, fs_serverIwdNames);
+}
+
+
+
+
+
+/*
+=====================
+FS_PureServerSetLoadedPaks
+
+If the string is empty, all data sources will be allowed.
+If not empty, only pk3 files that match one of the space
+separated checksums will be checked for files, with the
+exception of .cfg and .dat files.
+=====================
+*/
+
+int FS_PureServerSetLoadedIwds(const char *paksums, const char *paknames)
+{
+  int i, k, l, rt;
+  int numPakSums;
+  fsPureSums_t *pureSums;
+  int numPakNames;
+  char *lpakNames[1024];
+  int lpakSums[1024];
+
+  rt = 0;
+  
+  Cmd_TokenizeString(paksums);
+  
+  numPakSums = Cmd_Argc();
+  
+  if ( numPakSums > sizeof(lpakSums)/sizeof(lpakSums[0]))
+  {
+    numPakSums = sizeof(lpakSums)/sizeof(lpakSums[0]);
+  }
+  
+  for ( i = 0 ; i < numPakSums ; i++ ) {
+	lpakSums[i] = atoi( Cmd_Argv( i ) );
+  }
+  Cmd_EndTokenizedString();
+
+  Cmd_TokenizeString(paknames);
+  numPakNames = Cmd_Argc();
+  
+  if ( numPakNames > sizeof(lpakNames)/sizeof(lpakNames[0]) )
+  {
+    numPakNames = sizeof(lpakNames)/sizeof(lpakNames[0]);
+  }
+  
+  for ( i = 0 ; i < numPakNames ; i++ ) {
+	lpakNames[i] = CopyString( Cmd_Argv( i ) );
+  }
+  
+  Cmd_EndTokenizedString();
+
+  if ( numPakSums != numPakNames )
+  {
+    Com_Error(ERR_FATAL, "iwd sum/name mismatch");
+	return rt;
+  }
+  
+	if ( numPakSums )
+	{
+  
+		for(pureSums = fs_iwdPureChecks; pureSums; pureSums = pureSums->next)
+		{
+
+			for ( i = 0; i < numPakSums; i++)
+			{
+				if(lpakSums[i] == pureSums->checksum && !Q_stricmp(lpakNames[i], pureSums->baseName))
+				{
+					break;
+				}
+			}
+			if ( i == numPakSums )
+			{
+				rt = 1;
+				break;
+			}
+		}
+	}
+
+	if ( numPakSums == fs_numServerIwds && rt == 0)
+	{
+		for ( i = 0, k = 0; i < fs_numServerIwds; )
+		{
+		  if ( lpakSums[k] == fs_serverIwds[i] && !Q_stricmp(lpakNames[k], fs_serverIwdNames[i]) )
+		  {
+			++k;
+			if ( k < numPakSums )
+			{
+			  i = 0;
+			  continue;
+			}
+			
+			for ( l = 0; l < numPakNames; ++l )
+			{
+				Z_Free(lpakNames[l]);
+				lpakNames[l] = NULL;
+			}
+			return 0;
+		  
+		  }
+		  ++i;
+		}
+		if ( numPakSums == 0 )
+		{
+			return rt;
+		}
+	}
+
+    //SND_StopSounds(8);
+    FS_ShutdownServerIwdNames( );
+    fs_numServerIwds = numPakSums;
+    if ( numPakSums )
+    {
+      Com_DPrintf("Connected to a pure server.\n");
+      Com_Memcpy(fs_serverIwds, lpakSums, sizeof(int) * fs_numServerIwds);
+      Com_Memcpy(fs_serverIwdNames, lpakNames, sizeof(char*) * fs_numServerIwds);
+      //fs_fakeChkSum = 0;
+    }
+    return rt;
 }
 

@@ -567,7 +567,8 @@ void SV_SendClientMessages( void ) {
 	
 	// send a message to each connected client
 	for ( i = 0, c = svs.clients ; i < sv_maxclients->integer ; i++, c++ ) {
-		if ( !c->state ) {
+		if ( !c->state || c->netchan.remoteAddress.type == NA_BOT)
+		{
 			snapClients[i] = 0;		
 			continue; // not connected
 		}
