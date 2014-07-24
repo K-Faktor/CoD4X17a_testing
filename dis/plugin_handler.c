@@ -217,7 +217,7 @@ void Plugin_Load(char* name, size_t size)
             Com_DPrintf("Fetching plugin information...\n");
             (*pluginFunctions.plugins[i].OnInfoRequest)(&info);
             if(info.handlerVersion > PLUGIN_HANDLER_VERSION){
-            Com_PrintError("^7This plugin might not be compatible with this server version! Requested plugin handler version: %g, server's plugin handler version: %g. Unloading the plugin...\n",info.handlerVersion,PLUGIN_HANDLER_VERSION);
+            Com_PrintError("This plugin might not be compatible with this server version! Requested plugin handler version: %g, server's plugin handler version: %g. Unloading the plugin...\n",info.handlerVersion,PLUGIN_HANDLER_VERSION);
             Plugin_Unload(i);
             return;
             }
@@ -229,7 +229,7 @@ void Plugin_Load(char* name, size_t size)
             Com_Printf("Plugin %s loaded successfully. Server is currently running %d plugins.\n",pluginFunctions.plugins[i].name,pluginFunctions.loadedPlugins);
         }
         else{
-            Com_Printf("^7function OnInfoRequest not found in the plugin file. Unloading...\n");
+            Com_PrintError("function OnInfoRequest not found in the plugin file. Unloading...\n");
             Plugin_Unload(i);
             return;
 
