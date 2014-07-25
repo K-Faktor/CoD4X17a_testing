@@ -36,6 +36,7 @@ typedef struct{
 	char username[32];
 	char salt[129];
 	char sha256[65];
+	char sessionid[65];
 	//int power; Stored inside the adminPower_t object
 	int uid;
 }authData_admin_t; // size: 32 + 129 + 65 = 289 B
@@ -50,6 +51,8 @@ void Auth_SetAdmin_f( void );
 void Auth_UnsetAdmin_f( void );
 void Auth_ListAdmins_f( void );
 void Auth_ChangeAdminPassword( int uid,const char* oldPassword, const char *password );
+int Auth_Authorize(const char *login, const char *password);
+
 
 qboolean Auth_AddAdminToList(const char* username, const char* password, const char* salt, int power, int uid);
 void Auth_ClearAdminList( void );
@@ -57,5 +60,8 @@ void Auth_ClearAdminList( void );
 void Auth_Init();
 qboolean Auth_InfoAddAdmin(const char* line);
 void Auth_WriteAdminConfig(char* buffer, int size);
+
+const char* Auth_FindSessionID(const char* sessionid);
+const char* Auth_GetSessionId(const char* username, const char *password);
 
 #endif

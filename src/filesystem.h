@@ -189,6 +189,7 @@ int FS_PathCmp( const char *s1, const char *s2 );
 int	FS_FTell( fileHandle_t f );
 void	FS_Flush( fileHandle_t f );
 void FS_FreeFile( void *buffer );
+void FS_FreeFileKeepBuf( );
 int FS_ReadLine( void *buffer, int len, fileHandle_t f );
 fileHandle_t FS_SV_FOpenFileWrite( const char *filename );
 int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp );

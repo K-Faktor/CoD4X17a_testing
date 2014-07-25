@@ -16,6 +16,7 @@
 #include "sys_main.h"
 #include "net_game.h"
 #include "net_game_conf.h"
+#include "webadmin.h"
 
 #include <string.h>
 #include <stdint.h>
@@ -1107,7 +1108,28 @@ int HTTPServer_ReadMessage(netadr_t* from, msg_t* msg, ftRequest_t* request)
 					return -1;
 				}
 			}
-			
+			else if(!Q_stricmpn("Content-Type:", line, 13))
+			{
+
+				if(line[13] == ' ')
+				{
+					Q_strncpyz(request->contentType, &line[14], sizeof(request->contentType));
+				}else{
+					Q_strncpyz(request->contentType, &line[13], sizeof(request->contentType));
+				}
+
+			}
+			else if(!Q_stricmpn("Cookie:", line, 7))
+			{
+				
+				if(line[7] == ' ')
+				{
+					Q_strncpyz(request->cookie, &line[8], sizeof(request->cookie));
+				}else{
+					Q_strncpyz(request->cookie, &line[7], sizeof(request->cookie));
+				}
+				
+			}				
 		}
 		if(line[0] == '\0')
 			return -1;
@@ -1134,9 +1156,11 @@ int HTTPServer_ReadMessage(netadr_t* from, msg_t* msg, ftRequest_t* request)
 	return 1;
 }
 
-void HTTPServer_BuildMessage( ftRequest_t* request, char* status, char* message, int len)
+void HTTPServer_BuildMessage( ftRequest_t* request, char* status, char* message, int len, char* sessionkey)
 {
 	int headerlen;
+	byte* newbuf;
+	
 	char header[MAX_STRING_CHARS];
 	headerlen = Com_sprintf(header, sizeof(header),
 					  "HTTP/1.0 %s\r\n"
@@ -1144,7 +1168,21 @@ void HTTPServer_BuildMessage( ftRequest_t* request, char* status, char* message,
 					  "Content-Length: %d\r\n"
 					  "Access-Control-Allow-Origin: none\r\n"
 					  "Content-Type: text/html\r\n"
-					  "\r\n", status, len);
+					  "Set-Cookie: SessionId=%s; Path=/; HttpOnly\r\n"
+					  "\r\n", status, len, sessionkey);
+	
+	
+	newbuf = Z_Malloc(headerlen + len);
+	if(newbuf == NULL)
+	{	
+		return;
+	}
+	if(request->sendmsg.data)
+	{
+		Z_Free(request->sendmsg.data);
+	}
+	request->sendmsg.data = newbuf;
+	request->sendmsg.maxsize = headerlen + len;
 	
 	MSG_WriteData(&request->sendmsg, header, headerlen);
 	MSG_WriteData(&request->sendmsg, message, len);
@@ -1166,20 +1204,114 @@ qboolean HTTPServer_WriteMessage( ftRequest_t* request, netadr_t* from)
 }
 
 
-void HTTPServer_BuildResponse(ftRequest_t* request)
-{
-	char response[MAX_MSGLEN];
-	
-	Com_sprintf(response, sizeof(response), "<body>Your dir was: %s</body", request->url);
-	
-	
-	HTTPServer_BuildMessage( request, "200 OK", response, strlen(response));
 
+
+
+void HTTPServer_BuildResponse(ftRequest_t* request, char* sessionkey, httpPostVals_t* values)
+{
+	qboolean hasmessage;
+	msg_t msg;
+	
+	hasmessage = HTTPCreateWebadminMessage(request, &msg, sessionkey, values);
+	if(hasmessage)
+	{
+		HTTPServer_BuildMessage( request, "200 OK", (char*)msg.data, msg.cursize, sessionkey);
+		Z_Free(msg.data);
+		return;
+	}
+	HTTPServer_BuildMessage( request, "403 FORBIDDEN", "Error: Forbidden", strlen("Error: Forbidden"), sessionkey);
 }
+
+
+
+void HTTPServer_ParseBody(ftRequest_t* request, httpPostVals_t* values)
+{
+	int i, k;
+	
+	k = 0;
+	char* body = (char*)(request->recvmsg.data + request->headerLength);
+	
+	for(k = 0; k < MAX_POST_VALS; k++)
+	{
+		values[k].name[0] = '\0';
+		values[k].value[0] = '\0';
+	
+		i = 0;
+		
+		while (body[i] != '=' && body[i] != '\0')
+		{
+			i++;
+		}
+		if(body[i] == '\0')
+		{
+			break;
+		}
+		body[i] = '\0';
+		
+		Q_strncpyz(values[k].name, body, sizeof(values[k].name));
+		
+		body += i+1; 
+		i = 0;
+		
+		while (body[i] != '&' && body[i] != '\0')
+		{
+			i++;
+		}
+		if(body[i] == '\0')
+		{
+			Q_strncpyz(values[k].value, body, sizeof(values[k].value));
+			break;
+		}
+		body[i] = '\0';
+		
+		Q_strncpyz(values[k].value, body, sizeof(values[k].value));
+
+		body += i+1; 
+	
+	}
+
+	
+}
+
+void HTTPServer_ReadSessionId(ftRequest_t* request, char* sessionkey, int len)
+{
+	char* cookieval;
+	int i;
+
+	
+	cookieval = strstr(request->cookie, "SessionId=" );
+	if(cookieval == NULL)
+	{
+		sessionkey[0] = '\0';
+		return;
+	}
+	cookieval += 10;
+	i = 0;
+	
+	while (cookieval[i] != '\0' && cookieval[i] != ';' && cookieval[i] != ' ') {
+		i++;
+	}
+	if(cookieval[i] == ';' && cookieval[i] == ' ')
+	{
+		cookieval[i] = '\0';
+	}
+	
+	Q_strncpyz(sessionkey, cookieval, len);
+	
+	if(sessionkey[strlen(sessionkey) -1] == '\r')
+	{
+		sessionkey[strlen(sessionkey) -1] = '\0';	
+	}
+	
+}
+
 
 qboolean HTTPServer_Event(netadr_t* from, msg_t* msg, int connectionId)
 {
 	
+	char sessionkey[128];
+	httpPostVals_t values[MAX_POST_VALS];
+
 	ftRequest_t* request = (ftRequest_t*)connectionId;
 	int ret;
 	
@@ -1193,13 +1325,17 @@ qboolean HTTPServer_Event(netadr_t* from, msg_t* msg, int connectionId)
 			return qfalse;
 		}
 	}
-	HTTPServer_BuildResponse( request );
-	if(request->sendmsg.cursize == 0){
+	/* Received full message */
+	if(request->sendmsg.cursize == 0)
+	{
+		HTTPServer_ReadSessionId(request, sessionkey, sizeof(sessionkey));
+		HTTPServer_ParseBody(request, values);
+		Com_Printf("SessionID is: %s\n",  sessionkey);
+
+		HTTPServer_BuildResponse( request, sessionkey, values);
+
 	}
 	return HTTPServer_WriteMessage(request, from);
-	/* Received full message */
-//	return qtrue;
-	
 	
 }
 

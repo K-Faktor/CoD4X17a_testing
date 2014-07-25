@@ -25,6 +25,6 @@ nasm -f macho src/pluginexports.asm    --prefix _ -o bin/pluginexports.o
 echo Linking...
 gcc -m32 -stdlib=libc++ -rdynamic -o bin/cod4x17a_dedrun bin/*.o -Llib/ -ltomcrypt_mach -ltommath_mach -Wl -ldl -lpthread -lm -lstdc++
 
-rm bin/*.o
+#rm bin/*.o
 
 ./version_make_progress.sh
