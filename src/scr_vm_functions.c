@@ -1148,26 +1148,50 @@ void GScr_SHA256(){
 }
 
 
-
-
 /*
 ============
-GScr_CbufAddText
+GScr_CbufExecText
 
-Execute the given command on server as console command
-Usage: void = exec(string <string>);
+Execute the given command on server as console command and returns the response as string
+Usage: string = exec(string <string>);
 ============
 */
+char cmd_exec_redirect_buf[1024];
+
+void GScr_CbufExecRedirect(char* data, qboolean lastcommand)
+{
+    if(cmd_exec_redirect_buf[0] == '\0')
+    {
+        Q_strncpyz(cmd_exec_redirect_buf, data, sizeof(cmd_exec_redirect_buf));
+    }
+}
 
 void GScr_CbufAddText(){
 
     char string[1024];
+    char outputbuf[1024];
 
     if(Scr_GetNumParam() != 1){
-        Scr_Error("Usage: exec(<string>)\n");
+        Scr_Error("Usage: execex(<string>)\n");
     }
     Com_sprintf(string, sizeof(string), "%s\n",Scr_GetString(0));
-    Cbuf_AddText( string);
+
+    cmd_exec_redirect_buf[0] = '\0';
+
+    if(!Q_stricmpn(string, "map", 3) || !Q_stricmpn(string, "fast_restart", 3))
+    {
+
+        Cbuf_AddText( string );
+
+    }else{
+        Com_BeginRedirect(outputbuf, sizeof(outputbuf), GScr_CbufExecRedirect);
+        Cmd_ExecuteSingleCommand(0,0, string);
+        Com_EndRedirect();
+        cmd_exec_redirect_buf[sizeof(cmd_exec_redirect_buf) -1] = '\0';
+
+    }
+
+    Scr_AddString( cmd_exec_redirect_buf );
 }
 
 

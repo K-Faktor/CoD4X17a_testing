@@ -30,7 +30,7 @@
     // Callbacks available for use in plugin API, sorted alphabetically by module. //
     // ----------------------------------------------------------------------------//
 
-	PCL	void OnInfoRequest(pluginInfo_t *info);
+	PCL void OnInfoRequest(pluginInfo_t *info);
 	PCL int OnInit();
 	PCL void OnMessageSent(char* message, int slot, qboolean *show, int mode);
 	PCL void OnPreFastRestart();

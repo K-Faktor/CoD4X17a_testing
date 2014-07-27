@@ -786,6 +786,7 @@ void Com_Init(char* commandLine){
     if(com_securemode)
     {
         Cvar_SetStringByName("sv_democompletedCmd", "");
+        Cvar_SetStringByName("sv_mapDownloadCompletedCmd", "");
     }
 
     Com_StartupVariable(NULL);

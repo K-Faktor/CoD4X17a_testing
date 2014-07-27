@@ -88,7 +88,7 @@ cvar_t	*g_friendlyPlayerCanBlock;
 cvar_t	*g_FFAPlayerCanBlock;
 cvar_t	*sv_autodemorecord;
 cvar_t	*sv_demoCompletedCmd;
-
+cvar_t	*sv_mapDownloadCompletedCmd;
 cvar_t	*sv_master[MAX_MASTER_SERVERS];	// master server ip address
 cvar_t	*g_mapstarttime;
 cvar_t	*sv_uptime;
@@ -2033,6 +2033,7 @@ void SV_InitCvarsOnce(void){
 	sv_uptime = Cvar_RegisterString("uptime", "", CVAR_SERVERINFO | CVAR_ROM, "Time the server is running since last restart");
 	sv_autodemorecord = Cvar_RegisterBool("sv_autodemorecord", qfalse, 0, "Automatically start from each connected client a demo.");
 	sv_demoCompletedCmd = Cvar_RegisterString("sv_demoCompletedCmd", "", com_securemode ? CVAR_INIT : 0 , "This program will be executed when a demo has been completed. The demofilename will be passed as argument.");
+	sv_mapDownloadCompletedCmd = Cvar_RegisterString("sv_mapDownloadCompletedCmd", "", com_securemode ? CVAR_INIT : 0 , "This program will be executed when a downloaded map was received. The usermaps/mapname will be passed as argument.");
 	sv_consayname = Cvar_RegisterString("sv_consayname", "^2Server: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 	sv_contellname = Cvar_RegisterString("sv_contellname", "^5Server^7->^5PM: ^7", CVAR_ARCHIVE, "If the server broadcast text-messages this name will be used");
 

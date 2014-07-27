@@ -45,7 +45,7 @@
     __cdecl char* Plugin_ParseGetToken(char* line);                 // Tokenize a string - get next token
     __cdecl int Plugin_ParseTokenLength(char* token);               // Tokenize a string - get the token's length
     __cdecl void Plugin_ParseReset(void);               			// Tokenize a string - Reset the parsers position
-    
+    __cdecl void Plugin_Cbuf_AddText(const char* text);
     
     //      == Cvars ==
     
@@ -106,7 +106,7 @@
     __cdecl void Plugin_AddCommand(char *name, xcommand_t command, int defaultpower); // Add a server command
     __cdecl void *Plugin_Malloc(size_t size);                                // Same as stdlib.h function malloc
     __cdecl void Plugin_Free(void *ptr);                                     // Same as stdlib.h function free
-    __cdecl void Plugin_Error(int code, const char *fmt, ...);                       // Notify the server of an error, action depends on code parameter
+    __cdecl void Plugin_Error(int code, const char *fmt, ...);               // Notify the server of an error, action depends on code parameter
     __cdecl int Plugin_GetLevelTime();                                       // Self explanatory
     __cdecl int Plugin_GetServerTime();                                      // Self explanatory
 
@@ -177,3 +177,5 @@
     __cdecl void  Plugin_Scr_FreeThread( short threadId);
 
     __cdecl playerState_t *Plugin_SV_GameClientNum( int num ); //Retrives the playerState_t* object from a client number
+
+

@@ -63,7 +63,8 @@ char PHandler_Events[PLUGINS_ITEMCOUNT][32]={
     "OnPlayerConnectAuthFail",
     "OnClientUserinfoChanged",
     "OnClientMoveCommand",
-    "OnPlayerWantReservedSlot"
+    "OnPlayerWantReservedSlot",
+    "OnFilesystemStarted"
 };
 
 void PHandler_Init() // Initialize the Plugin Handler's data structures and add commands

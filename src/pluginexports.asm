@@ -125,3 +125,5 @@ pexport Scr_FreeThread
 pexport G_LogPrintf
 
 pexport SV_GameClientNum
+pexport unzSetPassword
+pexport Cbuf_AddText

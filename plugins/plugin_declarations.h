@@ -20,7 +20,7 @@
 */
 
 #define PLUGIN_HANDLER_VERSION_MAJOR 2
-#define PLUGIN_HANDLER_VERSION_MINOR 300
+#define PLUGIN_HANDLER_VERSION_MINOR 301
 //PHandler v. 2.2
 
 enum Plugin_Err{	// To be used as the code argument for Plugin_Error()

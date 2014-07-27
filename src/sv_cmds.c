@@ -42,6 +42,7 @@ These commands can only be entered from stdin or by a remote operator datagram
 #include "httpftp.h"
 #include "qcommon_mem.h"
 #include "sys_thread.h"
+#include "sys_main.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -1850,6 +1851,20 @@ qboolean SV_RunDownload(const char* url, const char* filename)
 	return qtrue;
 }
 
+void SV_DemoCompletedExec(const char* mapname)
+{
+	char cmdline[MAX_STRING_CHARS];
+
+	if(!*sv_mapDownloadCompletedCmd->string)
+		return;
+
+	Com_sprintf(cmdline, sizeof(cmdline), "\"%s/%s\" \"%s/usermaps/%s\"", fs_homepath->string, sv_mapDownloadCompletedCmd->string, fs_homepath->string, mapname);
+
+	Sys_DoStartProcess(cmdline);
+
+	Sys_TermProcess();
+}
+
 void SV_DownloadMapThread(char *inurl)
 {
 	int len;
@@ -1859,6 +1874,7 @@ void SV_DownloadMapThread(char *inurl)
 	char *mapname;
 	char filename[MAX_OSPATH];
 	static qboolean downloadActive = 0;
+
 	
 	Q_strncpyz(url, inurl, sizeof(url));
 	Z_Free(inurl);
@@ -1932,14 +1948,14 @@ void SV_DownloadMapThread(char *inurl)
 	
 	if(SV_RunDownload(dlurl, filename) == qfalse)
 	{
-		Com_Printf("File %s was not downloaded. This map has maybe no .iwd file\n");
-		Com_Printf("Download of map \"%s\" has been completed\n", mapname);
-		downloadActive = qfalse;
-		return;
-	}
-	Com_Printf("Received file: %s\n", filename );
+		Com_Printf("File %s was not downloaded. This map has maybe no .iwd file\n", filename);
+	}else{
+		Com_Printf("Received file: %s\n", filename );
+        }
 	Com_Printf("Download of map \"%s\" has been completed\n", mapname);
 	downloadActive = qfalse;
+
+	Sys_SetupThreadCallback(SV_DemoCompletedExec, mapname);
 
 }
 

@@ -719,6 +719,7 @@ void SV_GetConfigstring( int index, char *buffer, int bufferSize );
 extern cvar_t* sv_protocol;
 extern cvar_t* sv_padPackets;
 extern cvar_t* sv_demoCompletedCmd;
+extern cvar_t* sv_mapDownloadCompletedCmd;
 extern cvar_t* sv_wwwBaseURL;
 extern cvar_t* sv_maxPing;
 extern cvar_t* sv_minPing;
