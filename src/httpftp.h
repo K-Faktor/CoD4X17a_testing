@@ -37,6 +37,8 @@ typedef struct
 	char status[32];
 	char url[MAX_STRING_CHARS];
 	char address[MAX_STRING_CHARS];
+	char contentType[64];
+	char cookie[MAX_STRING_CHARS];
 	int mode;
 	int headerLength;
 	int contentLength;
@@ -52,6 +54,13 @@ typedef enum
 	HTTP_HEAD
 }httpMethod_t;
 
+
+#define MAX_POST_VALS 8
+typedef struct
+{
+	char name[MAX_STRING_CHARS];
+	char value[MAX_STRING_CHARS];
+}httpPostVals_t;
 
 void FileDownloadFreeRequest(ftRequest_t* request);
 ftRequest_t* FileDownloadRequest( const char* url);

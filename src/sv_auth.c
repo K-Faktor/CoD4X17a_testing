@@ -54,6 +54,50 @@ authData_t auth_admins;
 #define AUTH_DEFAULT_POWER 1
 
 
+const char* Auth_FindSessionID(const char* sessionid)
+{
+	int i;
+	authData_admin_t *user;
+	
+	if(strlen(sessionid) != 64)
+	{
+		return NULL;
+	}
+	
+	for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++){
+		
+		if(!Q_stricmp(user->sessionid, sessionid))
+		{
+			return user->username;
+		}
+	}
+	return NULL;
+	
+}
+
+const char* Auth_GetSessionId(const char* username, const char *password)
+{
+	int handle;
+	byte buff[129];
+	
+	unsigned long size;
+	
+	handle = Auth_Authorize(username, password);
+	if(handle < 0)
+	{
+		return NULL;
+	}
+	
+	size = sizeof(auth_admins.admins[handle].sessionid);
+	
+	Com_RandomBytes(buff, sizeof(buff));
+	//Sec_BinaryToHex((char *)buff,sizeof(buff),salt,&size);
+	Sec_HashMemory( SEC_HASH_SHA256, buff, sizeof(buff), auth_admins.admins[handle].sessionid, &size, qfalse );
+	
+	return auth_admins.admins[handle].sessionid;
+}
+
+
 int Auth_Authorize(const char *login, const char *password){
     int i;
     char hstring[256];

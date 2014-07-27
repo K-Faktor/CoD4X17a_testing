@@ -61,8 +61,8 @@ zlib is Copyright (C) 1995-1998 Jean-loup Gailly and Mark Adler
 CONTACT
 =======
 
-Ninja, ninja@iceops.in
+Ninja, ninja(?@?)iceops.in
 
-TheKelm, thekelm@iceops.in
+TheKelm, thekelm(?@?)iceops.in
 
 https://iceops.in

@@ -2477,7 +2477,7 @@ void NET_TcpServerPacketEventLoop()
 
 						}else if(conn->state == TCP_AUTHSUCCESSFULL){
 							tcpServer.activeConnectionCount++;
-							Com_PrintNoRedirect("New connection accepted for: %s from type: %d\n", NET_AdrToString(&conn->remote), conn->serviceId);
+							Com_PrintNoRedirect("New connection accepted for: %s from type: %x\n", NET_AdrToString(&conn->remote), conn->serviceId);
 						}
 						break;
 

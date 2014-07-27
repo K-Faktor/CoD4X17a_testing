@@ -1553,6 +1553,16 @@ void FS_FreeFile( void *buffer ) {
 	free( buffer );
 }
 
+/*
+ =============
+ FS_FreeFileKeepBuf
+ =============
+ */
+void FS_FreeFileKeepBuf( )
+{
+	
+	FS_LoadStackDec();
+}
 
 
 /*

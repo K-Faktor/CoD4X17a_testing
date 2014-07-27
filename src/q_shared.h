@@ -242,11 +242,13 @@ void* stack_pop(void *array[], int size);
 =====================================================================
 */
 
+
 typedef struct{
     int		parents;
     qboolean	last;
     void *stack[48];
     char *buffer;
+    int bufposition;
     char *encoding;
     size_t buffersize;
 }xml_t;
@@ -255,7 +257,7 @@ void XML_Init( xml_t *base, char *s, int size, char* encoding);
 void XML_Escape( char* buffer, size_t size, const char* string);
 qboolean QDECL XML_OpenTag( xml_t *base, char* root, int count,... );
 void XML_CloseTag(xml_t *base);
-
+void XML_AppendToBuffer( xml_t *base, const char* s );
 
 char *Com_SkipCharset( char *s, char *sep );
 char *Com_SkipTokens( char *s, int numTokens, char *sep );

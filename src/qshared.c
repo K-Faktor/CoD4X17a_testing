@@ -1080,33 +1080,34 @@ qboolean isNumeric(const char* string, int size){
 
 
 
+
 /*
-=====================================================================
-
+ =====================================================================
+ 
  Functions to operate onto a stack in lifo mode
-
-=====================================================================
-*/
+ 
+ =====================================================================
+ */
 
 void stack_init(void *array[], size_t size){
     array[0] = (void*)((size_t)array+size );	//Moving the stackpointer in array[0] to top of stack
 }
 
 qboolean stack_push(void *array[], int size, void* pointer){
-        void** base;
-
-        if(array[0] == &array[1]) return qfalse;	//Stackoverflow
-        array[0] -= sizeof(void*);
-
-        base = *array;
-        *base = pointer;
-        return qtrue;
+	void** base;
+	
+	if(array[0] == &array[1]) return qfalse;	//Stackoverflow
+	array[0] -= sizeof(void*);
+	
+	base = *array;
+	*base = pointer;
+	return qtrue;
 }
 
 void* stack_pop(void *array[], int size){
-
+	
     void** base;
-
+	
     if(array[0] < (void*)((size_t)array+size )){
         base = *array;
         array[0] += sizeof(void*);
@@ -1115,164 +1116,185 @@ void* stack_pop(void *array[], int size){
     return NULL;	//Stack reached bottom
 }
 
-/*
-=====================================================================
-
-  Writing XML STRINGS
-
-=====================================================================
-*/
 
 /*
-==================
-XML_Init
+ =====================================================================
+ 
+ Writing XML STRINGS
+ 
+ =====================================================================
+ */
 
-Changes or adds a key/value pair
-==================
-*/
+
+
+void XML_AppendToBuffer( xml_t *base, const char* s )
+{
+    int len = strlen(s);
+	
+    if(len + base->bufposition + 1 >= base->buffersize )
+    {
+        Com_Printf(  "Error: XML_AppendToBuffer: Overflow!\n" );
+        return;
+    }
+    Com_Memcpy(base->buffer + base->bufposition, s, len);
+    base->bufposition += len;
+    base->buffer[base->bufposition] = '\0';
+}
+
+
+/*
+ ==================
+ XML_Init
+ 
+ Changes or adds a key/value pair
+ ==================
+ */
 
 void XML_Init( xml_t *base, char *s, int size, char* encoding) {
+	
 	Com_Memset(base,0,sizeof(xml_t));
+	char version[1024];
+	
 	base->buffer = s;
+	base->bufposition = 0;
 	base->buffersize = size;
 	base->encoding = encoding;
 	stack_init(base->stack,sizeof(base->stack));
 	if ( 256 > size ) {
 		Com_Printf(  "Error: XML_Init: too small infostring" );
 	}
-	Com_sprintf(s, size, "<?xml version=\"1.0\" encoding=\"%s\"?>\n\0", base->encoding);
+	Com_sprintf(version, sizeof(version), "<?xml version=\"1.0\" encoding=\"%s\"?>\n\0", base->encoding);
+	XML_AppendToBuffer( base, version );
 }
 
 
 /*
-==================
-XML_Escape
-Changes or adds a key/value pair
-==================
-*/
+ ==================
+ XML_Escape
+ Changes or adds a key/value pair
+ ==================
+ */
 void XML_Escape( char* buffer, size_t size, const char* string){
 	int i;
-
-	//i = 7 create a safe margin for strcpy
-
+	
 	for(i = 7; i < size && *string != 0; i++, string++){
-
+		
 	    switch(*string){
-
-                case '<':
-                    strcpy(buffer, "&lt;");
-                    buffer += 4;
-                    break;
-                case '>':
-                    strcpy(buffer, "&gt;");
-                    buffer += 4;
-                    break;
-                case '&':
-                    strcpy(buffer, "&amp;");
-                    buffer += 5;
-                    break;
-                case '"':
-                    strcpy(buffer, "&quot;");
-                    buffer += 6;
-                    break;
-                case '\'':
-                    strcpy(buffer, "&apos;");
-                    buffer += 6;
-                    break;
-                default:
-                    if(*string >= ' '){
-                        *buffer = *string;
-                        buffer++;
-                    }
-            }
-        }
-        *buffer = 0;
+				
+			case '<':
+				strcpy(buffer, "&lt;");
+				buffer += 4;
+				break;
+			case '>':
+				strcpy(buffer, "&gt;");
+				buffer += 4;
+				break;
+			case '&':
+				strcpy(buffer, "&amp;");
+				buffer += 5;
+				break;
+			case '"':
+				strcpy(buffer, "&quot;");
+				buffer += 6;
+				break;
+			case '\'':
+				strcpy(buffer, "&apos;");
+				buffer += 6;
+				break;
+			default:
+				if(*string >= ' '){
+					*buffer = *string;
+					buffer++;
+				}
+		}
+	}
+	*buffer = 0;
 }
 
 
 
-
 /*
-==================
-XML_OpenTag
-
-Changes or adds a key/value pair
-==================
-*/
+ ==================
+ XML_OpenTag
+ 
+ Changes or adds a key/value pair
+ ==================
+ */
 qboolean QDECL XML_OpenTag( xml_t *base, char* root, int count,... ) {
-
+	
 	char* key;
 	char* value;
-	char* s = base->buffer;
-	size_t size = base->buffersize;
 	char buffer[1024];
 	char smallbuff[128];
 	int i;
-
+	
 	buffer[0] = 0;
 	Com_Memset(&smallbuff[1],' ',base->parents*6);
 	smallbuff[0] = '\n';
 	smallbuff[base->parents*6] = 0;
-	Q_strcat(s,size,smallbuff);
-	Com_sprintf(buffer,sizeof(buffer),"<%s ",root);
-	if(!stack_push(base->stack,sizeof(base->stack),&s[strlen(s)+1])){
-		//XML_Init(base, s, size, "ISO-8859-1");
+	XML_AppendToBuffer( base, smallbuff );
+	Com_sprintf(buffer,sizeof(buffer),"<%s",root);
+	
+	if(!stack_push(base->stack,sizeof(base->stack), base->buffer + base->bufposition + 1)){
 		Com_Printf("^3Warning: XML_OpenTag called without prior initialization\n");
 		return qfalse;
 	}
-
-	Q_strcat(s,size,buffer);
+	
+	XML_AppendToBuffer( base, buffer );
 	va_list argptr;
 	va_start(argptr, count);
 	for(i=0;i < count;i++){
 	    key = va_arg(argptr, char*);
 	    value = va_arg(argptr, char*);
 	    XML_Escape(smallbuff,sizeof(smallbuff),value);
-	    Com_sprintf(buffer,sizeof(buffer),"%s=\"%s\" ",key,smallbuff);
-	    Q_strcat(s,size,buffer);
+		
+		Com_sprintf(buffer,sizeof(buffer)," %s=\"%s\"",key,smallbuff);
+		
+	    XML_AppendToBuffer( base, buffer );
 	}
 	va_end(argptr);
-	Q_strcat(s,size,">\0");
+	XML_AppendToBuffer( base, ">" );
 	base->parents++;
 	base->last = qtrue;
 	return qtrue;
 }
 
 /*
-==================
-XML_CloseTag
-
-Changes or adds a key/value pair
-==================
-*/
+ ==================
+ XML_CloseTag
+ 
+ Changes or adds a key/value pair
+ ==================
+ */
 void XML_CloseTag(xml_t *base) {
-
+	
 	char buffer[256];
 	char outbuffer[256];
 	char preoffset[128];
 	int i;
-	char* s = base->buffer;
-	size_t size = base->buffersize;
 	char*	root;
 	char*	stringptr = buffer;
-
+	
 	base->parents--;
 	Com_Memset(&preoffset[1],' ',base->parents*6);
 	preoffset[base->parents*6] = 0;
 	preoffset[(base->parents*6)+1] = 0;
-
+	
+	buffer[0] = '\0';
+	
 	root = stack_pop(base->stack,sizeof(base->stack));
-	for(i=0 ;*root != ' ' && *root != 0 && i < sizeof(buffer); stringptr++, root++, i++) *stringptr = *root;
+	for(i=0 ;*root != ' ' && *root != 0 && *root != '>' && i < sizeof(buffer); stringptr++, root++, i++) *stringptr = *root;
 	*stringptr = 0;
 	if(base->last){
 		Com_sprintf(outbuffer,sizeof(outbuffer),"</%s>",buffer);
 	}else{
 		Com_sprintf(outbuffer,sizeof(outbuffer),"\n%s</%s>",&preoffset[1],buffer);
 	}
-
-	Q_strcat(s,size,outbuffer);
+	
+	XML_AppendToBuffer( base, outbuffer );
 	base->last = qfalse;
 }
+
 
 //====================================================================
 

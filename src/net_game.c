@@ -158,7 +158,7 @@ void NET_TCPPacketEvent(netadr_t* from, byte* bufData, int len, int connectionId
             }
         }
 
-        Com_PrintError("NET_TCPPacketEvent: Bad serviceId: %d\n", serviceId);
+        Com_PrintError("NET_TCPPacketEvent: Bad serviceId: %x\n", serviceId);
         NET_TcpCloseSocket(from->sock);
         return; //Close connection
 }

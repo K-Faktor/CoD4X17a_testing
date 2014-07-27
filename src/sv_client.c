@@ -280,7 +280,7 @@ __optimize3 __regparm1 void SV_AuthorizeIpPacket( netadr_t *from ) {
 		svse.challenges[i].ipAuthorize = -1;
 		if(!Q_stricmp(r, "CLIENT_UNKNOWN_TO_AUTH")){
 
-			NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "print\nUnkown how to auth client\n");
+			NET_OutOfBandPrint( NS_SERVER, &svse.challenges[i].adr, "print\nUnknown how to auth client\n");
 
 			if(svs.time - svse.challenges[i].firstTime > AUTHORIZE_TIMEOUT)
 			{
