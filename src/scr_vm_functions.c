@@ -1172,18 +1172,19 @@ void GScr_CbufAddText(){
     char outputbuf[1024];
 
     if(Scr_GetNumParam() != 1){
-        Scr_Error("Usage: execex(<string>)\n");
+        Scr_Error("Usage: exec(<string>)\n");
     }
     Com_sprintf(string, sizeof(string), "%s\n",Scr_GetString(0));
 
     cmd_exec_redirect_buf[0] = '\0';
 
-    if(!Q_stricmpn(string, "map", 3) || !Q_stricmpn(string, "fast_restart", 3))
+    if(!Q_stricmpn(string, "map", 3) || !Q_stricmpn(string, "fast_restart", 12))
     {
 
         Cbuf_AddText( string );
 
     }else{
+
         Com_BeginRedirect(outputbuf, sizeof(outputbuf), GScr_CbufExecRedirect);
         Cmd_ExecuteSingleCommand(0,0, string);
         Com_EndRedirect();
