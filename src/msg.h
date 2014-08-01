@@ -43,10 +43,10 @@ typedef struct {
 	qboolean	overflowed;		//0x00
 	qboolean	readonly;		//0x04
 	byte		*data;			//0x08
-	byte*		var_01;			//0x0c
+	byte		*splitdata;		//0x0c
 	int		maxsize;		//0x10
 	int		cursize;		//0x14
-	int		var_02;			//0x18
+	int		splitcursize;		//0x18
 	int		readcount;		//0x1c
 	int		bit;			//0x20	// for bitwise reads and writes
 	int		lastRefEntity;		//0x24

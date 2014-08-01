@@ -67,8 +67,8 @@ void MSG_Init( msg_t *buf, byte *data, int length ) {
 	buf->overflowed = qfalse;
 	buf->cursize = 0;
 	buf->readonly = qfalse;
-	buf->var_01 = NULL;
-	buf->var_02 = 0;
+	buf->splitdata = NULL;
+	buf->splitcursize = 0;
 	buf->readcount = 0;
 	buf->bit = 0;
 	buf->lastRefEntity = 0;
@@ -80,9 +80,9 @@ void MSG_InitReadOnly( msg_t *buf, byte *data, int length ) {
 	buf->data = data;
 	buf->cursize = length;
 	buf->readonly = qtrue;
-	buf->var_01 = NULL;
+	buf->splitdata = NULL;
 	buf->maxsize = length;
-	buf->var_02 = 0;
+	buf->splitcursize = 0;
 	buf->readcount = 0;
 }
 
@@ -91,16 +91,16 @@ void MSG_InitReadOnlySplit( msg_t *buf, byte *data, int length, byte* arg4, int 
 	buf->data = data;
 	buf->cursize = length;
 	buf->readonly = qtrue;
-	buf->var_01 = arg4;
+	buf->splitdata = arg4;
 	buf->maxsize = length + arg5;
-	buf->var_02 = arg5;
+	buf->splitcursize = arg5;
 	buf->readcount = 0;
 }
 
 
 void MSG_Clear( msg_t *buf ) {
 	
-	if(buf->readonly == qtrue || buf->var_01 != NULL)
+	if(buf->readonly == qtrue || buf->splitdata != NULL)
 	{
 		Com_Error(ERR_FATAL, "MSG_Clear: Can not clear a read only msg");
 		return;
@@ -447,7 +447,7 @@ void MSG_ClearLastReferencedEntity( msg_t *msg ) {
 
 int MSG_GetUsedBitCount( msg_t *msg ) {
 
-    return ((msg->cursize + msg->var_02) * 8) - ((8 - msg->bit) & 7);
+    return ((msg->cursize + msg->splitcursize) * 8) - ((8 - msg->bit) & 7);
 
 }
 
@@ -470,7 +470,7 @@ int MSG_ReadBits(msg_t *msg, int numBits)
     {
       if ( !(msg->bit & 7) )
       {
-        if ( msg->readcount >= msg->var_02 + msg->cursize )
+        if ( msg->readcount >= msg->splitcursize + msg->cursize )
         {
           msg->overflowed = 1;
           return -1;
@@ -481,10 +481,10 @@ int MSG_ReadBits(msg_t *msg, int numBits)
       if ( ((msg->bit / 8)) >= msg->cursize )
       {
 
-        if(msg->var_01 == NULL)
+        if(msg->splitdata == NULL)
             return 0;
 
-        var = msg->var_01[(msg->bit / 8) - msg->cursize];
+        var = msg->splitdata[(msg->bit / 8) - msg->cursize];
 
       }else
         var = msg->data[msg->bit / 8];

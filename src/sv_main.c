@@ -2172,9 +2172,9 @@ typedef struct{
     char* string;
     int unk1;
     int unk2;
-}unkGameState_t;
+}constConfigstring_t;
 
-#define unkGameStateStr (unkGameState_t*)UNKGAMESTATESTR_ADDR
+#define constantConfigstrings (constConfigstring_t*)UNKGAMESTATESTR_ADDR
 #define UNKGAMESTATESTR_ADDR (0x826f260)
 /*
 ===============
@@ -2188,8 +2188,8 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 	int i, edi, ebx, numConfigstrings, esi, var_03, clnum;
 	entityState_t nullstate, *base;
 	snapshotInfo_t snapInfo;
-	unkGameState_t *gsbase = unkGameStateStr;
-	unkGameState_t *gsindex;
+	constConfigstring_t *gsbase = constantConfigstrings;
+	constConfigstring_t *gsindex;
 	unsigned short strindex;
 
 	MSG_WriteByte( msg, svc_gamestate );
@@ -2275,7 +2275,8 @@ void SV_WriteGameState( msg_t* msg, client_t* cl ) {
 	Com_Memset( &nullstate, 0, sizeof( nullstate ) );
 	clnum = cl - svs.clients;
 	// baselines
-	for ( i = 0; i < MAX_GENTITIES ; i++ ) {
+	for ( i = 0; i < MAX_GENTITIES ; i++ )
+	{
 		base = &sv.svEntities[i].baseline;
 		if ( !base->number ) {
 			continue;

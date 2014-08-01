@@ -34,14 +34,38 @@
 #include <string.h>
 
 
+typedef struct
+{
+    short word_0;
+    byte byte_2;
+    byte numbytes;
+    byte datastart;
+}slHeader_t;
+
+typedef union
+{
+    slHeader_t header;
+    char data[12];
+}slTree_t;
+/*
 char* SL_ConvertToString(unsigned int index)
 {
 
     char** ptr = (char**)STRBUFFBASEPTR_ADDR;
     char* base = *ptr;
-    return &base[ index*12 + 4];
+    return &base[ index * 12 + 4];
 }
+*/
 
+char* SL_ConvertToString(unsigned int index)
+{
+    char* string;
+
+    slTree_t** ptr = (slTree_t**)STRBUFFBASEPTR_ADDR;
+    slTree_t* base = *ptr;
+    string = (char*)&base[index].header.datastart;
+    return string;
+}
 
 void AddRedirectLocations()
 {
