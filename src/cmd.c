@@ -1171,7 +1171,6 @@ static void Cmd_Help_f( void ) {
 Cmd_CompleteCfgName
 ==================
 */
-
 /*
 void Cmd_CompleteCfgName( char *args, int argNum ) {
 	if( argNum == 2 ) {
@@ -1179,6 +1178,7 @@ void Cmd_CompleteCfgName( char *args, int argNum ) {
 	}
 }
 */
+
 void Cmd_Init( void ) {
 
 	Cmd_AddCommand( "cmdlist",Cmd_List_f );
@@ -1188,5 +1188,4 @@ void Cmd_Init( void ) {
 	Cmd_AddCommand( "echo",Cmd_Echo_f );
 	Cmd_AddCommand( "wait", Cmd_Wait_f );
 	//Cmd_AddCommand( "help", Cmd_Help_f ); Not ready yet
-
 }

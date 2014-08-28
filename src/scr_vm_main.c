@@ -42,7 +42,6 @@ typedef struct{
 
 
 void Scr_AddStockFunctions(){
-
 	Scr_AddFunction("createprintchannel", (void*)0x80bf832, 0);
 	Scr_AddFunction("setprintchannel", (void*)0x80bf75c, 0);
 	Scr_AddFunction("print", (void*)0x80bf706, 0);
@@ -269,6 +268,7 @@ void Scr_AddStockFunctions(){
 	Scr_AddFunction("exec", GScr_CbufAddText, 0);
 	Scr_AddFunction("sha256", GScr_SHA256, 0);
 	Scr_AddFunction("addscriptcommand", GScr_AddScriptCommand, 0);
+
 
 }
 
@@ -1176,3 +1176,94 @@ void GetHuffmanArray(){
 }
 */
 
+int GetArraySize(int aHandle)
+{
+    int size = scrVarGlob.variables[aHandle].value.typeSize.size;
+    return size;
+}
+
+/* only for debug */
+__regparm3 void VM_Notify_Hook(int entid, int constString, variableValue_t* arguments)
+{
+    Com_Printf("^2Notify Entitynum: %d, EventString: %s\n", entid, SL_ConvertToString(constString));
+    VM_Notify(entid, constString, arguments);
+}
+
+void Scr_InitSystem()
+{
+  scrVarPub.dword18 = AllocObject();
+  scrVarPub.dword1C = Scr_AllocArray();
+  scrVarPub.varLevel = AllocObject();
+  scrVarPub.dword28 = AllocObject();
+  scrVarPub.dword14 = 0;
+  g_script_error_level = -1;
+}
+
+void Scr_ClearArguments()
+{
+    while(scrVmPub.numParams)
+    {
+        RemoveRefToValue(scrVmPub.argumentVariables->varType, scrVmPub.argumentVariables->value);
+        --scrVmPub.argumentVariables;
+        --scrVmPub.numParams;
+    }
+}
+
+void Scr_NotifyInternal(int varNum, int constString, int numArgs)
+{
+  variableValue_t *curArg;
+  int z;
+  int ctype;
+
+  Scr_ClearArguments();
+  curArg = scrVmPub.argumentVariables - numArgs;
+  z = scrVmPub.field_18 - numArgs;
+  if ( varNum )
+  {
+    ctype = curArg->varType;
+    curArg->varType = 8;
+    scrVmPub.field_18 = 0;
+    VM_Notify(varNum, constString, scrVmPub.argumentVariables);
+    curArg->varType = ctype;
+  }
+  while( scrVmPub.argumentVariables != curArg )
+  {
+    RemoveRefToValue(scrVmPub.argumentVariables->varType, scrVmPub.argumentVariables->value);
+    --scrVmPub.argumentVariables;
+  }
+  scrVmPub.field_18 = z;
+}
+
+
+void Scr_NotifyLevel(int constString, unsigned int numArgs)
+{
+    Scr_NotifyInternal(scrVarPub.varLevel, constString, numArgs);
+}
+
+
+void Scr_NotifyNum(int entityNum, unsigned int entType, unsigned int constString, unsigned int numArgs)
+{
+    int entVarNum;
+
+
+    entVarNum = FindEntityId(entityNum, entType);
+
+    Scr_NotifyInternal(entVarNum, constString, numArgs);
+
+}
+
+void Scr_Notify(gentity_t* ent, unsigned short constString, unsigned int numArgs)
+{
+    Scr_NotifyNum(ent->s.number, 0, constString, numArgs);
+}
+/*
+unsigned short constJunk;
+
+void NotifyJunk()
+{
+	if(constJunk == 0)
+		constJunk = GScr_AllocString("junk");
+	Scr_NotifyLevel(constJunk, 0);
+
+}
+*/

@@ -23,6 +23,7 @@
 
 #include "q_shared.h"
 #include "qcommon_io.h"
+#include "qcommon_mem.h"
 #include "sys_main.h"
 #include "sys_cod4defs.h"
 #include "sys_patch.h"
@@ -65,6 +66,11 @@ void Sys_CoD4Linker();
 void Com_PatchError(void);
 void Cvar_PatchModifiedFlags();
 void Scr_Sys_Error_Wrapper(const char* fmt, ...);
+void dError (int num, const char *msg, ...);
+void dMessage (int num, const char *msg, ...);
+void* __cdecl yy_create_buffer(FILE *file, int bufferSize);
+void Com_StdErrorStub(int stderr, const char* fmt, ...);
+void __regparm3 VM_Notify_Hook(int, int, void*);
 
 static void __cdecl Cbuf_AddText_Wrapper_IW(int dummy, const char *text )
 {
@@ -313,6 +319,27 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x812257c, Com_Error);
 	SetCall(0x815ea33, Scr_Sys_Error_Wrapper);
 
+
+	SetJump(0x80e2a9e, dError);
+	SetJump(0x80e2a9e, dMessage);
+	SetJump(0x8165f18 ,yy_create_buffer);
+	SetJump(0x8165aba ,Com_StdErrorStub);
+	SetJump(0x8165d46 ,Com_StdErrorStub);
+	SetJump(0x8165dc6 ,Com_StdErrorStub);
+	SetJump(0x8165f7c ,Com_StdErrorStub);
+	SetJump(0x8166628 ,Com_StdErrorStub);
+	SetJump(0x81d4bec ,Sys_OutOfMemError);
+
+
+	if( atoi( Cvar_VariableString("scr_debugnotify")) )
+	{
+		SetCall(0x815e82a, VM_Notify_Hook);
+	}else{
+		SetJump(0x815e762 ,Scr_NotifyNum);
+	}
+
+	SetJump(0x815d60e, Scr_InitSystem);
+
 	*(char*)0x8215ccc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebc = '\n'; //adds a missing linebreak
 	*(char*)0x8222ebd = '\0'; //adds a missing linebreak
@@ -325,7 +352,6 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	/* Kill the function DB_AddUserMapDir */
 	*(byte*)0x8204bc8 = 0xc3;
 	*(byte*)0x810f6b4 = 0xcc;
-
 }
 
 

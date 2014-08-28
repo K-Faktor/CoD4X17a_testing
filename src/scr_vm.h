@@ -27,6 +27,10 @@
 #define SCRSTRUCT_ADDR 0x895bf08
 #define STRINGINDEX_ADDR 0x836fe20
 #define stringIndex (*((stringIndex_t*)(STRINGINDEX_ADDR)))
+#define scrVarGlob (*((VariableValueInternal_t*)( 0x8a64e80 )))
+#define scrVarPub (*((scrVarPub_t*)( 0x8be4e80 )))
+#define scrVmPub (*((scrVmPub_t*)( 0x8c06320 )))
+#define g_script_error_level *(int*)(0x8c0631c)
 
 #include "q_shared.h"
 #include "q_math.h"
@@ -266,6 +270,90 @@ typedef struct
 
 }client_fields_t;
 
+typedef enum
+{
+    SCR_UNK,
+    SCR_POINTER,
+    SCR_STRING,
+    SCR_ISTRING, //(Localized String)
+    SCR_VECTOR,
+    SCR_FLOAT,
+    SCR_INT
+}scriptVarType_t;
+
+typedef struct
+{
+    unsigned short type;
+    unsigned short size;
+}scrTypeSize_t;
+
+typedef union
+{
+    int integer;
+    float floatVal;
+    short constString;
+    scrTypeSize_t typeSize;
+}VariableUnion_t;
+
+#pragma pack(push, 1)
+typedef struct
+{
+  unsigned short pathA;
+  unsigned short next;
+  VariableUnion_t value;
+  unsigned int type;
+  unsigned short pathB;
+  unsigned short prev;
+}VariableValueUnit_t;
+
+typedef struct
+{
+  VariableUnion_t value;
+  int varType;
+}variableValue_t;
+
+typedef struct
+{
+  VariableValueUnit_t header;
+  VariableValueUnit_t variables[32768];
+  VariableValueUnit_t header2;
+  VariableValueUnit_t variables2[32768];
+}VariableValueInternal_t;
+
+
+typedef struct
+{
+  int dword0;
+  int dword4;
+  int dword8;
+  int dwordC;
+  int dword10;
+  int dword14;
+  int dword18;
+  int dword1C;
+  int varLevel;
+  int dword24;
+  int dword28;
+}scrVarPub_t;
+
+
+typedef struct
+{
+  int field_0;
+  int field_4;
+  int field_8;
+  int field_C;
+  variableValue_t *argumentVariables;
+  char field_14;
+  char field_15;
+  char field_16;
+  char field_17;
+  int field_18;
+  int numParams;
+}scrVmPub_t;
+
+#pragma pack(pop)
+
 
 void __cdecl Scr_InitVariables(void);			//VM
 void __cdecl Scr_Init(void);			//VM_Init
@@ -273,7 +361,8 @@ void __cdecl Scr_Settings(int, int, int);
 void __cdecl Scr_AddEntity(gentity_t* ent);
 void __cdecl Scr_Cleanup(void);
 void __cdecl GScr_Shutdown(void);
-short __cdecl Scr_AllocArray();
+int __cdecl Scr_AllocArray();
+int __cdecl AllocObject();
 int __cdecl Scr_GetNumParam( void );
 int __cdecl Scr_GetInt( unsigned int );
 float __cdecl Scr_GetFloat( unsigned int );
@@ -281,7 +370,9 @@ char* __cdecl Scr_GetString( unsigned int );
 gentity_t* __cdecl Scr_GetEntity( unsigned int );
 short __cdecl Scr_GetConstString( unsigned int );
 unsigned int __cdecl Scr_GetType( unsigned int );
+unsigned int __cdecl Scr_GetPointerType( unsigned int );
 void __cdecl Scr_GetVector( unsigned int, float* );
+unsigned int __cdecl Scr_GetObject( unsigned int );
 void __cdecl Scr_Error( const char *string);
 void __cdecl Scr_SetLoading( qboolean );
 void __cdecl Scr_ParamError( int, const char *string);
@@ -290,6 +381,7 @@ void __cdecl Scr_AddInt(int value);
 void __cdecl Scr_AddFloat(float);
 void __cdecl Scr_AddBool(qboolean);
 void __cdecl Scr_AddString(const char *string);
+void __cdecl Scr_AddConstString(int strindex);
 void __cdecl Scr_AddUndefined(void);
 void __cdecl Scr_AddVector( vec3_t vec );
 void __cdecl Scr_AddArray( void );
@@ -310,6 +402,7 @@ unsigned int __cdecl GetNewVariable( unsigned int, unsigned int );
 void * __cdecl TempMalloc( int );
 void __cdecl ScriptParse( sval_u* , byte);
 unsigned int __cdecl GetObjectA( unsigned int );
+unsigned int __cdecl GetObject( unsigned int );
 unsigned int __cdecl GetVariable( unsigned int, unsigned int );
 void __cdecl ScriptCompile( sval_u, unsigned int, unsigned int, PrecacheEntry*, int);
 void* __cdecl Scr_AddSourceBuffer( const char*, const char*, const char*, byte );
@@ -320,6 +413,11 @@ void __cdecl Scr_AddFields( unsigned int, const char*, unsigned int );
 void __cdecl Scr_SetGenericField( void*, fieldtype_t, int );
 void __cdecl Scr_GetGenericField( void*, fieldtype_t, int );
 void __cdecl Scr_SetString(unsigned short *strindexptr, unsigned const stringindex);
+int __cdecl GScr_AllocString(const char* string);
+void Scr_InitSystem();
+int GetArraySize(int);
+void RemoveRefToValue(scriptVarType_t type, VariableUnion_t val);
+
 /*
 void __cdecl GScr_AddFieldsForEntity( void );
 tGScr_AddFieldsForEntity GScr_AddFieldsForEntity = (tGScr_AddFieldsForEntity(0x80c7808);
@@ -348,8 +446,8 @@ qboolean Scr_AddMethod( const char *cmd_name, xfunction_t function, qboolean dev
 qboolean Scr_RemoveMethod( const char *cmd_name );
 void Scr_ClearMethods( void );
 __cdecl void* Scr_GetMethod( const char** v_functionName, qboolean* v_developer );
-
-
+void __regparm3 VM_Notify(int, int, variableValue_t* val);
+int __cdecl FindEntityId(int, int);
 
 #define MAX_SCRIPT_FILEHANDLES 10
 
@@ -387,4 +485,5 @@ void GScr_GetCvar();
 void GScr_AddScriptCommand();
 
 #endif
+
 

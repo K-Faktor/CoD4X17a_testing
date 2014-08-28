@@ -778,15 +778,21 @@ void Com_Init(char* commandLine){
 
     FS_InitFilesystem();
 
+    if(FS_SV_FileExists("securemode"))
+    {
+        com_securemode = qtrue;
+    }
+
     Cbuf_AddText( "exec default_mp.cfg\n");
     Cbuf_Execute(0,0); // Always execute after exec to prevent text buffer overflowing
     Cbuf_AddText( "exec " Q3CONFIG_CFG "\n");
     Cbuf_Execute(0,0); // Always execute after exec to prevent text buffer overflowing
-
     if(com_securemode)
     {
         Cvar_SetStringByName("sv_democompletedCmd", "");
         Cvar_SetStringByName("sv_mapDownloadCompletedCmd", "");
+        Cvar_SetBool(com_securemodevar, qtrue);
+        Com_Printf("Info: SecureMode is enabled on this server!\n");
     }
 
     Com_StartupVariable(NULL);

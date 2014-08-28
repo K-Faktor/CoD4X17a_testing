@@ -32,7 +32,7 @@
 #include "cvar.h"
 
 #include <string.h>
-
+#include <stdarg.h>
 
 typedef struct
 {
@@ -47,15 +47,6 @@ typedef union
     slHeader_t header;
     char data[12];
 }slTree_t;
-/*
-char* SL_ConvertToString(unsigned int index)
-{
-
-    char** ptr = (char**)STRBUFFBASEPTR_ADDR;
-    char* base = *ptr;
-    return &base[ index * 12 + 4];
-}
-*/
 
 char* SL_ConvertToString(unsigned int index)
 {
@@ -155,13 +146,51 @@ qboolean __cdecl Com_LoadDvarsFromBuffer(const char **inputbuf, unsigned int len
 	return 0;
 }
 
+void dError (int num, const char *msg, ...)
+{
+  va_list ap;
+  char buf[2048];
+
+  va_start (ap, msg);
+  Q_vsnprintf(buf, sizeof(buf), msg, ap);
+  va_end(ap);
+
+  if(num)
+  {
+    Com_Error(ERR_FATAL, "\nODE Error %d: %s\n", num, buf);
+  }else{
+    Com_Error(ERR_FATAL, "\nODE Error: %s\n", buf);
+  }
+}
+
+void dMessage (int num, const char *msg, ...)
+{
+  va_list ap;
+  char buf[2048];
+
+  va_start (ap, msg);
+  Q_vsnprintf(buf, sizeof(buf), msg, ap);
+  va_end(ap);
+
+  if(num)
+  {
+    Com_PrintError("\nODE Message %d: %s\n", num, buf);
+  }else{
+    Com_PrintError("\nODE Message: %s\n", buf);
+  }
+}
 
 
+void Com_StdErrorStub(int stderr, const char* fmt, ...)
+{
 
+    va_list ap;
+    char buf[2048];
 
+    va_start (ap, fmt);
+    Q_vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
 
+    Com_Error(ERR_FATAL, "%s", buf);
 
-
-
-
-
+}

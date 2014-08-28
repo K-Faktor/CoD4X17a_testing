@@ -2006,7 +2006,7 @@ void SV_AddOperatorCommands(){
 		return;
 	}
 	initialized = qtrue;
-	
+
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
 	Cmd_AddCommand ("setPerk", SV_SetPerk_f);
 	Cmd_AddCommand ("map_restart", SV_MapRestart_f);

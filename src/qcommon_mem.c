@@ -24,7 +24,7 @@
 #include "q_shared.h"
 #include "qcommon_mem.h"
 
-#define MEM_SIZE 140 //Megabyte
+#define MEM_SIZE 150 //Megabyte
 
 void* Mem_AlignedAlloc(unsigned int align, unsigned int size)
 {
@@ -72,7 +72,10 @@ char *CopyString( const char *in ) {
 	return out;
 }
 
-
+void __cdecl Sys_OutOfMemError(const char* filename, int line)
+{
+	Com_Error(ERR_FATAL, "System is out of memory! Filename: %s, Line: %d\n", filename, line);
+}
 
 void* Z_Malloc(int size)
 {
@@ -86,3 +89,4 @@ void* Z_Malloc(int size)
 	memset(allocmem, 0, size);
 	return allocmem;
 }
+

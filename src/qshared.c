@@ -877,6 +877,143 @@ void BigInfo_SetValueForKey( char *s, const char *key, const char *value ) {
 }
 
 
+void Info_Print( const char *s ) {
+	char	key[BIG_INFO_KEY];
+	char	value[BIG_INFO_VALUE];
+	char	*o;
+	int		l;
+
+	if (*s == '\\')
+		s++;
+	while (*s)
+	{
+		o = key;
+		while (*s && *s != '\\')
+			*o++ = *s++;
+
+		l = o - key;
+		if (l < 20)
+		{
+			Com_Memset (o, ' ', 20-l);
+			key[20] = 0;
+		}
+		else
+			*o = 0;
+		Com_Printf ("%s ", key);
+
+		if (!*s)
+		{
+			Com_Printf ("MISSING VALUE\n");
+			return;
+		}
+
+		o = value;
+		s++;
+		while (*s && *s != '\\')
+			*o++ = *s++;
+		*o = 0;
+
+		if (*s)
+			s++;
+		Com_Printf ("%s\n", value);
+	}
+}
+
+
+static void Info_EncodeChar(unsigned char chr, unsigned char* encodedchr)
+{
+	sprintf((char*)encodedchr, "%%%X", (char)chr);
+}
+
+static void Info_Encode(const char* inurl, int encodelen, char* outencodedurl, int len)
+{
+	int i, y;
+	unsigned char* url = (unsigned char*)inurl;
+	unsigned char* encodedurl = (unsigned char*)outencodedurl;
+	
+	for(i = 0, y = 0; y < len -4 && i < encodelen; i++)
+	{
+		switch(url[i])
+		{
+			case '\\':
+			case '\"':
+			case ';':
+				Info_EncodeChar(url[i], &encodedurl[y]);
+				y += 3;
+				break;
+			
+			default:
+				if(url[i] < 0x20)
+				{
+					Info_EncodeChar(url[i], &encodedurl[y]);
+					y += 3;
+				}else{
+					encodedurl[y] = url[i];
+					++y;
+				}
+				break;
+		}
+	}
+	encodedurl[y] = '\0';
+}
+
+char Info_DecodeChar(unsigned char* encodedchr)
+{
+	char decoded;
+	char encoded[4];
+
+        encoded[0] = encodedchr[0];
+        encoded[1] = encodedchr[1];
+        encoded[2] = encodedchr[2];
+        encoded[3] = encodedchr[3];
+
+        if(encoded[0] != '%'){
+            return ' ';
+	}
+
+	decoded = strtol(&encoded[1], NULL, 16);
+        return decoded;
+}
+
+int Info_Decode(const char* inurl, char* outdecodedurl, int buflen)
+{
+	int i, y, k;
+
+	unsigned char* url = (unsigned char*)inurl;
+	unsigned char* decodedurl = (unsigned char*)outdecodedurl;
+	
+	for(i = 0, y = 0; url[y] && i < buflen; i++)
+	{
+		if(url[y] == '%')
+		{
+			decodedurl[i] = Info_DecodeChar(&url[y]);
+
+			for(k = 0; url[y] && k < 3; ++k)
+				++y;
+		}else{
+			decodedurl[i] = url[y];
+			++y;
+		}
+	}
+	return i;
+}
+
+void BigInfo_SetEncodedValueForKey( char *s, const char *key, const char *value, int len )
+{
+    char codedvalue[BIG_INFO_STRING];
+
+    Info_Encode(value, len, codedvalue, sizeof(codedvalue));
+
+    BigInfo_SetValueForKey( s, key, codedvalue );
+}
+
+int BigInfo_DecodedValueForKey( const char *s, const char *key, char *out, int outbuflen)
+{
+    const char* value;
+
+    value = Info_ValueForKey( s, key );
+    return Info_Decode(value, out, outbuflen);
+}
 
 
 /*
@@ -925,48 +1062,6 @@ void Q_strchrrepl(char *string, char torepl, char repl){
 
 
 //============================================================================
-
-void Info_Print( const char *s ) {
-	char	key[BIG_INFO_KEY];
-	char	value[BIG_INFO_VALUE];
-	char	*o;
-	int		l;
-
-	if (*s == '\\')
-		s++;
-	while (*s)
-	{
-		o = key;
-		while (*s && *s != '\\')
-			*o++ = *s++;
-
-		l = o - key;
-		if (l < 20)
-		{
-			Com_Memset (o, ' ', 20-l);
-			key[20] = 0;
-		}
-		else
-			*o = 0;
-		Com_Printf ("%s ", key);
-
-		if (!*s)
-		{
-			Com_Printf ("MISSING VALUE\n");
-			return;
-		}
-
-		o = value;
-		s++;
-		while (*s && *s != '\\')
-			*o++ = *s++;
-		*o = 0;
-
-		if (*s)
-			s++;
-		Com_Printf ("%s\n", value);
-	}
-}
 
 
 /*****************************************************
@@ -1059,14 +1154,14 @@ qboolean isNumeric(const char* string, int size){
     const char* ptr;
     int i;
 
-    if(size > 0){ //If we have given a length compare the whole string
+    if(size > 0){ //If we have given a length compare the string limited by the length
 
         for(i = 0, ptr = string; i < size; i++, ptr++){
             if(i == 0 && *ptr == '-') continue;
             if(*ptr < '0' || *ptr > '9') return qfalse;
         }
 
-    } else { //Search until the 1st space otherwise or null otherwise
+    } else { //Search until the 1st space or null otherwise
 
         for(i = 0, ptr = string; *ptr != ' '; i++, ptr++){
             if(i == 0 && *ptr == '-') continue;
@@ -1605,3 +1700,5 @@ qboolean strToVect(const char* string, float *vect, int dim)
 
     return qtrue;
 }
+
+

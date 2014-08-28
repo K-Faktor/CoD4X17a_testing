@@ -41,6 +41,7 @@ void __cdecl Mem_EndAlloc(const char*, int);
 void* __cdecl TempMalloc( int );
 char *CopyString( const char *in );
 void __cdecl PMem_Free(const char*, unsigned int);
+void __cdecl Sys_OutOfMemError(const char* filename, int line);
 #define Z_Free free
 #define S_Malloc Z_Malloc
 

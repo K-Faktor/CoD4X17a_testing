@@ -683,6 +683,32 @@ qboolean FS_SV_HomeFileExists( const char *file )
 	char testpath[MAX_OSPATH];
 
 	FS_BuildOSPathForThread( fs_homepath->string, file, "", testpath, 0);
+	FS_StripTrailingSeperator( testpath );
+
+	f = fopen( testpath, "rb" );
+	if (f) {
+		fclose( f );
+		return qtrue;
+	}
+	return qfalse;
+}
+
+qboolean FS_SV_FileExists( const char *file )
+{
+	FILE *f;
+	char testpath[MAX_OSPATH];
+
+	FS_BuildOSPathForThread( fs_homepath->string, file, "", testpath, 0);
+	FS_StripTrailingSeperator( testpath );
+
+	f = fopen( testpath, "rb" );
+	if (f) {
+		fclose( f );
+		return qtrue;
+	}
+
+	FS_BuildOSPathForThread( fs_basepath->string, file, "", testpath, 0);
+	FS_StripTrailingSeperator( testpath );
 
 	f = fopen( testpath, "rb" );
 	if (f) {

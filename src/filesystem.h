@@ -171,6 +171,7 @@ qboolean FS_HomeRemove( const char *path );
 qboolean FS_SV_HomeRemove( const char *path );
 
 qboolean FS_FileExists( const char *file );
+qboolean FS_SV_FileExists( const char *file );
 qboolean FS_SV_HomeFileExists( const char *file );
 
 char* FS_SV_GetFilepath( const char *file, char* buf, int buflen );

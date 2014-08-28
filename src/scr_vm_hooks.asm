@@ -78,9 +78,17 @@ global Scr_GetType
 Scr_GetType:
 	jmp dword [oScr_GetType]
 
+global Scr_GetPointerType
+Scr_GetPointerType:
+	jmp dword [oScr_GetPointerType]
+
 global Scr_GetVector
 Scr_GetVector:
 	jmp dword [oScr_GetVector]
+
+global Scr_GetObject
+Scr_GetObject:
+	jmp dword [oScr_GetObject]
 
 global Scr_Error
 Scr_Error:
@@ -114,6 +122,10 @@ global Scr_AddString
 Scr_AddString:
 	jmp dword [oScr_AddString]
 
+global Scr_AddConstString
+Scr_AddConstString:
+	jmp dword [oScr_AddConstString]
+
 global Scr_AddUndefined
 Scr_AddUndefined:
 	jmp dword [oScr_AddUndefined]
@@ -130,13 +142,13 @@ global Scr_MakeArray
 Scr_MakeArray:
 	jmp dword [oScr_MakeArray]
 
-global Scr_Notify
-Scr_Notify:
-	jmp dword [oScr_Notify]
+;global Scr_Notify
+;Scr_Notify:
+;	jmp dword [oScr_Notify]
 
-global Scr_NotifyNum
-Scr_NotifyNum:
-	jmp dword [oScr_NotifyNum]
+;global Scr_NotifyNum
+;Scr_NotifyNum:
+;	jmp dword [oScr_NotifyNum]
 
 ;Not working :(
 global Scr_PrintPrevCodePos
@@ -247,6 +259,27 @@ global Scr_SetString
 Scr_SetString:
 	jmp dword [oScr_SetString]
 
+global VM_Notify
+VM_Notify:
+	jmp dword [oVM_Notify]
+
+global FindEntityId
+FindEntityId:
+	jmp dword [oFindEntityId]
+
+global AllocObject
+AllocObject:
+	jmp dword [oAllocObject]
+
+global RemoveRefToValue
+RemoveRefToValue:
+	jmp dword [oRemoveRefToValue]
+
+global GScr_AllocString
+GScr_AllocString:
+	jmp dword [oGScr_AllocString]
+
+
 SECTION .rodata
 
 oScr_InitVariables dd 0x815288a
@@ -256,13 +289,16 @@ oScr_AddEntity dd 0x80c7770
 oScr_Cleanup dd 0x815cf84
 oGScr_Shutdown dd 0x80bf610
 oScr_AllocArray dd 0x8153cca
+oAllocObject dd 0x8153e88
 oScr_GetNumParam dd 0x815d01e
 oScr_GetInt dd 0x8160fee
 oScr_GetFloat dd 0x816094c
 oScr_GetString dd 0x8160932
 oScr_GetEntity dd 0x80c76ec
 oScr_GetConstString dd 0x816074c
+oScr_GetObject dd 0x815f8ce
 oScr_GetType dd 0x815f7c8
+oScr_GetPointerType dd 0x815f4d4
 oScr_GetVector dd 0x815ffe6
 oScr_Error dd 0x815e9f4
 oScr_SetLoading dd 0x815cfba
@@ -272,6 +308,7 @@ oScr_AddInt dd 0x815f01a
 oScr_AddFloat dd 0x815ef9a
 oScr_AddBool dd 0x815eac6
 oScr_AddString dd 0x815ec68
+oScr_AddConstString dd 0x815eb46
 oScr_AddUndefined dd 0x815eea2
 oScr_AddVector dd 0x815ee12
 oScr_AddArray dd 0x815d5c0
@@ -305,3 +342,7 @@ oScr_FreeHudElem dd 0x80c778e
 oScr_EndLoadScripts dd 0x814bcee
 oScr_ConstructMessageString dd 0x80c02aa
 oScr_SetString dd 0x81512fc
+oVM_Notify dd 0x815da56
+oFindEntityId dd 0x81529a4
+oRemoveRefToValue dd 0x8156054
+oGScr_AllocString dd 0x80c0c62

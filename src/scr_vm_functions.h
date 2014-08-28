@@ -71,7 +71,7 @@ void GScr_Spawn();
 void GScr_SpawnVehicle();
 void GScr_SpawnHelicopter();
 void GScr_VectorAdd();
-
+void GScr_TypeTest();
 __cdecl void ClientScr_SetSessionTeam(gclient_t* gcl, client_fields_t* gfl);
 
 #endif
