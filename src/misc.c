@@ -181,7 +181,7 @@ void dMessage (int num, const char *msg, ...)
 }
 
 
-void Com_StdErrorStub(int stderr, const char* fmt, ...)
+void Com_StdErrorStub(int e, const char* fmt, ...)
 {
 
     va_list ap;

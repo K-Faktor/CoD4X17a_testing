@@ -69,7 +69,7 @@ void Scr_Sys_Error_Wrapper(const char* fmt, ...);
 void dError (int num, const char *msg, ...);
 void dMessage (int num, const char *msg, ...);
 void* __cdecl yy_create_buffer(FILE *file, int bufferSize);
-void Com_StdErrorStub(int stderr, const char* fmt, ...);
+void Com_StdErrorStub(int e, const char* fmt, ...);
 void __regparm3 VM_Notify_Hook(int, int, void*);
 
 static void __cdecl Cbuf_AddText_Wrapper_IW(int dummy, const char *text )
