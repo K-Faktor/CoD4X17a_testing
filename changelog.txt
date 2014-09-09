@@ -31,3 +31,7 @@ Removed the non working recusion callback function for player's chat. Use plugin
 
 July 27 2014:
 exec() script function now returns the result as string truncated - Maybe this functionality getting removed later again if issues arise
+
+September 09 2014:
+exec is now execex
+exec works like before July 27 2014

@@ -140,10 +140,15 @@ General purpose functions
 
 =========================================
 
+execex
+==========================
+Executes the given command on server as console command and returns results
+Usage: string = execex(string <string>);
+
 exec
 ==========================
 Executes the given command on server as console command
-Usage: string = exec(string <string>);
+Usage: exec(string <string>);
 
 addScriptCommand
 ==========================

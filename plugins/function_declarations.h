@@ -69,6 +69,8 @@
     __cdecl int Plugin_Cvar_VariableIntegerValue( const char *var_name );
     __cdecl int Plugin_Cvar_VariableBooleanValue( const char *var_name );
     __cdecl const char* Plugin_Cvar_VariableString( const char *var_name );
+    // Sets a cvar by name and by a string value which gets interpreted correctly depending on the cvar type
+    __cdecl void Plugin_Cvar_Set( const char *var_name, const char* value );
 
 
     //      == File handling functions == - Do we really need those?

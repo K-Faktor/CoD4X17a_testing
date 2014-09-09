@@ -51,6 +51,7 @@ void GScr_GetRealTime();
 void GScr_TimeToString();
 void GScr_SHA256();
 void GScr_CbufAddText();
+void GScr_CbufAddTextEx();
 void GScr_FS_FOpen();
 void GScr_FS_FClose();
 void GScr_FS_FCloseAll();

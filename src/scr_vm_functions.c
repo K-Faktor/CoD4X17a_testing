@@ -1166,13 +1166,13 @@ void GScr_CbufExecRedirect(char* data, qboolean lastcommand)
     }
 }
 
-void GScr_CbufAddText(){
+void GScr_CbufAddTextEx(){
 
     char string[1024];
     char outputbuf[1024];
 
     if(Scr_GetNumParam() != 1){
-        Scr_Error("Usage: exec(<string>)\n");
+        Scr_Error("Usage: execex(<string>)\n");
     }
     Com_sprintf(string, sizeof(string), "%s\n",Scr_GetString(0));
 
@@ -1193,6 +1193,20 @@ void GScr_CbufAddText(){
     }
 
     Scr_AddString( cmd_exec_redirect_buf );
+}
+
+void GScr_CbufAddText(){
+
+    char string[1024];
+
+    if(Scr_GetNumParam() != 1){
+        Scr_Error("Usage: exec(<string>)\n");
+    }
+    Com_sprintf(string, sizeof(string), "%s\n",Scr_GetString(0));
+
+
+    Cbuf_AddText( string );
+
 }
 
 

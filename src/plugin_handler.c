@@ -184,7 +184,7 @@ void PHandler_CloseTempFile(char* filepath)
 
 #define PLUGINCENSOR_HASH "bfb496df0acc1bd01a0789b8d35d8081143db883297206aa"
 #define PLUGINANTISPAM_HASH "7fc95f3902bd809a1e50a783fbb482044f67ad8927259a36"
-#define PLUGINGAMERANGER_HASH "25feab2d90616aa1ddf507cc9a4e4093050fc777f6c16c4c"
+#define PLUGINGAMERANGER_HASH "6609a69715a41b486611fa1c461f90acfed836eac0e699d8"
 
 
 void PHandler_Load(char* name) // Load a plugin, safe for use

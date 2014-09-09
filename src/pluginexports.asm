@@ -77,6 +77,7 @@ pexport Cvar_SetInt
 pexport Cvar_SetBool
 pexport Cvar_SetString
 pexport Cvar_SetFloat
+pexport Cvar_Set
 
 pexport FS_SV_FOpenFileRead
 pexport FS_SV_FOpenFileWrite
