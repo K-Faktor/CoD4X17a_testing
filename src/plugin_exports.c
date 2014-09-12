@@ -584,3 +584,14 @@ P_P_F void Plugin_BanClient( unsigned int clientnum, int duration, int invokerid
 	}
 	SV_DropClient(cl, dropmsg);
 }
+
+P_P_F gentity_t* Plugin_GetGentityForEntityNum(int entnum)
+{
+    return &g_entities[entnum];
+}
+
+P_P_F client_t* Plugin_GetClientForClientNum(int clientnum)
+{
+    return &svs.clients[clientnum];
+}
+

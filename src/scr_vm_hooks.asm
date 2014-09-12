@@ -275,9 +275,9 @@ global RemoveRefToValue
 RemoveRefToValue:
 	jmp dword [oRemoveRefToValue]
 
-global GScr_AllocString
-GScr_AllocString:
-	jmp dword [oGScr_AllocString]
+global Scr_AllocString
+Scr_AllocString:
+	jmp dword [oScr_AllocString]
 
 
 SECTION .rodata
@@ -345,4 +345,4 @@ oScr_SetString dd 0x81512fc
 oVM_Notify dd 0x815da56
 oFindEntityId dd 0x81529a4
 oRemoveRefToValue dd 0x8156054
-oGScr_AllocString dd 0x80c0c62
+oScr_AllocString dd 0x80c0c62

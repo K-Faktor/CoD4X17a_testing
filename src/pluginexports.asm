@@ -117,11 +117,15 @@ pexport Scr_AddUndefined
 pexport Scr_AddVector
 pexport Scr_AddArray
 pexport Scr_MakeArray
-pexport Scr_Notify
-pexport Scr_NotifyNum
 pexport Scr_ExecEntThread
 pexport Scr_ExecThread
 pexport Scr_FreeThread
+
+pexport Scr_Notify
+pexport Scr_NotifyNum
+pexport Scr_NotifyLevel
+
+pexport Scr_AllocString
 
 pexport G_LogPrintf
 

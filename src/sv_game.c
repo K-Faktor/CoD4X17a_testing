@@ -67,3 +67,4 @@ sharedEntity_t *SV_GEntityForSvEntity( svEntity_t *svEnt ) {
 	num = svEnt - sv.svEntities;
 	return SV_GentityNum( num );
 }
+

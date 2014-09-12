@@ -413,7 +413,7 @@ void __cdecl Scr_AddFields( unsigned int, const char*, unsigned int );
 void __cdecl Scr_SetGenericField( void*, fieldtype_t, int );
 void __cdecl Scr_GetGenericField( void*, fieldtype_t, int );
 void __cdecl Scr_SetString(unsigned short *strindexptr, unsigned const stringindex);
-int __cdecl GScr_AllocString(const char* string);
+int __cdecl Scr_AllocString(const char* string);
 void Scr_InitSystem();
 int GetArraySize(int);
 void RemoveRefToValue(scriptVarType_t type, VariableUnion_t val);

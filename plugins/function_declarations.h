@@ -147,8 +147,8 @@
     __cdecl void Plugin_RandomBytes( byte *string, int len );
 
     //      == Scriptfunctions ==
-    __cdecl void Plugin_ScrAddFunction(char *name, xfunction_t function);
-    __cdecl void Plugin_ScrAddMethod(char *name, xfunction_t function);
+    __cdecl void Plugin_ScrAddFunction(char *name, void (*function)());
+    __cdecl void Plugin_ScrAddMethod(char *name, void (*function)(scr_entref_t object));
     __cdecl void Plugin_ScrReplaceFunction(char *name, xfunction_t function);
     __cdecl void Plugin_ScrReplaceMethod(char *name, xfunction_t function);
 
@@ -172,12 +172,21 @@
     __cdecl void Plugin_Scr_AddVector( vec3_t vec );
     __cdecl void Plugin_Scr_AddArray( void );
     __cdecl void Plugin_Scr_MakeArray( void );
-    __cdecl void Plugin_Scr_Notify( gentity_t*, unsigned short, unsigned int);
-    __cdecl void Plugin_Scr_NotifyNum( int, unsigned int, unsigned int, unsigned int);
     __cdecl short Plugin_Scr_ExecEntThread( gentity_t* ent, int callbackHook, unsigned int numArgs);
     __cdecl short Plugin_Scr_ExecThread( int callbackHook, unsigned int numArgs);
-    __cdecl void  Plugin_Scr_FreeThread( short threadId);
+    __cdecl void Plugin_Scr_FreeThread( short threadId);
+
+
+
+    __cdecl void Plugin_Scr_NotifyLevel(int constString, unsigned int numArgs);
+    __cdecl void Plugin_Scr_NotifyNum(int entityNum, unsigned int entType, unsigned int constString, unsigned int numArgs);
+    __cdecl void Plugin_Scr_Notify(gentity_t* ent, unsigned short constString, unsigned int numArgs);
+    __cdecl int Plugin_Scr_AllocString(const char*);
+
+
 
     __cdecl playerState_t *Plugin_SV_GameClientNum( int num ); //Retrives the playerState_t* object from a client number
 
+    __cdecl gentity_t* Plugin_GetGentityForEntityNum(int entnum);
+    __cdecl client_t* Plugin_GetClientForClientNum(int clientnum);
 

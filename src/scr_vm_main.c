@@ -1263,7 +1263,7 @@ unsigned short constJunk;
 void NotifyJunk()
 {
 	if(constJunk == 0)
-		constJunk = GScr_AllocString("junk");
+		constJunk = Scr_AllocString("junk");
 	Scr_NotifyLevel(constJunk, 0);
 
 }
