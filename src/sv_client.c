@@ -2391,7 +2391,7 @@ void SV_GetVoicePacket(netadr_t *from, msg_t *msg)
 
 	cl = SV_ReadPackets(from, qport);
 	
-	if ( cl->state >= CS_CONNECTED)
+	if ( cl && cl->state >= CS_CONNECTED)
 	{
 		cl->lastPacketTime = svs.time;
 		if ( cl->state >= CS_ACTIVE )
