@@ -278,13 +278,14 @@ char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets call
                 }else{
 
                     int remaining = (int)(this->expire - Com_GetRealtime()) +1; //in seconds (+1 for fixing up a display error when only some seconds are remaining)
+                    int srem = remaining;
                     int d = remaining/(60*60*24);
                     remaining = remaining%(60*60*24);
                     int h = remaining/(60*60);
                     remaining = remaining%(60*60);
                     int m = remaining/60;
 
-                    if(sv_banappealminhours && remaining < sv_banappealminhours->integer * 60*60)
+                    if(sv_banappealminhours && srem < sv_banappealminhours->integer * 60*60)
                     {
                         appealmsg[0] = '\0';
                     }
@@ -451,6 +452,7 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr, char* message, in
             if(this->expire > Com_GetRealtime()){
 
 		int remaining = (int)(this->expire - Com_GetRealtime());
+                int srem = remaining;
                 SV_PlayerAddBanByip(addr, this->reason, this->playeruid, pbguid, this->adminuid, this->expire);
 		int d = remaining/(60*60*24);
 		remaining = remaining%(60*60*24);
@@ -458,7 +460,7 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr, char* message, in
 		remaining = remaining%(60*60);
 		int m = remaining/60;
 
-                if(sv_banappealminhours && remaining < sv_banappealminhours->integer * 60*60)
+                if(sv_banappealminhours && srem < sv_banappealminhours->integer * 60*60)
                 {
                     appealmsg[0] = '\0';
                 }
@@ -486,13 +488,14 @@ char* SV_PlayerIsBanned(int uid, char* pbguid, netadr_t *addr, char* message, in
             if(this->expire > Com_GetRealtime()){
 
 		int remaining = (int)(this->expire - Com_GetRealtime());
+		int srem = remaining;
 		int d = remaining/(60*60*24);
 		remaining = remaining%(60*60*24);
 		int h = remaining/(60*60);
 		remaining = remaining%(60*60);
 		int m = remaining/60;
 
-                if(sv_banappealminhours && remaining < sv_banappealminhours->integer * 60*60)
+                if(sv_banappealminhours && srem < sv_banappealminhours->integer * 60*60)
                 {
                     appealmsg[0] = '\0';
                 }
