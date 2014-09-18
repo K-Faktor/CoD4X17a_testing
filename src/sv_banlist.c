@@ -256,6 +256,8 @@ char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets call
     int i;
 
     char appealmsg[512];
+    char uidguidmsg[64];
+
     appealmsg[0] = '\0';
 
     if(sv_banappealurl && sv_banappealurl->string[0])
@@ -269,10 +271,16 @@ char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets call
 
             if(Com_GetRealtime() < this->timeout)
             {
+                if(this->uid > 0)
+                {
+                    Com_sprintf(uidguidmsg, sizeof(uidguidmsg), "Your UID is: %i", this->uid);
+                }else{
+                    Com_sprintf(uidguidmsg, sizeof(uidguidmsg), "Your GUID is: %s", this->guid);
+                }
 
                 if(this->expire == -1){
-		Com_sprintf(message, len, "Enforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n%s\n",
-                    this->uid,this->adminuid,this->banmsg, appealmsg);
+		Com_sprintf(message, len, "Enforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n %s    Banning admin UID is: %i\nReason for this ban:\n%s\n%s\n",
+                    uidguidmsg,this->adminuid,this->banmsg, appealmsg);
 					return message;
 
                 }else{
@@ -290,8 +298,8 @@ char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets call
                         appealmsg[0] = '\0';
                     }
 
-                    Com_sprintf(message, len, "Enforcing prior kick/ban\nTemporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n%s\n",
-                    d,h,m,this->uid,this->adminuid,this->banmsg, appealmsg);
+                    Com_sprintf(message, len, "Enforcing prior kick/ban\nTemporary ban issued onto this gameserver\nYou are not allowed to rejoin this gameserver for another\n %i days %i hours %i minutes\n %s    Banning admin UID is: %i\nReason for this ban:\n%s\n%s\n",
+                    d,h,m,uidguidmsg,this->adminuid,this->banmsg, appealmsg);
 					return message;
                 }
 
