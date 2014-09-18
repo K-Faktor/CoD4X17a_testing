@@ -61,6 +61,7 @@ typedef struct {	//It is only for timelimited tempbans to prevent happy reconnec
 
 typedef struct banList_s {
     time_t	expire;
+    time_t	created;
     int		playeruid;
     int		adminuid;
     char	pbguid[BANLIST_PBGUID_LENGTH];
@@ -99,20 +100,28 @@ qboolean SV_ParseBanlist(char* line, time_t aclock, int linenumber){
     int playeruid = 0;
     int adminuid = 0;
     time_t expire = 0;
+    time_t create = 0;
     char reason[128];
     char guid[9];
     guid[8] = 0;
     char playername[MAX_NAME_LENGTH];
     int i;
+    char *tmp;
 
     playeruid = atoi(Info_ValueForKey(line, "uid"));
     adminuid = atoi(Info_ValueForKey(line, "auid"));
     expire = atoi(Info_ValueForKey(line, "exp"));
+    tmp = Info_ValueForKey(line, "create");
+    if(tmp && tmp[0])
+    {
+        create = atoi(tmp);
+    }
     Q_strncpyz(reason, Info_ValueForKey(line, "rsn"), sizeof(reason));
     Q_strncpyz(guid, Info_ValueForKey(line, "guid"), sizeof(guid));
     Q_strncpyz(playername, Info_ValueForKey(line, "nick"), sizeof(guid));
 
-    if(expire < aclock && expire != (time_t)-1){
+    if(expire < aclock && expire != (time_t)-1)
+    {
             return qtrue;
     }
     this = banlist;
@@ -146,6 +155,7 @@ qboolean SV_ParseBanlist(char* line, time_t aclock, int linenumber){
     this->playeruid = playeruid;
     this->adminuid = adminuid;
     this->expire = expire;
+    this->created = create;
     Q_strncpyz(this->reason, reason, sizeof(this->reason));
     Q_strncpyz(this->pbguid, guid, sizeof(this->pbguid));
     Q_strncpyz(this->playername, playername, sizeof(this->playername));
@@ -227,6 +237,7 @@ void SV_WriteBanlist(){
             Info_SetValueForKey(infostring, "nick", this->playername);
             Info_SetValueForKey(infostring, "rsn", this->reason);
             Info_SetValueForKey(infostring, "exp", va("%i", this->expire));
+            Info_SetValueForKey(infostring, "create", va("%i", this->created));
             Info_SetValueForKey(infostring, "auid", va("%i", this->adminuid));
             Q_strcat(infostring, sizeof(infostring), "\\\n");
             FS_Write(infostring,strlen(infostring),file);
@@ -251,8 +262,7 @@ char* SV_PlayerBannedByip(netadr_t *netadr, char* message, int len){	//Gets call
             {
 
                 if(this->expire == -1){
-                    
-					Com_sprintf(message, len, "Enforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
+		Com_sprintf(message, len, "Enforcing prior ban\nPermanent ban issued onto this gameserver\nYou will be never allowed to join this gameserver again\n Your UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s\n",
                     this->uid,this->adminuid,this->banmsg);
 					return message;
 
@@ -510,12 +520,15 @@ qboolean  SV_ReloadBanlist(){
 
 qboolean SV_AddBan(int uid, int auid, char* guid, char* name, time_t expire, char* banreason){
 
+    time_t aclock;
+
     if(!SV_OversizeBanlistAlign())
         return qfalse;
 
+    time(&aclock);
+
     banList_t *this;
     int i;
-
 
     this = banlist;
     if(!this)
@@ -564,6 +577,7 @@ qboolean SV_AddBan(int uid, int auid, char* guid, char* name, time_t expire, cha
     this->playeruid = uid;
     this->adminuid = auid;
     this->expire = expire;
+    this->created = aclock;
 
     if(banreason)
         Q_strncpyz(this->reason, banreason, sizeof(this->reason));
