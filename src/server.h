@@ -164,7 +164,8 @@ typedef struct client_s {//90b4f8c
 	//Free Space
 	qboolean		enteredWorldForFirstTime;
 	unsigned int		connectedTime;
-	byte			free[648];
+	char			xversion[8];
+	byte			free[640];
 	char			name[64];
 
 	int			unknownUsercmd1;	//0x63c

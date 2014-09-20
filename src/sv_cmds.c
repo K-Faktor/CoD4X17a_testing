@@ -992,9 +992,9 @@ static void SV_MiniStatus_f( void ) {
 
 	Com_Printf ("map: %s\n", sv_mapname->string );
 
-	Com_Printf ("num score ping uid/guid   name                             address                                             FPS\n");
+	Com_Printf ("num score ping uid/guid   name                             address                                             FPS XVer\n");
 
-	Com_Printf ("--- ----- ---- ---------- -------------------------------- --------------------------------------------------- ---\n");
+	Com_Printf ("--- ----- ---- ---------- -------------------------------- --------------------------------------------------- --- ----\n");
 	for (i=0,cl=svs.clients, gclient = level.clients ; i < sv_maxclients->integer ; i++, cl++, gclient++)
 	{
 		if (!cl->state)
@@ -1069,6 +1069,8 @@ static void SV_MiniStatus_f( void ) {
 		} while(j < l);
 
 		Com_Printf("%3i ", cl->clFPS);
+
+		Com_Printf("%s ", cl->xversion);
 
 		odd = ~odd;
 		Com_Printf ("\n");
