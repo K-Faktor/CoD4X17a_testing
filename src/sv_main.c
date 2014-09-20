@@ -1766,6 +1766,8 @@ void	serverStatus_Write(){
     char	teamname[32];
     char	cid[4];
     char	ping[4];
+    char	power[4];
+    char	rank[4];
 	mvabuf;
 
 
@@ -1798,7 +1800,6 @@ void	serverStatus_Write(){
 
             for ( i = 0, cl = svs.clients, gclient = level.clients; i < sv_maxclients->integer ; i++, cl++, gclient++ ) {
                 if ( cl->state >= CS_CONNECTED ){
-
                         Com_sprintf(cid,sizeof(cid),"%i", i);
 
                         if(cl->state == CS_ACTIVE){
@@ -1810,6 +1811,8 @@ void	serverStatus_Write(){
                             Com_sprintf(deaths,sizeof(deaths),"%i", gclient->pers.scoreboard.deaths);
                             Com_sprintf(assists,sizeof(assists),"%i", gclient->pers.scoreboard.assists);
                             Com_sprintf(ping,sizeof(ping),"%i", cl->ping);
+                            Com_sprintf(power,sizeof(power),"%i", cl->power);
+                            Com_sprintf(rank,sizeof(rank),"%i", gclient->sess.rank +1);
                             switch(gclient->sess.sessionTeam){
 
                                 case TEAM_RED:
@@ -1848,6 +1851,7 @@ void	serverStatus_Write(){
                             *deaths = 0;
                             *assists = 0;
                             *ping = 0;
+                            *rank = 0;
                             if(cl->state == CS_CONNECTED){
                                 Q_strncpyz(teamname, "Connecting...", 32);
                             }else{
@@ -1855,7 +1859,7 @@ void	serverStatus_Write(){
                             }
                         }
 
-                        XML_OpenTag(&xmlbase, "Client", 13, "CID",cid, "ColorName",cl->name, "DBID",va("%i", cl->uid), "IP",NET_AdrToStringShort(&cl->netchan.remoteAddress), "PBID",cl->pbguid, "Score",score, "Kills",kills, "Deaths",deaths, "Assists",assists, "Ping", ping, "Team",team, "TeamName", teamname, "Updated", timestr);
+                        XML_OpenTag(&xmlbase, "Client", 15, "CID",cid, "ColorName",cl->name, "DBID",va("%i", cl->uid), "IP",NET_AdrToStringShort(&cl->netchan.remoteAddress), "PBID",cl->pbguid, "Score",score, "Kills",kills, "Deaths",deaths, "Assists",assists, "Ping", ping, "Team",team, "TeamName", teamname, "Updated", timestr, "power", power, "rank", rank);
                         XML_CloseTag(&xmlbase);
                 }
             }
