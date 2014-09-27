@@ -1302,13 +1302,13 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 		SVC_RemoteCommand( from, msg );
 	} else if (!Q_stricmp(c, "connect")) {
 		SV_DirectConnect( from );
-
+#ifdef COD4X17A
 	} else if (!Q_stricmp(c, "ipAuthorize")) {
 		SV_AuthorizeIpPacket( from );
 
 	} else if (!Q_stricmp(c, "stats")) {
 		SV_ReceiveStats(from, msg);
-
+#endif
         } else if (!Q_stricmp(c, "rcon")) {
 		SVC_RemoteCommand( from, msg );
 
@@ -2046,11 +2046,7 @@ void SV_InitCvarsOnce(void){
 	sv_master[2] = Cvar_RegisterString("sv_master3", "", 0, "A masterserver name");
 	sv_master[3] = Cvar_RegisterString("sv_master4", "", 0, "A masterserver name");
 	sv_master[4] = Cvar_RegisterString("sv_master5", "", 0, "A masterserver name");
-
-	if(sv_authorizemode->integer < 1)
-		sv_master[5] = Cvar_RegisterString("sv_master6", "cod.iw4play.de", CVAR_ROM, "A masterserver name");
-	else
-		sv_master[5] = Cvar_RegisterString("sv_master6", "", 0, "A masterserver name");
+	sv_master[5] = Cvar_RegisterString("sv_master6", "", 0, "A masterserver name");
 
 	sv_master[6] = Cvar_RegisterString("sv_master7", MASTER_SERVER_NAME, CVAR_ROM, "Default masterserver name");
 	sv_master[7] = Cvar_RegisterString("sv_master8", MASTER_SERVER_NAME2, CVAR_ROM, "Default masterserver name");
@@ -2554,11 +2550,6 @@ void SV_PreLevelLoad(){
 
 	G_InitMotd();
 
-	if(sv_authorizemode->integer < 1){
-		Cvar_SetString(sv_master[5], "cod.iw4play.de");
-		sv_master[5]->flags = CVAR_ROM;
-	}
-
 	for ( client = svs.clients, i = 0 ; i < sv_maxclients->integer ; i++, client++ ) {
 
 		G_DestroyAdsForPlayer(client); //Remove hud message ads
@@ -2587,6 +2578,24 @@ void SV_PostLevelLoad(){
 	PHandler_Event(PLUGINS_ONSPAWNSERVER, NULL);
 	sv.frameusec = 1000000 / sv_fps->integer;
 	sv.serverId = com_frameTime;
+}
+
+void SV_LoadLevel(const char* levelname)
+{
+	char mapname[MAX_QPATH];
+
+	Q_strncpyz(mapname, levelname, sizeof(mapname));
+	FS_ConvertPath(mapname);
+	SV_PreLevelLoad();
+	SV_SpawnServer(mapname);
+
+#ifndef COD4X17A
+	char cs[MAX_STRING_CHARS];
+	Com_sprintf(cs, sizeof(cs), "cod%d xmodel=4000", PROTOCOL_VERSION);
+	SV_SetConfigstring(2, cs);
+#endif
+
+	SV_PostLevelLoad();
 }
 
 
@@ -2630,12 +2639,7 @@ qboolean SV_Map( const char *levelname ) {
 
 //	Cbuf_ExecuteBuffer(0, 0, "selectStringTableEntryInDvar mp/didyouknow.csv 0 didyouknow");
 
-	FS_ConvertPath(mapname);
-	SV_PreLevelLoad();
-
-	SV_SpawnServer(mapname);
-
-	SV_PostLevelLoad();
+	SV_LoadLevel(mapname);
 	return qtrue;
 }
 
@@ -2657,7 +2661,6 @@ This allows fair starts with variable load times.
 */
 void SV_MapRestart( qboolean fastRestart ){
 
-	char mapname[MAX_QPATH];
 	int i, j;
 	client_t    *client;
 	const char  *denied;
@@ -2681,11 +2684,7 @@ void SV_MapRestart( qboolean fastRestart ){
 	if(!fastRestart)
 	{
 		G_SetSavePersist(0);
-		Q_strncpyz(mapname, sv_mapname->string, sizeof(mapname));
-		FS_ConvertPath(mapname);
-		SV_PreLevelLoad();
-		SV_SpawnServer(mapname);
-		SV_PostLevelLoad();
+		SV_LoadLevel(sv_mapname->string);
 		return;
 	}
 

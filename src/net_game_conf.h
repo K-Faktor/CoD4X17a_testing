@@ -43,7 +43,11 @@
 
 #define	PORT_SERVER		28960
 
-#define	PROTOCOL_VERSION	6
+#ifndef COD4X17A
+    #define	PROTOCOL_VERSION	7
+#else
+    #define	PROTOCOL_VERSION	6
+#endif
 
 #define MAX_MSGLEN 0x20000
 

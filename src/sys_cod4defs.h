@@ -38,9 +38,14 @@
 #define HEARTBEAT_GAME "COD-4"
 #define HEARTBEAT_DEAD "flatline"
 
-  #define PRODUCT_VERSION "1.0"
+#define PRODUCT_VERSION "1.0"
 
-#define Q3_VERSION "1.7a"
+#ifdef COD4X17A
+    #define Q3_VERSION "1.7a"
+#else
+    #define Q3_VERSION "1.8"
+#endif
+
 #define GAME_STRING "CoD4 X"
 
 #include "version.h"

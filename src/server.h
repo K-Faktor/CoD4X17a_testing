@@ -429,7 +429,9 @@ typedef struct {//0x8c51780
 
 typedef struct {
 	unsigned long long	nextHeartbeatTime;
+#ifdef COD4X17A
 	challenge_t		challenges[MAX_CHALLENGES];	// to prevent invalid IPs from connecting
+#endif
 	netadr_t		redirectAddress;			// for rcon return messages
 	netadr_t		authorizeAddress;			// ??? for rcon return messages
 	client_t		*redirectClient;		//used for SV_ExecuteRemoteControlCmd()

@@ -28,7 +28,7 @@ nasm -f elf src/msg_hooks.asm        -o bin/msg_hooks.o
 nasm -f elf src/pluginexports.asm    -o bin/pluginexports.o
 
 echo Linking...
-gcc -m32 -rdynamic -Tlinkerscript.ld -o bin/cod4x17a_dedrun bin/*.o -Llib/ -ltomcrypt_linux -ltommath_linux -ldl -lpthread -lm -lstdc++
+gcc -m32 -rdynamic -Tlinkerscript.ld -o bin/cod4x18_dedrun bin/*.o -Llib/ -ltomcrypt_linux -ltommath_linux -ldl -lpthread -lm -lstdc++
 
 rm bin/*.o
 

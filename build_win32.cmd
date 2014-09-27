@@ -3,12 +3,12 @@
 
 echo Compiling C-code...
 cd bin
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_win32.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/win_syscon.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_cod4linker_win32.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/pe32_parser.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/*.c
-gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=nocona -D WINVER=0x501 -c ../src/zlib/*.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D COD4X17A -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_win32.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D COD4X17A -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/win_syscon.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D COD4X17A -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/sys_cod4linker_win32.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D COD4X17A -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/win32/pe32_parser.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -march=nocona -D COD4X17A -D WINVER=0x501 -I../lib_tomcrypt/headers -I../lib_tomcrypt/math/tommath -c ../src/*.c
+gcc -m32 -Wall -O0 -g -fno-omit-frame-pointer -mtune=nocona -D COD4X17A -D WINVER=0x501 -c ../src/zlib/*.c
 cd ../
 
 echo Compiling NASM...

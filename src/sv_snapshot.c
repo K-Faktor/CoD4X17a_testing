@@ -404,31 +404,42 @@ Called by SV_SendClientSnapshot and SV_SendClientGameState
 */
 __cdecl void SV_SendMessageToClient( msg_t *msg, client_t *client ) {
 	int rateMsec;
+
+#ifdef COD4X17A
 	int len;
-
 	*(int32_t*)0x13f39080 = *(int32_t*)msg->data;
-
 	len = MSG_WriteBitsCompress( 0, msg->data + 4 ,(byte*)0x13f39084 , msg->cursize - 4);
-	
 //	SV_TrackHuffmanCompression(len, msg->cursize - 4);
-	
 	len += 4;
-
+#endif
 	if(client->delayDropMsg){
 		SV_DropClient(client, client->delayDropMsg);
 	}
 
 	if(client->demorecording && !client->demowaiting)
+	{
+#ifdef COD4X17A
 		SV_WriteDemoMessageForClient((byte*)0x13f39080, len, client);
+#else
+		SV_WriteDemoMessageForClient(msg->data, msg->cursize, client);
+#endif
+	}
 
 	// record information about the message
+#ifdef COD4X17A
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = len;
+#else
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
+#endif
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = Sys_Milliseconds();
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = 0xFFFFFFFF;
 
 	// send the datagram
+#ifdef COD4X17A
 	SV_Netchan_Transmit( client, (byte*)0x13f39080, len );
-
+#else
+	SV_Netchan_Transmit( client, msg->data, msg->cursize );
+#endif
 	// set nextSnapshotTime based on rate and requested number of updates
 
 	// local clients get snapshots every frame
@@ -477,7 +488,11 @@ __cdecl void SV_SendMessageToClient( msg_t *msg, client_t *client ) {
 			client->nextSnapshotTime = svs.time + 1000;
 		}
 	}
-	sv.bpsTotalBytes += len ;
+#ifdef COD4X17A
+	sv.bpsTotalBytes += len;
+#else
+	sv.bpsTotalBytes += msg->cursize;
+#endif
 }
 
 void SV_SendClientSnapshot(client_t *cl){

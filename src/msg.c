@@ -320,6 +320,46 @@ void MSG_WriteBits(msg_t *msg, int bits, int bitcount)
     }
 }
 
+char *base64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+void MSG_WriteBase64(msg_t* msg, byte* inbuf, int len)
+{
+    int bits, i, k, j, shift, offset;
+    int mask;
+    int b64data;
+
+    i = 0;
+
+    while(i < len)
+    {
+        bits = 0;
+        /* Read a base64 3 byte block */
+        for(k = 0; k < 3 && i < len; ++k, ++i)
+        {
+            ((byte*)&bits)[2 - k] = inbuf[i];
+        }
+
+        mask = 64 - 1;
+
+        for(j = 0, shift = 0; j < 4; ++j, shift += 6)
+        {
+            offset = (bits & (mask << shift)) >> shift;
+
+            ((byte*)&b64data)[3 - j] = base64[offset];
+        }
+        MSG_WriteLong(msg, b64data);
+    }
+
+    if(msg->cursize < 3)
+    {
+        return;
+    }
+
+    for(i = 0; k < 3; i++, k++)
+    {
+        msg->data[msg->cursize - i -1] = '=';
+    }
+}
 
 //============================================================
 
@@ -495,6 +535,61 @@ int MSG_ReadBits(msg_t *msg, int numBits)
   }
   return retval;
 }
+
+
+
+
+void MSG_ReadBase64(msg_t* msg, byte* outbuf, int len)
+{
+    int databyte;
+    int b64data;
+    int k, shift;
+
+    int i = 0;
+
+    do
+    {
+        b64data = 0;
+        for(k = 0, shift = 18; k < 4; ++k, shift -= 6)
+        {
+
+            databyte = MSG_ReadByte(msg);
+            if(databyte >= 'A' && databyte <= 'Z')
+            {
+                databyte -= 'A';
+            }else if(databyte >= 'a' && databyte <= 'z' ){
+                databyte -= 'a';
+                databyte += 26;
+            }else if(databyte >= '0' && databyte <= '9' ){
+                databyte -= '0';
+                databyte += 52;
+            }else if(databyte == '+'){
+                databyte = 62;
+            }else if(databyte == '/'){
+                databyte = 63;
+            }else{
+                databyte = -1;
+                break;
+            }
+
+            b64data |= (databyte << shift);
+
+        }
+
+        outbuf[i + 0] = ((char*)&b64data)[2];
+        outbuf[i + 1] = ((char*)&b64data)[1];
+        outbuf[i + 2] = ((char*)&b64data)[0];
+
+        i += 3;
+
+    }while(databyte != -1 && (i +4) < len);
+
+    outbuf[i] = '\0';
+
+}
+
+
+
 
 /*
 void MSG_NUinitHuffman() {
@@ -1751,3 +1846,7 @@ void MSG_WriteReliableCommandToBuffer(const char *source, char *destination, int
 	}
   }
 }
+
+
+
+

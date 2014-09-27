@@ -96,7 +96,8 @@ void __cdecl MSG_WriteDeltaPlayerstate(struct snapshotInfo_s* , msg_t* , int , s
 void __cdecl MSG_WriteEntityIndex(struct snapshotInfo_s*, msg_t*, int, int);
 void __cdecl MSG_ReadDeltaUsercmdKey( msg_t *msg, int key, struct usercmd_s *from, struct usercmd_s *to );
 void __cdecl MSG_SetDefaultUserCmd( struct playerState_s *ps, struct usercmd_s *ucmd );
+void MSG_WriteBase64(msg_t* msg, byte* inbuf, int len);
+void MSG_ReadBase64(msg_t* msg, byte* outbuf, int len);
 
 #endif
-
 
