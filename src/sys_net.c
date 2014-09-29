@@ -148,7 +148,7 @@ void NET_TCPConnectionClosed(netadr_t* adr, int sock, int connectionId, int serv
 #endif
 #ifndef __NET_GAME_H__
 #pragma message "Function NET_UDPPacketEvent is undefined"
-void NET_UDPPacketEvent(netadr_t* from, void* data, int len){}
+void NET_UDPPacketEvent(netadr_t* from, void* data, int len, int buflen){}
 #endif
 #ifndef __NET_GAME_H__
 #pragma message "Function NET_TCPAuthPacketEvent is undefined"
@@ -2881,7 +2881,7 @@ __optimize3 __regparm1 qboolean NET_Event(int socket)
 					continue;          // drop this packet
 			}
 
-			NET_UDPPacketEvent(&from, bufData, len);
+			NET_UDPPacketEvent(&from, bufData, len, sizeof(bufData));
 
 				//Com_RunAndTimeServerPacket(&from, &netmsg);
 			//else

@@ -38,8 +38,13 @@
 //#define SV_ENCODE_START 4
 //#define CL_ENCODE_START 9
 
+#ifdef COD4X17A
 #define NETCHAN_UNSENTBUFFER_SIZE 0x20000
 #define NETCHAN_FRAGMENTBUFFER_SIZE 0x800
+#else
+#define NETCHAN_UNSENTBUFFER_SIZE 0x1C000
+#define NETCHAN_FRAGMENTBUFFER_SIZE 0x4800
+#endif
 
 #define MAX_PACKETLEN           1400        // max size of a network packet
 #define FRAGMENT_SIZE           ( MAX_PACKETLEN - 100 )

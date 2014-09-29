@@ -1905,12 +1905,16 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 	int serverId;
 
 	msg_t decompressMsg;
-	byte buffer[8192]; //Big enought to never create an overflow by decompressing
+	byte buffer[NETCHAN_FRAGMENTBUFFER_SIZE +1];
 
 	MSG_Init(&decompressMsg, buffer, sizeof(buffer));
-	decompressMsg.cursize = MSG_ReadBitsCompress(msg->data + msg->readcount, decompressMsg.data, msg->cursize - msg->readcount);
 
-
+	decompressMsg.cursize = MSG_ReadBitsCompress(msg->data + msg->readcount, msg->cursize - msg->readcount, decompressMsg.data, decompressMsg.maxsize);
+	if(decompressMsg.cursize == decompressMsg.maxsize)
+	{
+		SV_DropClient(cl, "SV_ExecuteClientMessage: Client sent oversize message");
+		return;
+	}
 	serverId = cl->serverId;
 
 	if ( serverId != sv_serverId && !cl->wwwDl_var01 && !cl->wwwDownloadStarted && !cl->wwwDl_var02 )

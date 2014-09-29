@@ -513,7 +513,7 @@ void SV_SendClientSnapshot(client_t *cl){
 
 void SV_BeginClientSnapshot(client_t *client, msg_t *msg)
 {
-	static byte tempSnapshotMsgBuf[0x20000];
+	static byte tempSnapshotMsgBuf[NETCHAN_UNSENTBUFFER_SIZE];
 	
 	
 	MSG_Init( msg, tempSnapshotMsgBuf, sizeof(tempSnapshotMsgBuf) );

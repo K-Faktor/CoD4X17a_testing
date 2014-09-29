@@ -28,7 +28,7 @@
 #include "sys_net.h"
 #include "msg.h"
 
-void NET_UDPPacketEvent(netadr_t* from, void* data, int len);
+void NET_UDPPacketEvent(netadr_t* from, void* data, int len, int buflen);
 unsigned int NET_TimeGetTime();
 
 void NET_TCPConnectionClosed(netadr_t* adr, int connectionId, int serviceId);

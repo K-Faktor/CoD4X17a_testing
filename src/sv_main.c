@@ -1439,19 +1439,8 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 	}
 	
 	cl->lastPacketTime = svs.time;  // don't timeout
-	if(msg->cursize > 2000){
-		//This will fix up a buffer overflow.
-		//CoD4's message Decompress-function has no buffer overrun check
-		//Because the compression algorithm is very poor this is already sufficent
-		Com_Printf("Oversize message received from: %s\n", cl->name);
-		SV_DropClient(cl, "Oversize client message");
-	}else{
 
-//			SV_DumpCommands(cl, msg->data, msg->cursize, qtrue);
-		SV_ExecuteClientMessage( cl, msg );
-	}
-	
-
+	SV_ExecuteClientMessage( cl, msg );
 }
 
 

@@ -227,7 +227,7 @@ typedef struct client_s {//90b4f8c
 	short			clscriptid; //0xa0d22
 	int			canNotReliable; 
 	int			serverId; //0xa0d28
-	voices_t	voicedata[40];
+	voices_t		voicedata[40];
 	int			unsentVoiceData;//(0xa35f4)
 	byte			mutedClients[MAX_CLIENTS];
 	byte			hasVoip;//(0xa3638)

@@ -375,7 +375,7 @@ int msg_hData[256] = {
 
 static huff_t		msgHuff;
 
-int MSG_ReadBitsCompress(const byte* input, byte* outputBuf, int readsize){
+int MSG_ReadBitsCompress(const byte* input, int readsize, byte* outputBuf, int outputBufSize){
 
     readsize = readsize * 8;
     byte *outptr = outputBuf;
@@ -388,7 +388,7 @@ int MSG_ReadBitsCompress(const byte* input, byte* outputBuf, int readsize){
         return 0;
     }
 
-    for(offset = 0, i = 0; readsize > offset; i++){
+    for(offset = 0, i = 0; offset < readsize && i < outputBufSize; i++){
         Huff_offsetReceive( msgHuff.tree, &get, (byte*)input, &offset);
         *outptr = (byte)get;
         outptr++;

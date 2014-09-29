@@ -31,7 +31,7 @@
 #include "net_game_conf.h"
 #include "plugin_handler.h"
 
-void NET_UDPPacketEvent(netadr_t* from, void* data, int len)
+void NET_UDPPacketEvent(netadr_t* from, void* data, int len, int buflen)
 {
 
         msg_t msg;
@@ -45,10 +45,10 @@ void NET_UDPPacketEvent(netadr_t* from, void* data, int len)
 
         msg.data = data;
         msg.cursize = len;
-        msg.maxsize = len;
+        msg.maxsize = buflen;
         msg.readcount = 0;
         msg.bit = 0;
-        msg.readonly = qtrue;
+        msg.readonly = qfalse;
         msg.overflowed = qfalse;
 
         SV_PacketEvent(from, &msg);
