@@ -902,7 +902,7 @@ void Com_Init(char* commandLine){
 
 
     HL2Rcon_Init( );
-//	HTTPServer_Init( );
+    HTTPServer_Init( );
     Auth_Init( );
 
     AddRedirectLocations( );

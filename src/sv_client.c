@@ -545,15 +545,19 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 #else
 	version = atoi( Info_ValueForKey( userinfo, "protocol" ));
 	if ( version != sv_protocol->integer ) {
-		if( sv_protocol->integer == 6 && version < 6)
+
+#ifdef COD4X18UPDATE
+		if(version < 7)
 		{
-			NET_OutOfBandPrint( NS_SERVER, from, "error\nServer uses a different protocol version: %i\n You have to install the update to Call of Duty 4  v1.7", sv_protocol->integer );
+			Com_Printf("Have to fix up old client which reports version %d\n", version);
 		}else{
-			NET_OutOfBandPrint( NS_SERVER, from, "error\nServer uses a different protocol version: %i\n You use protocol version: %i", sv_protocol->integer, version );
+#endif
+			NET_OutOfBandPrint( NS_SERVER, from, "error\nThis server requires protocol version: %d\nPlease restart CoD4 and see on the main-menu if a new update is available\n", sv_protocol->integer);
+			Com_Printf("rejected connect from version %i\n", version);
+			return;
+#ifdef COD4X18UPDATE
 		}
-		
-		Com_Printf("rejected connect from version %i\n", version);
-		return;
+#endif
 	}
 #endif
 
@@ -749,6 +753,15 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	newcl->hasVoip = 1;
 	newcl->gentity = SV_GentityNum(clientNum);
 	newcl->clscriptid = Scr_AllocArray();
+	newcl->protocol = version;
+#ifndef COD4X17A
+#ifdef COD4X18UPDATE
+	if(newcl->protocol != sv_protocol->integer)
+	{
+		newcl->needupdate = qtrue;
+	}
+#endif
+#endif
 
 	// get the game a chance to reject this connection or modify the userinfo
 	denied2 = ClientConnect(clientNum, newcl->clscriptid);
@@ -767,7 +780,6 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 #endif
 	Com_Printf( "Going from CS_FREE to CS_CONNECTED for %s num %i guid %s from: %s\n", nick, clientNum, newcl->pbguid, NET_AdrToConnectionString(from));
 
-
 	// save the addressgamestateMessageNum
 	// init the netchan queue
 	Netchan_Setup( NS_SERVER, &newcl->netchan, *from, qport,
@@ -780,6 +792,15 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	newcl->nextSnapshotTime = svs.time;
 	newcl->lastPacketTime = svs.time;
 	newcl->lastConnectTime = svs.time;
+
+#ifndef COD4X17A
+#ifdef COD4X18UPDATE
+	if(newcl->needupdate)
+	{
+		newcl->nextSnapshotTime = -1;
+	}
+#endif
+#endif
 
 	SV_UserinfoChanged(newcl);
 

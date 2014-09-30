@@ -1364,14 +1364,36 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 	return;
 }
 
+#ifdef COD4X18UPDATE
+
+void SV_PassToUpdateProxy(msg_t *msg, client_t *cl)
+{
+	
+}
+
+void SV_OpenConnectionWithUpdateProxy(msg_t *msg, client_t *cl)
+{
+	
+}
+
+void SV_ReceiveFromUpdateProxy(msg_t *msg, client_t *cl)
+{
+	
+}
+
+void SV_InitUpdateProxy(msg_t *msg, client_t *cl)
+{
+	
+}
 
 
+#endif
 
 //============================================================================
 
 /*
 =================
-SV_ReadPackets
+SV_PacketEvent
 =================
 */
 __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
@@ -1406,6 +1428,15 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 		NET_OutOfBandPrint( NS_SERVER, from, "disconnect" );
 		return;
 	}
+
+#ifdef COD4X18UPDATE
+	if(cl->needupdate)
+	{
+		SV_PassToUpdateProxy(msg, cl);
+		return;
+	}
+#endif
+
 	// make sure it is a valid, in sequence packet
 	if ( !Netchan_Process( &cl->netchan, msg ) )
 	{

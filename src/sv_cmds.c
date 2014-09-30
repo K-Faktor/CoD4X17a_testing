@@ -707,6 +707,11 @@ gothandle:
         Com_Printf("Error: You have exceeded the maximum allowed length of 126 characters for the reason\n");
         return;
     }
+	
+	if(cl.cl->power > SV_RemoteCmdGetInvokerPower()){
+		Com_Printf("Error: You cannot ban an admin with higher power!\n");
+		return;
+	}
 
 	if(cl.cl){
 		//Banning
@@ -799,7 +804,7 @@ gothandle:
 	/* Get the time this ban should last */
     length = strlen(Cmd_Argv(2));
     if(length > 7){
-        Com_Printf("Error: Did not got a valid bantime\n");
+        Com_Printf("Error: Did not got a valid ban time\n");
         return;
     }
 
@@ -821,11 +826,11 @@ gothandle:
         }
     }
     if(duration < 1){
-        Com_Printf("Error: Did not got a valid bantime\n");
+        Com_Printf("Error: Did not got a valid ban time\n");
         return;
     }
     if(duration > 60*24*30){
-        Com_Printf("Error: Can not issue a temporarely ban that last longer than 30 days\n");
+        Com_Printf("Error: Can not issue a temporary ban that last longer than 30 days\n");
         return;
     }
 
@@ -858,6 +863,11 @@ gothandle:
         Com_Printf("Error: You have exceeded the maximum allowed length of 126 for the reason\n");
         return;
     }
+	
+	if(cl.cl->power > SV_RemoteCmdGetInvokerPower()){
+		Com_Printf("Error: You cannot tempban an admin with higher power!\n");
+		return;
+	}
 
 	if(cl.cl){
 
@@ -867,14 +877,14 @@ gothandle:
 
 			Com_Printf( "Banrecord added for player: %s uid: %i\n", cl.cl->name, cl.uid);
 			SV_PrintAdministrativeLog( "temporarily banned player: %s uid: %i IP: %s until %s with the following reason: %s", cl.cl->name, cl.uid, NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
-			Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a temporarily ban onto this gameserver\nYour ban will expire on: %s UTC\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
+			Com_sprintf(dropmsg, sizeof(dropmsg), "You have a temporary ban onto this game server\nYour ban will expire on: %s UTC\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
 				endtime, cl.uid, SV_RemoteCmdGetInvokerUid(), banreason);
 			SV_DropClient(cl.cl, dropmsg);
 
 		}else{
 			Com_Printf( "Banrecord added for player: %s guid: %s\n", cl.cl->name, cl.cl->pbguid);
 			SV_PrintAdministrativeLog( "temporarily banned player: %s guid: %s IP: %s until %s with the following reason: %s", cl.cl->name, cl.cl->pbguid,NET_AdrToString ( &cl.cl->netchan.remoteAddress ), endtime, banreason);
-			Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a temporarily ban onto this gameserver\nYour ban will expire on: %s UTC\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
+			Com_sprintf(dropmsg, sizeof(dropmsg), "You have a temporary ban onto this game server\nYour ban will expire on: %s UTC\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
 				endtime, cl.cl->pbguid, SV_RemoteCmdGetInvokerUid(), banreason);
 
 			if(cl.cl->authentication < 1)
@@ -946,6 +956,12 @@ static void Cmd_KickPlayer_f() {
         Com_Printf("Error: You have exceeded the maximum allowed length of 126 for the reason\n");
         return;
     }
+	
+	if(cl.cl->power > SV_RemoteCmdGetInvokerPower()){
+		Com_Printf("Error: You cannot kick an admin with higher power!\n");
+		return;
+	}
+	
 	if(cl.uid > 0){
 		Com_Printf( "Player kicked: %s ^7uid: %i\nReason: %s\n", cl.cl->name, cl.uid, kickreason);
 		SV_PrintAdministrativeLog( "kicked player: %s^7 uid: %i with the following reason: %s", cl.cl->name, cl.uid, kickreason);

@@ -274,11 +274,11 @@ qboolean HTTPCreateWebadminMessage(ftRequest_t* request, msg_t* msg, char* sessi
 	Com_Printf("URL: %s\n", request->url);
 	if(!Q_strncmp(request->url, "/files", 6))
 	{
-		if(request->url[15] != '/' || request->url[16] == '\0')
+		if(request->url[6] != '/' || request->url[7] == '\0')
 		{
 			return qfalse;
 		}
-		Com_sprintf(qpath, sizeof(qpath), "/webadmin/%s", &request->url[16]);
+		Com_sprintf(qpath, sizeof(qpath), "/webadmindata/%s", &request->url[7]);
 		
 		if(strstr(qpath, "..") != NULL || strstr(qpath, "::") != NULL)
 		{
