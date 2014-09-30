@@ -52,6 +52,7 @@ void Auth_UnsetAdmin_f( void );
 void Auth_ListAdmins_f( void );
 void Auth_ChangeAdminPassword( int uid,const char* oldPassword, const char *password );
 int Auth_Authorize(const char *login, const char *password);
+void Auth_WipeSessionId(const char *username);
 
 
 qboolean Auth_AddAdminToList(const char* username, const char* password, const char* salt, int power, int uid);

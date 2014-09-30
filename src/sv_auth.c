@@ -97,6 +97,31 @@ const char* Auth_GetSessionId(const char* username, const char *password)
 	return auth_admins.admins[handle].sessionid;
 }
 
+void Auth_WipeSessionId(const char* username)
+{
+	authData_admin_t *user;
+	int i, id;
+	id = -1;
+
+	for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++)
+	{
+		if(*user->username && !Q_stricmp(user->username,username))
+		{
+			id = i;
+			break;
+		}
+	}
+
+	if(id < 0)
+	{
+		return;
+	}
+
+	auth_admins.admins[id].sessionid[0] = '\0';
+	return;
+}
+
+
 
 int Auth_Authorize(const char *login, const char *password){
     int i;
@@ -107,7 +132,10 @@ int Auth_Authorize(const char *login, const char *password){
     
     for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++){
 	if(*user->username && !Q_stricmp(user->username,login))
+	{
 	    id = i;
+	    break;
+	}
     }
     if(id < 0){
 	return id;
