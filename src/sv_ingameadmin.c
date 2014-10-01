@@ -41,7 +41,7 @@
 #define MAXPRINTMSG 1024
 #endif
 
-static cvar_t* sv_rconsys;
+cvar_t* sv_rconsys;
 
 typedef struct adminPower_s {
     struct	adminPower_s *next;
@@ -78,6 +78,13 @@ int SV_RemoteCmdGetInvokerClnum()
 int SV_RemoteCmdGetInvokerPower()
 {
     return cmdInvoker.currentCmdPower;
+}
+
+void SV_RemoteCmdSetCurrentInvokerInfo(int uid, int power, int client)
+{
+    cmdInvoker.currentCmdPower = power;
+    cmdInvoker.currentCmdInvoker = uid;
+    cmdInvoker.clientnum = client;
 }
 
 

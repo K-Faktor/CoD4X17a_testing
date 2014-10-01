@@ -149,18 +149,60 @@ void Webadmin_FlushRedirect(char *outputbuf, qboolean lastcommand )
 
 #define SV_OUTPUTBUF_LENGTH 4096
 
-void Webadmin_ConsoleCommand(xml_t* xmlobj, const char* command)
+void Webadmin_ConsoleCommand(xml_t* xmlobj, const char* command, int uid)
 {
 	char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
+	char buffer[960];
+	char cmd[48];
 
-	xmlobjFlush = xmlobj;
-	
-	Com_BeginRedirect (sv_outputbuf, SV_OUTPUTBUF_LENGTH, Webadmin_FlushRedirect);
-	
-	Cmd_ExecuteSingleCommand(0,0, command);
+	int power, powercmd, oldpower, oldinvokeruid, oldinvokerclnum, i;
 
+	if(sv_rconsys->boolean != qfalse && (power = SV_RemoteCmdGetClPowerByUID(uid)) < 100)
+	{
+		/* Get the current user's power 1st */
+		while ( command[i] != ' ' && command[i] != '\0' && command[i] != '\n' && i < 32 ){
+			i++;
+		}
+		if(i > 29 || i < 3) return;
+
+		Q_strncpyz(cmd,command,i+1);
+
+		//Prevent buffer overflow as well as prevent the execution of priveleged commands by using seperator characters
+		Q_strncpyz(buffer, command, sizeof(buffer));
+		Q_strchrrepl(buffer,';','\0');
+		Q_strchrrepl(buffer,'\n','\0');
+		Q_strchrrepl(buffer,'\r','\0');
+		// start redirecting all print outputs to the packet
+
+		powercmd = Cmd_GetPower(cmd);
+		if(powercmd > power)
+		{
+			XA(" Insufficient permissions! ");
+			return;
+		}
+
+		xmlobjFlush = xmlobj;
+
+		oldpower = SV_RemoteCmdGetInvokerPower();
+		oldinvokeruid = SV_RemoteCmdGetInvokerUid();
+		oldinvokerclnum = SV_RemoteCmdGetInvokerClnum();
+
+		SV_RemoteCmdSetCurrentInvokerInfo(uid, power, -1);
+
+		Com_BeginRedirect (sv_outputbuf, SV_OUTPUTBUF_LENGTH, Webadmin_FlushRedirect);
+		Cmd_ExecuteSingleCommand(0,0, buffer);
+
+		SV_RemoteCmdSetCurrentInvokerInfo(oldinvokeruid, oldpower, oldinvokerclnum);
+
+	}else{
+		xmlobjFlush = xmlobj;
+		Com_BeginRedirect (sv_outputbuf, SV_OUTPUTBUF_LENGTH, Webadmin_FlushRedirect);
+		Cmd_ExecuteSingleCommand(0,0, command);
+#ifdef PUNKBUSTER
+		if(!Q_stricmpn(command, "pb_sv_", 6)) PbServerForceProcess();
+#endif
+	}
 	Com_EndRedirect();
-
 	xmlobjFlush = NULL;
 }
 
@@ -191,6 +233,7 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 	xml_t* xmlobj = &xmlbase;
 	char actionval[64];
 	const char *postval;
+	int uid;
 	
 	XML_Init(xmlobj, (char*)msg->data, msg->maxsize, "ISO-8859-1");
 	
@@ -203,6 +246,9 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 			Webadmin_BuildLoginForm(xmlobj, invalidloginattempt);
 
 		}else {
+
+			uid = Auth_GetUID(username);
+
 			XO("p");
 			XO("b");
 				XA("Welcome back "); XA(username);
@@ -219,7 +265,7 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 					postval = Webadmin_GetPostVal(values, "consolecommand");
 					if(postval)
 					{
-						Webadmin_ConsoleCommand(xmlobj, postval);
+						Webadmin_ConsoleCommand(xmlobj, postval, uid);
 					}
 				}else if (strcmp(actionval, "logout") == 0) {
 					//Auth_WipeSessionId(username);
@@ -355,9 +401,8 @@ qboolean HTTPCreateWebadminMessage(ftRequest_t* request, msg_t* msg, char* sessi
 	}else{
 		Com_Printf("Already logged in as: %s\n", username);
 	}
-	
+
 	Webadmin_BuildMessage(msg, username, invalidlogin, request->url, values);
 
 	return qtrue;
 }
-

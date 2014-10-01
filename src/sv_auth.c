@@ -153,7 +153,7 @@ int Auth_Authorize(const char *login, const char *password){
 }
 
 
-int Auth_GetUID(char *name){
+int Auth_GetUID(const char *name){
     int i;
     authData_admin_t *user;
     int uid = -1;

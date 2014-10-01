@@ -713,6 +713,8 @@ void QDECL SV_PrintAdministrativeLog( const char *fmt, ... );
 int SV_RemoteCmdGetInvokerUid( void );
 int SV_RemoteCmdGetInvokerClnum( void );
 int SV_RemoteCmdGetInvokerPower( void );
+void SV_RemoteCmdSetCurrentInvokerInfo(int uid, int power, int client);
+
 void SV_RemoteCmdSetAdmin(int uid, char* guid, int power);
 void SV_RemoteCmdUnsetAdmin(int uid, char* guid);
 void SV_RemoteCmdSetPermission(char* command, int power);
@@ -752,6 +754,7 @@ extern cvar_t* sv_maxRate;
 extern cvar_t* sv_mapname;
 extern cvar_t* sv_floodProtect;
 extern cvar_t* sv_showAverageBPS;
+extern cvar_t* sv_rconsys;
 
 void __cdecl SV_StringUsage_f(void);
 void __cdecl SV_ScriptUsage_f(void);

@@ -1381,7 +1381,7 @@ void XML_CloseTag(xml_t *base) {
 			Com_Printf("%s\n", base->buffer);
 		}
 		Com_PrintError("You have errors in your XML code\n");
-
+		return;
 	}
 	base->parents--;
 	Com_Memset(&preoffset[1],' ',base->parents*6);

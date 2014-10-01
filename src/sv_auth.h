@@ -59,6 +59,7 @@ qboolean Auth_AddAdminToList(const char* username, const char* password, const c
 void Auth_ClearAdminList( void );
 
 void Auth_Init();
+int Auth_GetUID(const char* username);
 qboolean Auth_InfoAddAdmin(const char* line);
 void Auth_WriteAdminConfig(char* buffer, int size);
 
