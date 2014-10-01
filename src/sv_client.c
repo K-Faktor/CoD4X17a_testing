@@ -1082,7 +1082,7 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 
 	// add the disconnect command
 
-	drop->reliableSequence = drop->reliableAcknowledge;	//Reset unsentBuffer and Sequence to ommit the outstanding junk from beeing transmitted
+	drop->reliableSent = drop->reliableSequence = drop->reliableAcknowledge;	//Reset unsentBuffer and Sequence to ommit the outstanding junk from beeing transmitted
 	drop->netchan.unsentFragments = qfalse;
 	SV_SendServerCommand_IW( drop, 1, "%c \"%s\" PB\0", 0x77, dropreason);
 

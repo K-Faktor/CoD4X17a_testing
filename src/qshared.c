@@ -1369,7 +1369,20 @@ void XML_CloseTag(xml_t *base) {
 	int i;
 	char*	root;
 	char*	stringptr = buffer;
-	
+
+	if(base->parents == 0)
+	{
+		Com_PrintError("XML_CloseTag: Invalid close attempt in XML. Attempt to close more elements than you have opened.\n");
+		Com_Printf("Printing up to 960 recent characters of XML as debug:\n");
+		if(base->bufposition > 960)
+		{
+			Com_Printf("%s\n", &base->buffer[base->bufposition -960]);
+		}else{
+			Com_Printf("%s\n", base->buffer);
+		}
+		Com_PrintError("You have errors in your XML code\n");
+
+	}
 	base->parents--;
 	Com_Memset(&preoffset[1],' ',base->parents*6);
 	preoffset[base->parents*6] = 0;
