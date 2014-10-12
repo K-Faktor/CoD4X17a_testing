@@ -30,13 +30,6 @@ global SV_ScriptUsage_f
 SV_ScriptUsage_f:
 	jmp dword [oSV_ScriptUsage_f]
 
-;global SV_BeginClientSnapshot
-;SV_BeginClientSnapshot:
-;	jmp dword [oSV_BeginClientSnapshot]
-
-;global SV_EndClientSnapshot
-;SV_EndClientSnapshot:
-;	jmp dword [oSV_EndClientSnapshot]
 global SV_ArchiveSnapshot
 SV_ArchiveSnapshot:
 	jmp dword [oSV_ArchiveSnapshot]

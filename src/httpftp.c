@@ -96,8 +96,9 @@ static ftRequest_t* FT_CreateRequest(const char* address, const char* url)
 		}
 		
 	}
-
-	buf = Z_Malloc(INITIAL_BUFFERLEN);
+	
+	/* For proper terminating of string data +1 */
+	buf = Z_Malloc(INITIAL_BUFFERLEN +1);
 	if( buf == NULL)
 	{
 		FT_FreeRequest(request);
@@ -123,6 +124,51 @@ static ftRequest_t* FT_CreateRequest(const char* address, const char* url)
 	
 }
 
+
+static void FT_ResetRequest( ftRequest_t* request )
+{
+	
+	if(request->socket >= 0)
+	{
+        NET_TcpCloseSocket(request->socket);
+		request->socket = -1;
+	}
+	if(request->transfersocket >= 0)
+	{
+        NET_TcpCloseSocket(request->transfersocket);
+		request->transfersocket = -1;
+	}
+	request->lock = qtrue;
+	request->finallen = -1;
+	request->socket = -1;
+	request->transfersocket = -1;
+	request->address[0] = '\0';
+	request->url[0] = '\0';
+	request->username[0] = '\0';
+	request->password[0] = '\0';
+	request->active = qfalse;
+	request->transferactive = qfalse;
+	request->transferStartTime = 0;
+	request->sentBytes = 0;
+	request->totalreceivedbytes = 0;
+	request->extrecvmsg = NULL;
+	request->extsendmsg = NULL;
+	request->complete = qfalse;
+	request->code = 0;
+	request->version = 0;
+	request->status[0] = '\0';
+	request->mode = 0;
+	request->headerLength = 0;
+	request->contentLength = 0;
+	request->stage = 0;
+	request->protocol = 0;
+	MSG_Clear(&request->recvmsg);
+	MSG_Clear(&request->sendmsg);
+	MSG_Clear(&request->transfermsg);
+	
+	request->startTime = Sys_Milliseconds();
+	
+}
 
 
 
@@ -182,22 +228,26 @@ static int FT_SendData(ftRequest_t* request)
 static int FT_ReceiveData(ftRequest_t* request)
 {
 	void* newbuf;
-	int newsize, status;
+	int newsize, status, numbytes;
 	
 	if(request->socket == -1)
 		return -1;
 	
 	/* In case our buffer is already too small enlarge it */
-	if(request->finallen != -1 && request->recvmsg.cursize != request->finallen)
-		newsize = request->finallen;
-	else if (request->recvmsg.cursize == request->recvmsg.maxsize)
+	if (request->recvmsg.cursize == request->recvmsg.maxsize)
+	{
 		newsize = 2 * request->recvmsg.maxsize;
-	else 
+		if(request->finallen > 0 && newsize > request->finallen)
+		{
+			newsize = request->finallen;			
+		}
+	}else 
 		newsize = 0;
 	
 	if (newsize)
 	{
-		newbuf = Z_Malloc(newsize);
+		/* For proper terminating of string data +1 */
+		newbuf = Z_Malloc(newsize +1);
 		if(newbuf == NULL)
 		{
 			return -1;
@@ -208,9 +258,14 @@ static int FT_ReceiveData(ftRequest_t* request)
 		request->recvmsg.data = newbuf;
 		request->recvmsg.maxsize = newsize;
 	}
-	
+	numbytes = request->recvmsg.cursize;
 	/* Receive new bytes */
-	status = NET_ReceiveData(request->socket, &request->recvmsg);
+	status = NET_TcpReceiveData(request->socket, &request->recvmsg);
+	
+	
+	numbytes = request->recvmsg.cursize - numbytes;
+	request->totalreceivedbytes += numbytes;
+	
 	if (status == 1){
 		return 0;
 		
@@ -222,6 +277,9 @@ static int FT_ReceiveData(ftRequest_t* request)
 	}else if(status == -2){
 		request->socket = -1;			
 	}
+	
+	/* Proper terminating of string data */
+	request->recvmsg.data[request->recvmsg.cursize] = '\0';
 	return 1;
 }
 
@@ -231,8 +289,184 @@ static int FT_ReceiveData(ftRequest_t* request)
  Functions for retriving a file located on a HTTP-Server
  ========================================================
 */
+static void HTTP_EncodeChar(unsigned char chr, unsigned char* encodedchr)
+{
+	sprintf((char*)encodedchr, "%%%X", (char)chr);
+}
 
-static int HTTP_SendReceiveData(ftRequest_t* request)
+static void HTTP_EncodeURL(char* inurl, char* outencodedurl, int len)
+{
+	int i, y;
+	unsigned char* url = (unsigned char*)inurl;
+	unsigned char* encodedurl = (unsigned char*)outencodedurl;
+	
+	for(i = 0, y = 0; y < len -4 && url[i]; i++)
+	{
+		switch(url[i])
+		{
+			case '<':
+			case '>':
+			case ' ':
+			case '"':
+			case '#':
+			case '%':			
+			case '{':
+			case '}':
+			case '|':
+			case '\\':
+			case '^':
+			case '~':
+			case '[':
+			case ']':
+			case '`':
+				
+				HTTP_EncodeChar(url[i], &encodedurl[y]);
+				y += 3;
+				break;
+				
+			default:
+				
+				if(url[i] > 0x7f || url[i] < 0x20)
+				{
+					HTTP_EncodeChar(url[i], &encodedurl[y]);
+					y += 3;
+				}else{
+					encodedurl[y] = url[i];
+					++y;
+				}
+				break;
+		}
+	}
+	encodedurl[y] = '\0';
+}
+
+void HTTP_DecodeURL(char* url)
+{
+	int i, y;
+	char parse[3];
+	
+	parse[2] = '\0';
+	
+	for (i = 0, y = 0; url[i] != '\0'; ++i, ++y)
+	{
+		if(url[i] == '%')
+		{
+			parse[0] = url[i+1];
+			parse[1] = url[i+2];
+			url[y] = strtol(parse, NULL, 16);
+			y += 2;
+		}else{
+			url[y] = url[i];
+		}
+	}
+}
+
+
+void HTTP_DecodeURLFormData(char* url)
+{	
+	Q_strchrrepl(url, '+', ' ');
+	
+	HTTP_DecodeURL(url);
+}
+
+
+void HTTP_BuildNewRequest( ftRequest_t* request, const char* method, msg_t* msg, const char* additionalheaderlines)
+{
+	char getbuffer[MAX_STRING_CHARS];
+	char encodedUrl[MAX_STRING_CHARS];
+	char address[MAX_STRING_CHARS];
+	char *port;
+	char extheaderfields[512];
+	
+	request->protocol = FT_PROTO_HTTP;
+	request->active = qtrue;
+	request->finallen = -1;
+	request->version = 0;
+	request->code = 0;
+	request->status[0] = '\0';
+	request->contentLength = '\0';
+	request->headerLength = 0;
+	request->transferactive = qfalse;
+	request->totalreceivedbytes = 0;
+	
+	MSG_Clear(&request->sendmsg);
+	MSG_Clear(&request->recvmsg);
+	
+	Q_strncpyz(address, request->address, sizeof(address));
+	port = strstr(address, ":80");
+	if(port != NULL)
+	{
+		*port = '\0';
+	}
+	HTTP_EncodeURL(request->url, encodedUrl, sizeof(encodedUrl));
+	
+	extheaderfields[0] = '\0';
+	
+	if(msg != NULL)
+	{
+		Com_sprintf(extheaderfields, sizeof(extheaderfields), "Content-Length: %d\r\n", msg->cursize);
+		if(additionalheaderlines && additionalheaderlines[0])
+		{
+			Q_strcat(extheaderfields, sizeof(extheaderfields), additionalheaderlines);
+		}
+		
+	}
+	Com_sprintf(getbuffer, sizeof(getbuffer),
+				"%s %s HTTP/1.1\r\n"
+				"Accept: */*\r\n"
+				"Host: %s\r\n"
+				"User-Agent: CoD4X HTTP-Agent\r\n"
+				"Connection: Keep-Alive\r\n"
+				"%s"
+				"\r\n", method, encodedUrl, address, extheaderfields);
+	
+	FT_AddData(request, getbuffer, strlen(getbuffer));
+	if(msg != NULL)
+	{
+		FT_AddData(request, msg->data, msg->cursize);
+	}
+}
+
+
+
+static void HTTPSplitURL(const char* url, char* address, int lenaddress, char* wwwpath, int lenwwwpath)
+{
+	char* charloc;
+	
+	/* Strip away leading spaces */
+	while(*url == ' ')
+		url++;
+	
+	if(!Q_stricmpn(url, "http://", 7))
+	{
+		url += 7;
+	}
+	
+	Q_strncpyz(address, url, lenaddress);
+	Q_strncpyz(wwwpath, url, lenwwwpath);
+	
+	charloc = strchr(address, '/');
+	if(charloc)
+	{
+		charloc[0] = '\0';
+	}
+	
+	if (strchr(address, ':') == NULL) {
+		Q_strcat(address, lenaddress, ":80");
+	}
+	
+	charloc = strchr(wwwpath, '/');
+	if(charloc && charloc != wwwpath)
+	{
+		Q_bstrcpy(wwwpath, charloc);
+	}else{
+		wwwpath[0] = '/';
+		wwwpath[1] = '\0';
+	}
+}	
+
+
+int HTTP_SendReceiveData(ftRequest_t* request)
 {
 	char* line;
 	int status, i;
@@ -282,7 +516,7 @@ static int HTTP_SendReceiveData(ftRequest_t* request)
 		}
 		
 		request->version = atoi(line + 7);
-		if (request->version != 0 && request->version != 1)
+		if (request->version < 0 || request->version > 9)
 		{
 			Com_PrintError("HTTP_ReceiveData: Packet has unknown HTTP version 1.%d !\n", request->version);
 			
@@ -321,6 +555,37 @@ static int HTTP_SendReceiveData(ftRequest_t* request)
 					return -1;
 				}
 			}
+			else if(!Q_stricmpn("Location:", line, 9))
+			{
+				if(strlen(line +9) > 8)
+				{
+					/* We have to make it new... */
+					FT_ResetRequest( request );
+					/* Remove "Location:" */
+					Q_bstrcpy(line, line +9);
+					/* Remove trailing \r */
+					line[strlen(line) -1] = '\0';
+					
+					HTTPSplitURL(line, request->address, sizeof(request->address), request->url, sizeof(request->url));
+					
+					if(strlen(request->address) < 2)
+						return -1;
+					
+					Com_Printf("Received redirect request to http://%s%s\n", request->address, request->url);
+					
+					request->socket = NET_TcpClientConnect(request->address);
+					
+					if(request->socket < 0)
+					{	
+						request->socket = -1;
+						FT_FreeRequest(request);
+						return -1;
+					}
+					HTTP_BuildNewRequest( request, "GET", NULL, NULL);
+					return 0;
+				}
+				
+			}
 			
 		}
 		if(line[0] == '\0')
@@ -335,12 +600,14 @@ static int HTTP_SendReceiveData(ftRequest_t* request)
 		}
 
 	}
-	if(request->recvmsg.maxsize == request->finallen)
+	/* Header was complete */
+	if( request->finallen > 0)
 		request->transferactive = qtrue;
-
 	
-	if (request->recvmsg.cursize < request->finallen) {
-	/* Still needing bytes... */
+	request->extrecvmsg = &request->recvmsg;
+	
+	if (request->totalreceivedbytes < request->finallen) {
+		/* Still needing bytes... */
 		return 0;
 	}
 	/* Received full message */
@@ -349,44 +616,16 @@ static int HTTP_SendReceiveData(ftRequest_t* request)
 }
 
 
-static ftRequest_t* HTTPGetRequest(const char* url)
+ftRequest_t* HTTPRequest(const char* url, const char* method, msg_t* msg, const char* addheaderlines)
 {
 	char address[MAX_OSPATH];
 	char wwwpath[MAX_OSPATH];
-	char getbuffer[MAX_STRING_CHARS];
-	char* charloc;
+	
 	ftRequest_t* request;
 	
+	HTTPSplitURL(url, address, sizeof(address), wwwpath, sizeof(wwwpath));
 	
-	/* Strip away trailing spaces */
-	
-	while(*url == ' ')
-		url++;
-	
-	Com_DPrintf("HTTPGetRequest: Open URL: http://%s\n", url);
-	
-	Q_strncpyz(address, url, sizeof(address));
-	Q_strncpyz(wwwpath, url, sizeof(wwwpath));
-	
-	charloc = strchr(address, '/');
-	if(charloc)
-	{
-		charloc[0] = '\0';
-	}
-	
-	if (strchr(address, ':') == NULL) {
-		Q_strcat(address, sizeof(address), ":80");
-	}
-	
-	charloc = strchr(wwwpath, '/');
-	if(charloc && charloc != wwwpath)
-	{
-		Q_bstrcpy(wwwpath, charloc);
-	}else{
-		wwwpath[0] = '/';
-		wwwpath[1] = '\0';
-	}
-	
+	Com_DPrintf("HTTPRequest: Open URL: http://%s\n", url);
 	
 	if(strlen(address) < 2)
 		return NULL;
@@ -396,75 +635,109 @@ static ftRequest_t* HTTPGetRequest(const char* url)
 	if(request == NULL)
 		return NULL;
 	
-	request->protocol = FT_PROTO_HTTP;
-	request->active = qtrue;
-	
-	
-	Com_sprintf(getbuffer, sizeof(getbuffer),
-				"GET %s HTTP/1.1 \r\n"
-				"Host: %s \r\n"
-				"User-Agent: %s \r\n"
-				"Accept-Encoding: \r\n"
-				"Connection: Close\r\n"
-				"\r\n", wwwpath, address, "CoD4X HTTP Downloader");
-	
-	FT_AddData(request, getbuffer, strlen(getbuffer));
+	HTTP_BuildNewRequest( request, method, msg, addheaderlines);
 	
 	return request;
 	
 }
 
 /*
-========================================================
+ ========================================================
  Functions for retriving a file located on an FTP-Server
 ========================================================
 */
+
+static void FTP_SplitURL(const char* url, char* address, int lenaddress, char* path, int lenpath,
+						 char* loginname, int loginnamelen, char* password, int passwdlen)
+{
+	char* charloc;
+	
+	char parse[MAX_STRING_CHARS];
+	
+	path[0] = '\0';
+	address[0] = '\0';
+	password[0] = '\0';
+	loginname[0] = '\0';
+	
+	/* Strip away leading spaces */
+	while(*url == ' ')
+		url++;
+	
+	if(!Q_stricmpn(url, "ftp://", 6))
+	{
+		url += 6;
+	}
+	
+	
+	Q_strncpyz(parse, url, sizeof(parse));
+	
+	/* Find the filepath */
+	charloc = strchr(parse, '/');
+	if(charloc)
+	{
+		charloc[0] = '\0';
+		Q_strncpyz(path, &charloc[1], lenpath);
+	}
+	/* Find the address */
+	charloc = strchr(parse, '@');	
+	if(charloc)
+	{
+		charloc[0] = '\0';
+		Q_strncpyz(address, &charloc[1], lenaddress);
+	}else{
+		/* No @ char here so I expect the address comes without username:password */
+		Q_strncpyz(address, parse, lenaddress);
+	}	
+	/* See if we have a port for our address given. If not complete this. */
+	if (strchr(address, ':') == NULL) {
+		Q_strcat(address, lenaddress, ":21");
+	}
+	/* In case we had no login we are done */
+	if(charloc == NULL)
+	{
+		return;
+	}
+	/* Find the password */
+	charloc = strchr(parse, ':');
+	if(charloc)
+	{
+		charloc[0] = '\0';
+		Q_strncpyz(password, &charloc[1], passwdlen);
+	}
+	/* Copy what is over to the username */
+	Q_strncpyz(loginname, parse, loginnamelen);
+	
+}
+
 
 
 static ftRequest_t* FTP_DLRequest(const char* url)
 {
 	char address[MAX_OSPATH];
 	char ftppath[MAX_OSPATH];
-	char* charloc;
+	char user[MAX_OSPATH];
+	char passwd[MAX_OSPATH];
+	
 	ftRequest_t* request;
-
-	/* Strip away trailing spaces */
 	
+	FTP_SplitURL( url, address, sizeof(address), ftppath, sizeof(ftppath), user, sizeof(user), passwd, sizeof(passwd));
 	
-	while(*url == ' ')
-		url++;
-	
-	Com_DPrintf("FTPDLRequest: Open URL: ftp://%s\n", url);
-	
-	Q_strncpyz(address, url, sizeof(address));
-	Q_strncpyz(ftppath, url, sizeof(ftppath));
-	
-	charloc = strchr(address, '/');
-	if(charloc)
-	{
-		charloc[0] = '\0';
-	}
-	
-	if (strchr(address, ':') == NULL) {
-		Q_strcat(address, sizeof(address), ":21");
-	}
-	
-	charloc = strchr(ftppath, '/');
-	if(charloc && charloc != ftppath)
-	{
-		Q_bstrcpy(ftppath, charloc);
-	}else{
-		ftppath[0] = '/';
-		ftppath[1] = '\0';
-	}
-		
 	if(strlen(address) < 2)
 		return NULL;
-	
+	//Com_Printf("Connecting to: %s path: %s user: %s passwd: %s\n", address, ftppath, user, passwd);
 	request = FT_CreateRequest(address, ftppath);
 	
 	if(request == NULL)
 		return NULL;
+	
+	if(user[0] == '\0' && passwd[0] == '\0')
+	{
+		Q_strncpyz(request->username, "anonymous", sizeof(request->username));
+		Q_strncpyz(request->password, "cod4x@iceops.in", sizeof(request->password));
+	}else{
+		Q_strncpyz(request->username, user, sizeof(request->username));
+		Q_strncpyz(request->password, passwd, sizeof(request->password));	
+	}
 	
 	request->protocol = FT_PROTO_FTP;
 	request->active = qtrue;
@@ -595,6 +868,57 @@ static void FTP_GetExtendedPassiveAddress(const char* line, const char* address,
 	
 }
 
+
+static int FTP_ReceiveData(ftRequest_t* request)
+{
+	byte* newbuf;
+	int newsize, numbytes, status;
+	
+	newsize = 0;
+	
+	/* In case our buffer is already too small enlarge it */
+	if (request->transfermsg.cursize == request->transfermsg.maxsize)
+	{
+		newsize = 2 * request->transfermsg.maxsize;
+		if(request->finallen > 0 && newsize > request->finallen)
+		{
+			newsize = request->finallen;			
+		}
+		
+	}
+	
+	if (newsize)
+	{
+		newbuf = Z_Malloc(newsize +1);
+		if(newbuf == NULL)
+		{
+			return -1;
+		}
+		Com_Memcpy(newbuf, request->transfermsg.data, request->transfermsg.cursize);
+		
+		Z_Free(request->transfermsg.data);
+		request->transfermsg.data = newbuf;
+		request->transfermsg.maxsize = newsize;
+	}
+	
+	numbytes = request->transfermsg.cursize;
+	/* Receive new bytes */
+	status = NET_TcpReceiveData(request->transfersocket, &request->transfermsg);
+	
+	numbytes = request->transfermsg.cursize - numbytes;
+	/* Track and update the total received bytes */
+	request->transfertotalreceivedbytes += numbytes;
+	
+	if (status == -1 || status == -2){
+		request->transfersocket = -1;
+		
+	}
+	return status;
+	
+}
+
+
+
 static int FTP_SendReceiveData(ftRequest_t* request)
 {
 	char* line;
@@ -603,7 +927,7 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 	byte* buf;
 	netadr_t pasvadr;
 	char stringlinebuf[MAX_STRING_CHARS];
-
+	
 	status = FT_ReceiveData(request);
 	
 	if (status == -1 && request->stage < 9999) {
@@ -626,7 +950,7 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 		
 		if(request->stage > 60)
 			Com_DPrintf("\n");
-	
+		
 		Com_DPrintf("Response Code = %d\n", request->code);
 		
 		if (request->stage < 0)
@@ -708,7 +1032,7 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 						Com_PrintWarning("FTP_SendReceiveData: Couldn't read the address/port of passive mode response\n");
 						return -1;
 					}
-	
+					
 				}else {
 					Com_Printf("\nFTP_SendReceiveData: Received unexpected response: %s - Will abort!\n", line);
 					request->stage = -20;
@@ -745,17 +1069,24 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 					Com_DPrintf("FTP_SendReceiveData: Requested file will have %d bytes\n", bytes);
 					if(bytes < 1 || bytes > 1024*1024*1024)
 					{
-						Com_PrintWarning("FTP_SendReceiveData: Requested file would exceed %d bytes. Will not download!\n", 1024*1024*1024);
-				
+						Com_PrintWarning("FTP_SendReceiveData: Requested file exceeds %d bytes.\n", 1024*1024*1024);
+						
 					}
-					buf = Z_Malloc(bytes);
+					request->finallen = bytes;
+					request->contentLength = bytes;
+					request->headerLength = 0;
+					request->transfertotalreceivedbytes = 0;
+					
+					buf = Z_Malloc(INITIAL_BUFFERLEN +1);
 					if( buf == NULL)
 					{
 						Com_PrintWarning("FTP_SendReceiveData: Failed to allocate %d bytes for download file!\n", bytes);
 						return -1;
 					}
-					MSG_Init(&request->transfermsg, buf, bytes);
+					MSG_Init(&request->transfermsg, buf, INITIAL_BUFFERLEN);
+					request->extrecvmsg = &request->transfermsg;
 					request->stage = 51;
+					
 				}
 				break;
 			case 150:
@@ -834,22 +1165,22 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 	{
 		case 1:
 			/* Waiting for OK response code (220) */
-			Com_sprintf(command, sizeof(command), "USER %s\r\n", "anonymous");
+			Com_sprintf(command, sizeof(command), "USER %s\r\n", request->username);
 			FT_AddData(request, command, strlen(command));
 			request->stage = 10;
 			break;
 		case 11:
-			Com_sprintf(command, sizeof(command), "PASS %s\r\n", "cod4x@iceops.in");
+			Com_sprintf(command, sizeof(command), "PASS %s\r\n", request->password);
 			FT_AddData(request, command, strlen(command));
 			request->stage = 12;
 			break;
 		case 15:
-			Com_sprintf(command, sizeof(command), "ACCT %s\r\n", "nil");
+			Com_sprintf(command, sizeof(command), "ACCT %s\r\n", "noaccount");
 			FT_AddData(request, command, strlen(command));
 			request->stage = 16;
 			break;
 		case 17:
-			Com_sprintf(command, sizeof(command), "PASS %s\r\n", "cod4x@iceops.in");
+			Com_sprintf(command, sizeof(command), "PASS %s\r\n", request->password);
 			FT_AddData(request, command, strlen(command));
 			request->stage = 20;
 			break;			
@@ -878,23 +1209,16 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 			FT_AddData(request, command, strlen(command));
 			request->stage = 60;
 			break;			
-
-		case 61:
-			/* Receive new bytes */
-			request->transferactive = qtrue;
-			status = NET_ReceiveData(request->transfersocket, &request->transfermsg);
 			
-			if (status == -1){
-
-				request->transfersocket = -1;
-				
-			}else if(status == -2){
-				
-				request->transfersocket = -1;			
-			}
-			if(request->transfermsg.cursize == request->transfermsg.maxsize && request->transfermsg.maxsize != 0)
+		case 61:
+			
+			request->transferactive = qtrue;
+			
+			FTP_ReceiveData( request );
+			
+			if(request->transfertotalreceivedbytes == request->finallen && request->finallen != 0)
 			{
-				/* Comple file retrived */
+				/* Complete file retrived */
 				request->stage = 9999;
 				break;
 			}else if(request->transfersocket == -1){
@@ -908,12 +1232,14 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 			request->transferactive = qfalse;
 			
 			if(request->transfersocket >= 0)
-				status = NET_ReceiveData(request->transfersocket, &request->transfermsg);
-			
-			if (status == -1 || status == -2){
+			{
+				status = FTP_ReceiveData( request );
+			}
+			if (status == -1)
+			{
 				request->transfersocket = -1;
 			}
-			if(request->transfermsg.cursize == request->transfermsg.maxsize && request->transfermsg.maxsize != 0)
+			if(request->transfertotalreceivedbytes == request->finallen)
 			{
 				/* Comple file retrived */
 				Com_sprintf(command, sizeof(command), "QUIT\r\n");
@@ -922,6 +1248,7 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 				break;
 			}else {
 				Com_Printf("\nThe FTP server closed the data connection before the transfer was completed!\n");
+				Com_Printf("Expected %d bytes but got %d bytes\n", request->finallen, request->transfertotalreceivedbytes);
 				request->stage = -20;
 				break;
 			}
@@ -937,7 +1264,7 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 			}
 			request->stage = -1;
 			break;
-
+			
 		case -1:
 			Com_Printf("\n");
 			return -1;
@@ -945,7 +1272,7 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 			
 		case 10000:
 			request->transferactive = qfalse;
-
+			
 			if(request->socket >= 0)
 			{
 				NET_TcpCloseSocket(request->socket);
@@ -967,10 +1294,6 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 				Com_PrintError("\nReceived complete message but message buffer is NULL!\n");
 				break;
 			}
-			Com_Memcpy(&request->recvmsg, &request->transfermsg, sizeof(msg_t));
-			Com_Memset(&request->transfermsg, 0, sizeof(msg_t));
-			request->contentLength = request->recvmsg.cursize;
-			request->headerLength = 0;
 			request->stage = 10001;
 			request->code = 200;
 			Q_strncpyz(request->status, "OK", sizeof(request->status));
@@ -987,9 +1310,9 @@ static int FTP_SendReceiveData(ftRequest_t* request)
 
 /*
  =====================================================================
-							HTTP-Server
+ HTTP-Server
  =====================================================================
-*/
+ */
 
 int HTTPServer_ReadMessage(netadr_t* from, msg_t* msg, ftRequest_t* request)
 {
@@ -1417,7 +1740,7 @@ void HTTPServer_Init()
 
 ftRequest_t* FileDownloadRequest( const char* url)
 {
-	/* Strip away trailing spaces */
+	/* Strip away leading spaces */
 	ftprotocols_t proto;
 
 	
@@ -1442,7 +1765,7 @@ ftRequest_t* FileDownloadRequest( const char* url)
 		case FT_PROTO_FTP:
 			return FTP_DLRequest(url);
 		case FT_PROTO_HTTP:
-			return HTTPGetRequest(url);
+			return HTTPRequest(url, "GET", NULL, NULL);
 		default:
 			Com_PrintError("Unsupported File Transfer Protocol in url: %s!\n", url);
 			return NULL;
@@ -1500,7 +1823,7 @@ const char* FileDownloadGenerateProgress( ftRequest_t* request )
 	float percent;
 	float rate;
 	int elapsedmsec;
-	msg_t *msg;
+
 	
 	if(request->transferactive == qfalse)
 	{
@@ -1512,15 +1835,11 @@ const char* FileDownloadGenerateProgress( ftRequest_t* request )
 		request->transferStartTime = Sys_Milliseconds();
 	}
 	
-	if(request->transfermsg.data != NULL)
-		msg = &request->transfermsg;
-	else if(request->recvmsg.data != NULL)
-		msg = &request->recvmsg;
-	else
+	if(request->transfermsg.data == NULL && request->recvmsg.data == NULL)
 		return "";
 	
-	if(msg->maxsize > 0 && msg->cursize > 0)
-		percent = 100.0f * ((float)msg->cursize / (float)msg->maxsize);
+	if(request->finallen > 0 && request->totalreceivedbytes > 0)
+		percent = 100.0f * ((float)request->totalreceivedbytes / (float)request->finallen);
 	else
 		percent = 0.0f;
 	
@@ -1537,24 +1856,24 @@ const char* FileDownloadGenerateProgress( ftRequest_t* request )
 	
 	elapsedmsec = Sys_Milliseconds() - request->transferStartTime;
 	if (elapsedmsec != 0) {
-		rate = (((float)msg->cursize/1024.0f) * 1000.0f) / (float)elapsedmsec;
+		rate = (((float)request->totalreceivedbytes/1024.0f) * 1000.0f) / (float)elapsedmsec;
 	}else {
 		rate = 0;
 	}
 	
 	
-	Com_sprintf(line, sizeof(line), "\rReceiving: %s %.1f/%.1f kBytes @ %.1f kB/s", bar, (float)msg->cursize/1024.0f, (float)msg->maxsize/1024.0f, rate);
+	Com_sprintf(line, sizeof(line), "\rReceiving: %s %.1f/%.1f kBytes @ %.1f kB/s", bar, (float)request->totalreceivedbytes/1024.0f, (float)request->finallen/1024.0f, rate);
 	
 	return line;
 	
 }
 
 /*
-
-
-ftRequest_t* DownloadFile(const char* url)
-{
-	ftRequest_t* handle;
+ 
+ 
+ ftRequest_t* DownloadFile(const char* url)
+ {
+ ftRequest_t* handle;
 	int state;
 
 	handle = FileDownloadRequest( url );

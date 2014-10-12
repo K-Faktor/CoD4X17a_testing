@@ -62,6 +62,7 @@ typedef unsigned short sa_family_t;
 #	define EAFNOSUPPORT		WSAEAFNOSUPPORT
 #	define ECONNRESET		WSAECONNRESET
 #	define EINPROGRESS		WSAEINPROGRESS
+#	define EINTR			WSAEINTR
 typedef u_long	ioctlarg_t;
 #	define socketError		WSAGetLastError( )
 
@@ -2995,6 +2996,10 @@ __optimize3 __regparm1 qboolean NET_Sleep(unsigned int usec)
 	retval = select(highestfd + 1, &fdr, NULL, NULL, &timeout);
 	
 	if(retval < 0){
+		if(socketError == EINTR)
+		{
+			return qfalse;
+		}
 		Com_PrintWarningNoRedirect("NET_Sleep: select() syscall failed: %s\n", NET_ErrorString());
 		return qfalse;
 	}

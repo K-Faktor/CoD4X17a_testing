@@ -39,6 +39,7 @@
 #include "cmd.h"
 #include "sys_thread.h"
 #include "hl2rcon.h"
+#include "sv_auth.h"
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -375,7 +376,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	char			pbguid[33];
 	int			clientNum;
 	int			version;
-	int			qport;
+	unsigned int		qport;
 	int			challenge;
 	char			*password;
 	char			denied[MAX_STRING_CHARS];
@@ -502,15 +503,6 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	Q_strncpyz(pbguid, Info_ValueForKey( userinfo, "pbguid" ), sizeof(pbguid));
 #endif
 
-	if(strlen(pbguid) < 10){
-		NET_OutOfBandPrint( NS_SERVER, from, "error\nConnection rejected: No or invalid GUID found/provided.\n" );
-		Com_Printf("Rejected a connection: No or invalid GUID found/provided. Length: %i\n",
-		strlen(pbguid));
-#ifdef COD4X17A
-		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
-#endif
-		return;
-	}
 
 #ifdef COD4X17A
 	version = atoi( Info_ValueForKey( userinfo, "protocol" ));
@@ -560,6 +552,24 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 #endif
 	}
 #endif
+
+#ifdef COD4X18UPDATE
+	if(version < 7)
+	{
+		
+	}else
+#endif
+	if(strlen(pbguid) < 10)
+	{
+		NET_OutOfBandPrint( NS_SERVER, from, "error\nConnection rejected: No or invalid GUID found/provided.\n" );
+		Com_Printf("Rejected a connection: No or invalid GUID found/provided. Length: %i\n",
+		strlen(pbguid));
+#ifdef COD4X17A
+		Com_Memset( &svse.challenges[c], 0, sizeof( svse.challenges[c] ));
+#endif
+		return;
+	}
+
 
 
 	// find a client slot:
@@ -682,8 +692,21 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 #endif
 		return;
 	}
+
+#ifdef COD4X17A
 	//gotnewcl:
 	Com_Memset(newcl, 0x00, sizeof(client_t));
+#else
+    #ifdef COD4X18UPDATE
+	if(version == sv_protocol->integer || newcl->challenge != challenge || newcl->state != CS_CONNECTED)
+	{
+		Com_Memset(newcl, 0x00, sizeof(client_t));
+	}
+    #else
+	Com_Memset(newcl, 0x00, sizeof(client_t));
+    #endif
+#endif
+
 #ifdef COD4X17A
 	newcl->authentication = svse.challenges[c].ipAuthorize;
 #else
@@ -759,6 +782,8 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	if(newcl->protocol != sv_protocol->integer)
 	{
 		newcl->needupdate = qtrue;
+	}else{
+		newcl->needupdate = qfalse;
 	}
 #endif
 #endif
@@ -797,7 +822,14 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 #ifdef COD4X18UPDATE
 	if(newcl->needupdate)
 	{
-		newcl->nextSnapshotTime = -1;
+		newcl->nextSnapshotTime = 0x7fffffff;
+	}
+	SV_UserinfoChanged(newcl);
+
+	if(!newcl->updateconnOK && newcl->needupdate)
+	{
+		SV_ConnectWithUpdateProxy(newcl);
+		return;
 	}
 #endif
 #endif
@@ -831,7 +863,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 #ifdef COD4X17A
 __optimize3 __regparm2 void SV_ReceiveStats(netadr_t *from, msg_t* msg){
 
-	short qport;
+	unsigned short qport;
 	client_t *cl;
 	byte curstatspacket;
 	byte var_02;
@@ -868,6 +900,38 @@ __optimize3 __regparm2 void SV_ReceiveStats(netadr_t *from, msg_t* msg){
 
 	NET_OutOfBandPrint( NS_SERVER, from, "statResponse %i", var_02 );
 }
+
+#else
+#ifdef COD4X18UPDATE
+
+
+__optimize3 __regparm2 void SV_ReceiveStats(netadr_t *from, msg_t* msg){
+
+	unsigned short qport;
+	client_t *cl;
+	byte var_02;
+
+	qport = MSG_ReadShort( msg );
+	// find which client the message is from
+	cl = SV_ReadPackets(from, qport);
+	if(cl == NULL)
+	{
+		Com_DPrintf("SV_ReceiveStats: Received statspacket from disconnected remote client: %s qport: %d\n", NET_AdrToString(from), qport);
+		return;
+	}
+
+	cl->receivedstats = 0x7F;
+	var_02 = cl->receivedstats;
+	var_02 = ~var_02;
+	var_02 = var_02 & 127;
+	cl->lastPacketTime = svs.time;
+
+	NET_OutOfBandPrint( NS_SERVER, from, "statResponse %i", var_02 );
+}
+
+
+
+#endif
 #endif
 
 
@@ -1329,14 +1393,12 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 	}
 
 	if(!client->enteredWorldForFirstTime && (client->netchan.remoteAddress.type == NA_IP || client->netchan.remoteAddress.type == NA_IP6)){
-		if(psvs.useuids){
-			if(client->uid > 0){
-				SV_EnterLeaveLog("^5Client %s %s ^5entered this server in slot %d with uid %d", client->name, NET_AdrToString(&client->netchan.remoteAddress), clientNum, client->uid);
-				client->power = SV_RemoteCmdGetClPower(client);
-			}
+		if(client->uid > 0)
+		{
+			SV_EnterLeaveLog("^5Client %s %s ^5entered this server in slot %d with uid %d", client->name, NET_AdrToString(&client->netchan.remoteAddress), clientNum, client->uid);
+			client->power = Auth_GetClPowerByUID(client->uid);
 		}else{
 			SV_EnterLeaveLog("^5Client %s %s ^5entered this server in slot %d with guid %s", client->name, NET_AdrToString(&client->netchan.remoteAddress), clientNum, client->pbguid);
-			client->power = SV_RemoteCmdGetClPower(client);
 		}
 	}
 
@@ -1352,7 +1414,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 sharedEntity_t* SV_AddBotClient(){
 
     int i, cntnames, read;
-    short qport;
+    unsigned short qport;
     client_t *cl = NULL;
     const char* denied;
     char name[16];
@@ -1413,7 +1475,7 @@ sharedEntity_t* SV_AddBotClient(){
 	Info_SetValueForKey( userinfo, "rate", "99999");
 	Info_SetValueForKey( userinfo, "name", name);
 	Info_SetValueForKey( userinfo, "protocol", va("%i", sv_protocol->integer));
-	Info_SetValueForKey( userinfo, "qport", va("%i", qport));
+	Info_SetValueForKey( userinfo, "qport", va("%hi", qport));
 
 	Com_Memset(&botnet,0,sizeof(botnet));
 	botnet.type = NA_BOT;
@@ -2550,7 +2612,7 @@ void SV_SendClientVoiceData(client_t *client)
 
 void SV_GetVoicePacket(netadr_t *from, msg_t *msg)
 {
-	int qport;
+	unsigned int qport;
 
 	client_t *cl;
 	
@@ -2569,7 +2631,7 @@ void SV_GetVoicePacket(netadr_t *from, msg_t *msg)
 	}
 }
 
-client_t* SV_ReadPackets(netadr_t *from, int qport)
+client_t* SV_ReadPackets(netadr_t *from, unsigned int qport)
 {
 	int i;
 	client_t *cl;

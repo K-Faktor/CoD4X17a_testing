@@ -101,7 +101,7 @@ called to open a channel to a remote system
 ==============
 */
 
-void Netchan_Setup( netsrc_t sock, netchan_t *chan, netadr_t adr, int qport , byte* unsentBuffer, int unsentBufferSize, byte* fragmentBuffer, int fragmentBufferSize){
+void Netchan_Setup( netsrc_t sock, netchan_t *chan, netadr_t adr, unsigned int qport , byte* unsentBuffer, int unsentBufferSize, byte* fragmentBuffer, int fragmentBufferSize){
 
 	memset( chan, 0, sizeof( netchan_t ) );
 
@@ -598,7 +598,7 @@ return values:
 -2: Got new data + Connection closed
 ================
 */
-int NET_ReceiveData( int sock, msg_t* msg) {
+int NET_TcpReceiveData( int sock, msg_t* msg) {
 
 	int len = msg->maxsize - msg->cursize;
 	int ret;

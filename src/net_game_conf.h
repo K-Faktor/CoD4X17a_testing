@@ -37,6 +37,8 @@
 #define	AUTHORIZE_SERVER_NAME	"cod4master.activision.com"
 #endif
 
+#define AUTHORIZE_TIMEOUT 10000
+
 #ifndef PORT_AUTHORIZE
 #define	PORT_AUTHORIZE		20800
 #endif

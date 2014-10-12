@@ -84,5 +84,14 @@ qboolean Cmd_InfoSetPower( const char *infostring );
 void	Cmd_Vstr_f(void);
 void	Cmd_Wait_f(void);
 void	Cmd_Exec_f(void);
+
+
+int Cmd_GetInvokerUID();
+int Cmd_GetInvokerClnum();
+int Cmd_GetInvokerPower();
+void Cmd_SetCurrentInvokerInfo(int uid, int power, int client);
+void Cmd_ResetInvokerInfo();
+
 #endif
+
 

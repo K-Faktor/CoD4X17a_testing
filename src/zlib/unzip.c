@@ -130,9 +130,9 @@
 #define OF(args)  args
 #endif
 
-typedef unsigned char  Byte;  /* 8 bits */
-typedef unsigned int   uInt;  /* 16 bits or more */
-typedef unsigned long  uLong; /* 32 bits or more */
+//typedef unsigned char  Byte;  /* 8 bits */
+//typedef unsigned int   uInt;  /* 16 bits or more */
+//typedef unsigned long  uLong; /* 32 bits or more */
 
 #ifndef SEEK_SET
 #  define SEEK_SET        0       /* Seek from beginning of file.  */

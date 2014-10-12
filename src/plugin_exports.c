@@ -88,11 +88,11 @@ P_P_F clientScoreboard_t Plugin_GetClientScoreboard(int clientNum)
 }
 P_P_F int Plugin_Cmd_GetInvokerUid()
 {
-    return SV_RemoteCmdGetInvokerUid();
+    return Cmd_GetInvokerUID();
 }
 P_P_F int Plugin_Cmd_GetInvokerSlot()
 {
-    return SV_RemoteCmdGetInvokerClnum();
+    return Cmd_GetInvokerClnum();
 }
 P_P_F int Plugin_GetPlayerUid(int slot)
 {

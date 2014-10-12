@@ -34,6 +34,7 @@
 #include "cvar.h"
 #include "misc.h"
 #include "sha256.h"
+#include "sv_auth.h"
 
 #include <string.h>
 #include <time.h>
@@ -113,7 +114,7 @@ void PlayerCmd_GetPower(scr_entref_t arg){
     }
     cl = &svs.clients[entityNum];
 
-    power = SV_RemoteCmdGetClPower(cl);
+    power = Auth_GetClPowerByUID(cl->uid);
 
     Scr_AddInt(power);
 }
@@ -2098,13 +2099,13 @@ void GScr_ScriptCommandCB()
 
     if(Cmd_Argc() == 1)
     {
-        Scr_ScriptCommand(SV_RemoteCmdGetInvokerClnum(), Cmd_Argv(0), "");
+        Scr_ScriptCommand(Cmd_GetInvokerClnum(), Cmd_Argv(0), "");
 
     }else{
 
         Cmd_Argsv(1, buffer, sizeof(buffer));
 
-        Scr_ScriptCommand(SV_RemoteCmdGetInvokerClnum(), Cmd_Argv(0), buffer);
+        Scr_ScriptCommand(Cmd_GetInvokerClnum(), Cmd_Argv(0), buffer);
     }
 }
 

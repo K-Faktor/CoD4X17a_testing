@@ -1044,6 +1044,28 @@ void	Cmd_ExecuteString( const char *text )
 	if(!Q_stricmpn(arg0, "dvar", 4))
 	{
 		arg0[0] = 'c';
+	}else if(!Q_stricmpn(arg0, "auth", 4)){
+		if(!Q_stricmp(arg0, "authlogin"))
+		{
+			Q_strncpyz(arg0, "login", sizeof(arg0));
+		}
+		else if(!Q_stricmp(arg0, "authChangePassword"))
+		{
+			Q_strncpyz(arg0, "changePassword", sizeof(arg0));			
+		}
+		else if(!Q_stricmp(arg0, "authSetAdmin"))
+		{
+			Q_strncpyz(arg0, "adminSet", sizeof(arg0));			
+		}
+		else if(!Q_stricmp(arg0, "authUnsetAdmin"))
+		{
+			Q_strncpyz(arg0, "adminUnset", sizeof(arg0));			
+		}
+		else if(!Q_stricmp(arg0, "authListAdmins"))
+		{
+			Q_strncpyz(arg0, "adminList", sizeof(arg0));					
+		}
+		
 	}
 	// check registered command functions	
 	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
@@ -1117,8 +1139,8 @@ static void Cmd_List_f( void ) {
 	i = 0;
 	for ( cmd = cmd_functions ; cmd ; cmd = cmd->next ) {
 		if ( (match && !Com_Filter( match, (char*)cmd->name, qfalse )) 
-			|| SV_RemoteCmdGetInvokerPower() < cmd->minPower
-			|| ((cmd->minPower == 0) && SV_RemoteCmdGetInvokerPower() != 100))
+			|| Cmd_GetInvokerPower() < cmd->minPower
+			|| ((cmd->minPower == 0) && Cmd_GetInvokerPower() != 100))
 		{
 			continue;
 		}
@@ -1179,6 +1201,53 @@ void Cmd_CompleteCfgName( char *args, int argNum ) {
 }
 */
 
+/*
+ ============================================
+ For holding the state of powers
+ ============================================
+ */
+
+typedef struct{
+	int		currentCmdPower;			//used to set an execution permissionlevel - Default is 100 but if users execute commands it will be the users level
+	int		currentCmdInvoker;			//used to set an Invoker UID - Default is 0 but if users execute commands it will be his own UID
+	int		clientnum;				//Clientnum will be -1 if rcon is used
+	qboolean	authserver;
+}cmdInvoker_t;
+
+static cmdInvoker_t cmdInvoker;
+
+
+int Cmd_GetInvokerUID()
+{
+    return cmdInvoker.currentCmdInvoker;
+}
+
+int Cmd_GetInvokerClnum()
+{
+    return cmdInvoker.clientnum;
+}
+
+
+int Cmd_GetInvokerPower()
+{
+    return cmdInvoker.currentCmdPower;
+}
+
+void Cmd_SetCurrentInvokerInfo(int uid, int power, int client)
+{
+    cmdInvoker.currentCmdPower = power;
+    cmdInvoker.currentCmdInvoker = uid;
+    cmdInvoker.clientnum = client;
+}
+
+
+void Cmd_ResetInvokerInfo()
+{
+    cmdInvoker.currentCmdPower = 100;
+    cmdInvoker.currentCmdInvoker = -1;
+    cmdInvoker.clientnum = -1;
+}
+
 void Cmd_Init( void ) {
 
 	Cmd_AddCommand( "cmdlist",Cmd_List_f );
@@ -1187,5 +1256,6 @@ void Cmd_Init( void ) {
 	Cmd_AddCommand( "vstr",Cmd_Vstr_f );
 	Cmd_AddCommand( "echo",Cmd_Echo_f );
 	Cmd_AddCommand( "wait", Cmd_Wait_f );
+	Cmd_ResetInvokerInfo();
 	//Cmd_AddCommand( "help", Cmd_Help_f ); Not ready yet
 }

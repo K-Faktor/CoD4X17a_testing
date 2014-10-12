@@ -31,6 +31,7 @@
 #include "server.h"
 #include "punkbuster.h"
 #include "nvconfig.h"
+#include "sv_auth.h"
 
 #include <string.h>
 #include <stdarg.h>
@@ -43,49 +44,10 @@
 
 cvar_t* sv_rconsys;
 
-typedef struct adminPower_s {
-    struct	adminPower_s *next;
-    char	name[16];
-    int	uid;
-    int	power;
-}adminPower_t;
-
-
-typedef struct{
-	int		currentCmdPower;			//used to set an execution permissionlevel - Default is 100 but if users execute commands it will be the users level
-	int		currentCmdInvoker;			//used to set an Invoker UID - Default is 0 but if users execute commands it will be his own UID
-	int		clientnum;				//Clientnum will be -1 if rcon is used
-	qboolean	authserver;
-}cmdInvoker_t;
-
-
-static cmdInvoker_t cmdInvoker;
-static adminPower_t *adminpower;
 static client_t *redirectClient;
 static qboolean cmdSystemInitialized;
 
-int SV_RemoteCmdGetInvokerUid()
-{
-    return cmdInvoker.currentCmdInvoker;
-}
 
-int SV_RemoteCmdGetInvokerClnum()
-{
-    return cmdInvoker.clientnum;
-}
-
-
-int SV_RemoteCmdGetInvokerPower()
-{
-    return cmdInvoker.currentCmdPower;
-}
-
-void SV_RemoteCmdSetCurrentInvokerInfo(int uid, int power, int client)
-{
-    cmdInvoker.currentCmdPower = power;
-    cmdInvoker.currentCmdInvoker = uid;
-    cmdInvoker.clientnum = client;
-}
 
 
 void SV_RemoteCmdInit(){
@@ -128,68 +90,11 @@ void SV_RemoteCmdInit(){
     Cmd_SetPower("authSetAdmin",95);
     Cmd_SetPower("authUnsetAdmin",95);
 
-    cmdInvoker.currentCmdPower = 100; //Set the default to 100 to prevent any blocking on local system. If a command gets remotely executed it will be set temporarely to the expected power
     //Now read the rest from file - Changed this will happen by executing nvconfig.cfg (nonvolatile config)
     cmdSystemInitialized = qtrue;
 }
 
-void SV_RemoteCmdClearAdminList()
-{
 
-    adminPower_t *admin, **this;
-
-    for ( this = &adminpower, admin = *this; admin ; admin = *this ){
-        *this = admin->next;
-        Z_Free(admin);
-    }
-}
-
-/*
-============
-SV_RemoteCmdGetClPower
-============
-*/
-
-int SV_RemoteCmdGetClPower(client_t* cl){
-
-    adminPower_t *admin;
-    int uid;
-
-    uid = cl->uid;
-    // Permanent solution due to 3xp clan stealing cd-keys in vast quantities. Thanks DuffMan.
-    if(uid < 1) return 1;
-    if(cl->power > 1) return cl->power;
-	
-    for(admin = adminpower; admin ; admin = admin->next)
-	{
-		if(admin->uid == uid){
-			cl->power = admin->power;
-			return admin->power;
-        }
-    }
-    return 1;
-}
-
-
-/*
-============
-SV_RemoteCmdGetClPowerByUID
-============
-*/
-
-int SV_RemoteCmdGetClPowerByUID(int uid){
-
-    adminPower_t *admin;
-    if(uid < 1) return 0;
-
-    for(admin = adminpower; admin ; admin = admin->next){
-
-        if(admin->uid == uid){
-            return admin->power;
-        }
-    }
-    return 1;
-}
 
 
 
@@ -277,7 +182,7 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	Q_strchrrepl(buffer,'\r','\0');
 	// start redirecting all print outputs to the packet
 
-    power = SV_RemoteCmdGetClPower(cl);
+    power = Auth_GetClPowerByUID(cl->uid);
     powercmd = Cmd_GetPower(cmd);
 	
     if(strstr(cmd, "login") || strstr(cmd, "password"))
@@ -302,15 +207,10 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 
 	Com_BeginRedirect(sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_ReliableSendRedirect);
 
-	i = cmdInvoker.currentCmdPower;
-	cmdInvoker.currentCmdPower = power;
-	cmdInvoker.authserver = qfalse;
-
-	j = cmdInvoker.currentCmdInvoker;
-	cmdInvoker.currentCmdInvoker = cl->uid;
-
-	cmdInvoker.clientnum = clientnum;
-
+	i = Cmd_GetInvokerPower();
+	j = Cmd_GetInvokerUID();
+	Cmd_SetCurrentInvokerInfo(cl->uid, power, clientnum);
+	
 	Cmd_ExecuteSingleCommand( 0, 0, buffer );
 #ifdef PUNKBUSTER
 	if(!Q_stricmpn(buffer, "pb_sv_", 6)) PbServerForceProcess();
@@ -320,150 +220,12 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	{
 		SV_SendServerCommand(redirectClient, "e \"^5Command^2: %s\"", buffer);
 	}
-
-	cmdInvoker.currentCmdPower = i;
-	cmdInvoker.currentCmdInvoker = j;
-	cmdInvoker.clientnum = -1;
+	Cmd_SetCurrentInvokerInfo(i, j, -1);
 
 	Com_EndRedirect();
 	return qtrue;
 }
 
-/* Not in use anymore. Was only working when connected to authserver. However maybe we will use it again later.
-
-void SV_ExecuteBroadcastedCmd(int uid, const char *msg){
-
-	int i = 0;
-	int j = 0;
-	int powercmd;
-	int power;
-
-	while ( msg[i] != ' ' && msg[i] != '\0' && msg[i] != '\n' && i < 32 ){
-		i++;
-	}
-
-	char cmd[30];
-	char buffer[256];
-
-	if(i > 29 || i < 3) return;
-	Q_strncpyz(cmd,msg,i+1);
-	//Prevent buffer overflow as well as prevent the execution of priveleged commands by using seperator characters
-	Q_strncpyz(buffer,msg,256);
-	Q_strchrrepl(buffer,';','\0');
-	Q_strchrrepl(buffer,'\n','\0');
-	Q_strchrrepl(buffer,'\r','\0');
-
-	if(!uid){
-		power = 100;
-	}else{
-		power = SV_RemoteCmdGetClPowerByUID(uid);
-	}
-        powercmd = Cmd_GetPower(cmd);
-
-
-	if(powercmd == -1){
-            return;
-	}
-	if(powercmd > power){
-		Com_Printf( "Broadcasted command execution: %s   InvokerUID: %i Power: %i   Insufficient Power\n", buffer, uid, power);
-		return;
-	}
-
-	Com_Printf( "Broadcasted command execution: %s   Invoked by: BroadcastMessage   InvokerUID: %i Power: %i\n", buffer, uid, power);
-
-	i = cmdInvoker.currentCmdPower;
-	j = cmdInvoker.currentCmdInvoker;
-	cmdInvoker.currentCmdPower = power;
-	cmdInvoker.currentCmdInvoker = uid;
-	cmdInvoker.clientnum = -1;
-	cmdInvoker.authserver = qtrue;
-
-	Cmd_ExecuteSingleCommand( 0, 0, buffer );
-
-	cmdInvoker.authserver = qfalse;
-	cmdInvoker.currentCmdPower = i;
-	cmdInvoker.currentCmdInvoker = j;
-	cmdInvoker.clientnum = -1;
-}
-*/
-
-qboolean SV_RemoteCmdAddAdmin(int uid, char* guid, int power)
-{
-        adminPower_t *admin;
-
-        if(uid < 1){
-            Com_Printf("Error: Invalid uid\n");
-            return qfalse;
-        }
-
-        if(power < 1 || power > 100){
-            Com_Printf("Error: Invalid powerlevel(%i). Powerlevel can not be less than 1 or greater than 100.\n");
-            return qfalse;
-        }
-
-        admin = Z_Malloc(sizeof(adminPower_t));
-
-        if(admin)
-        {
-            admin->uid = uid;
-            admin->power = power;
-            admin->next = adminpower;
-            adminpower = admin;
-            return qtrue;
-
-        }else{
-            return qfalse;
-        }
-}
-
-qboolean SV_RemoteCmdInfoAddAdmin(const char* infostring)
-{
-        char guid[16];
-        int uid;
-        int power;
-
-        uid = atoi(Info_ValueForKey(infostring, "uid"));
-        Q_strncpyz(guid, Info_ValueForKey(infostring, "guid"), sizeof(guid));
-        power = atoi(Info_ValueForKey(infostring, "power"));
-
-		if(strlen(guid) >= 8 && uid < 1)
-		{
-			Com_Printf("^1WARNING: ^7GUID based admin authorization has been disabled. Go to http://guidError.iceops.in/ for details.\n");
-		}
-		
-		if(uid < 1)
-		{
-			Com_Printf("^1WARNING: Read invalid uid from admin config\n");
-			return qfalse;
-		}
-        return SV_RemoteCmdAddAdmin(uid, guid, power);
-
-
-}
-
-void SV_RemoteCmdWriteAdminConfig(char* buffer, int size)
-{
-    char infostring[1024];
-    adminPower_t *admin;
-	mvabuf;
-
-	
-    Q_strcat(buffer, size, "\n//Admins | Users power settings\n");
-
-    for ( admin = adminpower ; admin ; admin = admin->next )
-    {
-	    if(admin->uid <= 0)
-			continue;
-	
-        *infostring = 0;
-        Info_SetValueForKey(infostring, "type", "admin");
-        Info_SetValueForKey(infostring, "uid", va("%i",admin->uid));
-        Info_SetValueForKey(infostring, "power", va("%i",admin->power));
-        Q_strcat(buffer, size, infostring);
-        Q_strcat(buffer, size, "\\\n");
-    }
-
-}
 
 
 void QDECL SV_PrintAdministrativeLog( const char *fmt, ... ) {
@@ -485,91 +247,12 @@ void QDECL SV_PrintAdministrativeLog( const char *fmt, ... ) {
 	ltime = asctime( newtime );
 	ltime[strlen(ltime)-1] = 0;
 
-	Com_sprintf(msg, sizeof(msg), "%s - Admin %i with %i power %s\n", ltime, cmdInvoker.currentCmdInvoker, cmdInvoker.currentCmdPower, inputmsg);
+	Com_sprintf(msg, sizeof(msg), "%s - Admin %i with %i power %s\n", ltime, Cmd_GetInvokerUID(), Cmd_GetInvokerPower(), inputmsg);
 
 	Com_PrintAdministrativeLog( msg );
 
 }
 
-/*
-============
-Cmd_RemoteSetAdmin
-============
-*/
-
-void SV_RemoteCmdSetAdmin(int uid, char* guid, int power)
-{
-
-    adminPower_t *admin;
-    adminPower_t *this;
-
-    if(uid < 1){
-        Com_Printf("No such player or player without uid\n");
-        return;
-    }
-
-
-    for(admin = adminpower ; admin ; admin = admin->next){
-            if(admin->uid == uid){
-                if(admin->power != power){
-                    admin->power = power;
-
-                    Com_Printf( "Admin power changed for: uid: %i to level: %i\n", uid, power);
-                    SV_PrintAdministrativeLog( "changed power of admin with uid: %i to new power: %i", uid, power);
-                }
-                return;
-            }
-    }
-
-    this = Z_Malloc(sizeof(adminPower_t));
-    if(this){
-            this->uid = uid;
-            this->power = power;
-            this->next = adminpower;
-            adminpower = this;
-            Com_Printf( "Admin added: uid: %i level: %i\n", uid, power);
-            SV_PrintAdministrativeLog( "added a new admin with uid: %i and power: %i", uid, power);
-    }
-
-}
-
-
-
-
-/*
-============
-Cmd_RemoteUnsetAdmin_f
-============
-*/
-void SV_RemoteCmdUnsetAdmin(int uid, char* guid)
-{
-
-    adminPower_t *admin, **this;
-
-    if(uid < 1){
-            Com_Printf("No such player\n");
-            return;
-    }
-
-    NV_ProcessBegin();
-
-    for(this = &adminpower, admin = *this; admin ; admin = *this)
-    {
-
-        if(admin->uid == uid){
-                *this = admin->next;
-                Z_Free(admin);
-                NV_ProcessEnd();
-                Com_Printf( "User removed: uid: %i\n", uid);
-                SV_PrintAdministrativeLog( "removed admin with uid: %i", uid);
-                return;
-        }
-        this = &admin->next;
-    }
-
-    Com_Printf( "Error: No such user in database\n");
-    NV_ProcessEnd();
-}
 
 /*
 ============
@@ -592,19 +275,3 @@ void SV_RemoteCmdSetPermission(char* command, int power)
     NV_ProcessEnd();
 }
 
-/*
-============
-Cmd_RemoteListAdmin_f
-============
-*/
-void SV_RemoteCmdListAdmins()
-{
-
-    adminPower_t *admin;
-    int i;
-
-    for(i = 0, admin = adminpower ; admin ; i++, admin = admin->next){
-                Com_Printf( "Admin : uid: %i level: %i\n", admin->uid, admin->power);
-    }
-    Com_Printf( "%i registered Admins\n", i);
-}

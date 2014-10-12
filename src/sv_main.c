@@ -1268,6 +1268,251 @@ __optimize3 __regparm2 static void SVC_RemoteCommand( netadr_t *from, msg_t *msg
 
 }
 
+#ifdef COD4X18UPDATE
+#define UPDATE_PROXYSERVER_NAME "192.168.178.3"
+#define UPDATE_PROXYSERVER_PORT 27953
+
+typedef enum
+{
+    UPDCONN_CHALLENGING,
+    UPDCONN_CONNECT
+}update_connState_t;
+
+typedef struct
+{
+    update_connState_t state;
+    int mychallenge;
+    int serverchallenge;
+    char authkey[128];
+    netadr_t updateserveradr;
+}update_connection_t;
+
+update_connection_t update_connection;
+
+
+
+void SV_UpdateProxyUpdateBadChallenge(netadr_t* from)
+{
+    int mychallenge;
+
+    if(SV_Cmd_Argc() < 2)
+    {
+        return;
+    }
+
+    mychallenge = atoi(SV_Cmd_Argv(1));
+
+    if(mychallenge != update_connection.mychallenge)
+    {
+        return;
+    }
+
+    if(!NET_CompareAdr(from, &update_connection.updateserveradr))
+    {
+        Com_Printf("SV_UpdateProxyUpdateBadChallenge: Packet not from updateserver\n");
+        return;
+    }
+
+    update_connection.state = UPDCONN_CHALLENGING;
+    Com_Printf("SV_UpdateProxyUpdateBadChallenge: Will start challenging\n");
+}
+
+void SV_UpdateProxyChallengeResponse(netadr_t* from)
+{
+    int mychallenge;
+    int svchallenge;
+
+    if(SV_Cmd_Argc() < 3)
+    {
+        return;
+    }
+
+    mychallenge = atoi(SV_Cmd_Argv(2));
+
+    if(mychallenge != update_connection.mychallenge)
+    {
+        Com_Printf("SV_UpdateProxyChallengeResponse: Bad challenge\n");
+        return;
+    }
+
+    if(!NET_CompareAdr(from, &update_connection.updateserveradr))
+    {
+        Com_Printf("SV_UpdateProxyChallengeResponse: Packet not from updateserver\n");
+        return;
+    }
+
+    svchallenge = atoi(SV_Cmd_Argv(1));
+    update_connection.serverchallenge = svchallenge;
+    update_connection.state = UPDCONN_CONNECT;
+}
+
+void SV_UpdateProxyConnectResponse( netadr_t* from )
+{
+
+    int mychallenge;
+    int clchallenge;
+    int i;
+    unsigned short qport;
+    client_t* cl;
+
+    if(SV_Cmd_Argc() < 4)
+    {
+        return;
+    }
+    mychallenge = atoi(SV_Cmd_Argv(1));
+    if(mychallenge != update_connection.mychallenge)
+    {
+//        Com_Printf("SV_UpdateProxyConnectResponse: Bad challenge\n");
+        return;
+    }
+
+    if(!NET_CompareAdr(from, &update_connection.updateserveradr))
+    {
+//        Com_Printf("SV_UpdateProxyConnectResponse: Packet not from updateserver\n");
+        return;
+    }
+
+    clchallenge = atoi(SV_Cmd_Argv(2));
+    qport = atoi(SV_Cmd_Argv(3));
+
+    for(cl = svs.clients, i = 0; i < sv_maxclients->integer; ++i, ++cl)
+    {
+        if(cl->state == CS_CONNECTED && cl->challenge == clchallenge && cl->netchan.qport == qport)
+        {
+            break;
+        }
+    }
+
+    if(i == sv_maxclients->integer)
+    {
+//        Com_Printf("SV_UpdateProxyConnectResponse: Bad challenge for client\n");
+        return;
+    }
+
+    cl->updateconnOK = qtrue;
+
+}
+
+void SV_ReceiveFromUpdateProxy( msg_t *msg )
+{
+    int i;
+    client_t* cl;
+
+    /* Callenge 0x4 */
+    int clchallenge = MSG_ReadLong(msg);
+    /* sequence 0x8 */
+    int sequence = MSG_ReadLong(msg);
+    /* qport 0xC */
+    unsigned short qport = MSG_ReadShort(msg);
+
+    /* data 0xE */
+    for(cl = svs.clients, i = 0; i < sv_maxclients->integer; ++i, ++cl)
+    {
+        if(cl->state == CS_CONNECTED && cl->challenge == clchallenge && cl->netchan.qport == qport)
+        {
+            break;
+        }
+    }
+
+    if(i == sv_maxclients->integer)
+    {
+//        Com_Printf("SV_ReceiveFromUpdateProxy: Received packet for bad client\n");
+        NET_OutOfBandPrint(NS_SERVER, &update_connection.updateserveradr, "disconnect %d %d", update_connection.serverchallenge, clchallenge);
+        return;
+    }
+
+    *(uint32_t*)&msg->data[10] = sequence;
+    NET_SendPacket(NS_SERVER, msg->cursize - 10, msg->data +10, &svs.clients[i].netchan.remoteAddress);
+
+}
+
+void SV_PassToUpdateProxy(msg_t *msg, client_t *cl)
+{
+    byte outbuf[MAX_MSGLEN];
+
+    msg_t outmsg;
+
+    MSG_Init(&outmsg, outbuf, sizeof(outbuf));
+
+    /* Update packet header */
+    MSG_WriteLong(&outmsg, 0xfffffffe);
+    /* client challenge */
+    MSG_WriteLong(&outmsg, cl->challenge);
+    MSG_WriteData(&outmsg, msg->data, msg->cursize);
+
+    NET_SendPacket(NS_SERVER, outmsg.cursize, outmsg.data, &update_connection.updateserveradr);
+
+}
+
+void SV_ConnectWithUpdateProxy(client_t *cl)
+{
+
+
+    int res;
+    char info[MAX_STRING_CHARS];
+    mvabuf;
+
+    switch(update_connection.state)
+    {
+        case UPDCONN_CHALLENGING:
+
+            if(update_connection.mychallenge == 0)
+            {
+                Com_RandomBytes((byte*)&update_connection.mychallenge, sizeof(update_connection.mychallenge));
+            }
+
+            if(update_connection.updateserveradr.type == NA_BAD)
+            {
+                Com_Printf("Resolving %s\n", UPDATE_PROXYSERVER_NAME);
+                res = NET_StringToAdr(UPDATE_PROXYSERVER_NAME, &update_connection.updateserveradr, NA_IP);
+
+                if(res == 2)
+                {
+                    // if no port was specified, use the default master port
+                    update_connection.updateserveradr.port = BigShort(UPDATE_PROXYSERVER_PORT);
+                }
+                if(res)
+                {
+                    Com_Printf( "%s resolved to %s\n", UPDATE_PROXYSERVER_NAME, NET_AdrToString(&update_connection.updateserveradr));
+                }else{
+                    Com_Printf( "%s has no IPv4 address.\n", UPDATE_PROXYSERVER_NAME);
+                    return;
+                }
+            }
+
+            if(update_connection.updateserveradr.type == NA_IP)
+            {
+                NET_OutOfBandPrint( NS_SERVER, &update_connection.updateserveradr, "updgetchallenge %d %s", update_connection.mychallenge, "noguid");
+            }
+            return;
+
+        case UPDCONN_CONNECT:
+
+
+            info[0] = '\0';
+
+            Info_SetValueForKey(info, "challenge", va("%d", update_connection.serverchallenge));
+            Info_SetValueForKey(info, "rtnchallenge", va("%d", update_connection.mychallenge));
+            Info_SetValueForKey(info, "clchallenge", va("%d", cl->challenge));
+            Info_SetValueForKey(info, "name", cl->name);
+            Info_SetValueForKey(info, "clremote", NET_AdrToString(&cl->netchan.remoteAddress));
+            Info_SetValueForKey(info, "qport", va("%hi", cl->netchan.qport));
+            Info_SetValueForKey(info, "protocol", va("%hi", cl->protocol));
+
+            NET_OutOfBandPrint( NS_SERVER, &update_connection.updateserveradr, "updconnect \"%s\"", info);
+            return;
+
+    }
+
+
+}
+
+
+#endif
+
+
+
+
 /*
 =================
 SV_ConnectionlessPacket
@@ -1309,12 +1554,34 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 	} else if (!Q_stricmp(c, "stats")) {
 		SV_ReceiveStats(from, msg);
 #endif
+
+#ifndef COD4X17A
+#ifdef COD4X18UPDATE
+
+	} else if (!Q_stricmp(c, "stats")) {
+		SV_ReceiveStats(from, msg);
+
+#endif
+#endif
+
         } else if (!Q_stricmp(c, "rcon")) {
 		SVC_RemoteCommand( from, msg );
 
 	} else if (!Q_stricmp(c, "getchallenge")) {
 		SV_GetChallenge(from);
-		
+
+#ifdef COD4X18UPDATE
+	} else if (!Q_stricmp(c, "updbadchallenge")) {
+		SV_UpdateProxyUpdateBadChallenge( from );
+	} else if (!Q_stricmp(c, "updchallengeResponse")) {
+		SV_UpdateProxyChallengeResponse( from );
+	} else if (!Q_stricmp(c, "updconnectResponse")) {
+		SV_UpdateProxyConnectResponse( from );
+
+#endif
+
+
+
 	} else if (!strcmp(c, "v")) {
 		SV_GetVoicePacket(from, msg);
 
@@ -1364,30 +1631,6 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 	return;
 }
 
-#ifdef COD4X18UPDATE
-
-void SV_PassToUpdateProxy(msg_t *msg, client_t *cl)
-{
-	
-}
-
-void SV_OpenConnectionWithUpdateProxy(msg_t *msg, client_t *cl)
-{
-	
-}
-
-void SV_ReceiveFromUpdateProxy(msg_t *msg, client_t *cl)
-{
-	
-}
-
-void SV_InitUpdateProxy(msg_t *msg, client_t *cl)
-{
-	
-}
-
-
-#endif
 
 //============================================================================
 
@@ -1399,7 +1642,7 @@ SV_PacketEvent
 __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 
 	client_t    *cl;
-	short qport;
+	unsigned short qport;
 
 	if(!com_sv_running->boolean)
             return;
@@ -1415,7 +1658,18 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 	// read the qport out of the message so we can fix up
 	// stupid address translating routers
 	MSG_BeginReading( msg );
+
+#ifdef COD4X18UPDATE
+	int seq = MSG_ReadLong( msg );           // sequence number
+	if(seq == 0xfffffffe)
+	{
+		SV_ReceiveFromUpdateProxy( msg );
+		return;
+	}
+#else
 	MSG_ReadLong( msg );           // sequence number
+#endif
+
 	qport = MSG_ReadShort( msg );  // & 0xffff;
 
 	// find which client the message is from
@@ -1430,8 +1684,9 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 	}
 
 #ifdef COD4X18UPDATE
-	if(cl->needupdate)
+	if(cl->needupdate && cl->updateconnOK)
 	{
+		cl->lastPacketTime = svs.time;
 		SV_PassToUpdateProxy(msg, cl);
 		return;
 	}

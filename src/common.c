@@ -751,7 +751,7 @@ void Com_Init(char* commandLine){
     char creatorname[37];
 	mvabuf;
 
-    int	qport;
+    unsigned int	qport;
 
     jmp_buf* abortframe = (jmp_buf*)Sys_GetValue(2);
 
