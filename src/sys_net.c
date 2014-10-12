@@ -1092,6 +1092,8 @@ int NET_IPSocket( char *net_interface, int port, int *err, qboolean tcp) {
 	ioctlarg_t			_true = 1;
 	int				i = 1;
 	int				tos = IPEFF_EF;
+	int				reuse;
+//	struct	linger			so_linger;
 
 	*err = 0;
 
@@ -1133,6 +1135,22 @@ int NET_IPSocket( char *net_interface, int port, int *err, qboolean tcp) {
 		if( setsockopt( newsocket, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(tos) ) == SOCKET_ERROR ) {
 			Com_PrintWarning( "NET_IPSocket: setsockopt IP_TOS: %s\n", NET_ErrorString() );
 		}
+	}else{
+/*
+	// Short WAIT_STATE time
+		so_linger.l_onoff = 1;
+		so_linger.l_linger = 2; //Two seconds timeout
+
+		if( setsockopt( newsocket, SOL_SOCKET, SO_LINGER, (char *) &so_linger, sizeof(so_linger) ) == SOCKET_ERROR ) {
+			Com_PrintWarning( "NET_IPSocket: setsockopt SO_LINGER: %s\n", NET_ErrorString() );
+		}
+*/
+		reuse = 1;
+
+		if( setsockopt( newsocket, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, sizeof(reuse) ) == SOCKET_ERROR ) {
+			Com_PrintWarning( "NET_IPSocket: setsockopt SO_REUSEADDR: %s\n", NET_ErrorString() );
+		}
+
 	}
 
 	if( !net_interface || !net_interface[0]) {
@@ -1205,7 +1223,8 @@ int NET_IP6Socket( char *net_interface, int port, struct sockaddr_in6 *bindto, i
 	SOCKET				newsocket;
 	struct sockaddr_in6		address;
 	ioctlarg_t			_true = 1;
-
+//	struct	linger			so_linger;
+	int				reuse;
 	*err = 0;
 
 	if( net_interface )
@@ -1247,6 +1266,28 @@ int NET_IP6Socket( char *net_interface, int port, struct sockaddr_in6 *bindto, i
 		*err = socketError;
 		closesocket(newsocket);
 		return INVALID_SOCKET;
+	}
+
+	if(tcp)
+	{
+/*
+	// Short WAIT_STATE time
+
+		so_linger.l_onoff = 1;
+		so_linger.l_linger = 2; //Two seconds timeout
+
+		if( setsockopt( newsocket, SOL_SOCKET, SO_LINGER, (char *) &so_linger, sizeof(so_linger) ) == SOCKET_ERROR ) {
+			Com_PrintWarning( "NET_IP6Socket: setsockopt SO_LINGER: %s\n", NET_ErrorString() );
+		}
+*/
+
+		reuse = 1;
+
+		if( setsockopt( newsocket, SOL_SOCKET, SO_REUSEADDR, (char *) &reuse, sizeof(reuse) ) == SOCKET_ERROR ) {
+			Com_PrintWarning( "NET_IP6Socket: setsockopt SO_REUSEADDR: %s\n", NET_ErrorString() );
+		}
+
+
 	}
 
 #ifdef IPV6_V6ONLY
@@ -1887,6 +1928,7 @@ void NET_OpenIP( void ) {
 							{
 								validsock6 = qfalse;	//This is an invalid port
 								closesocket( ip_socket[j].sock );
+								ip_socket[j].sock = INVALID_SOCKET;
 							}
 						}
 						socketindex6 = 0;
@@ -1988,6 +2030,7 @@ void NET_OpenIP( void ) {
 							{
 								validsock = qfalse;	//This is an invalid port
 								closesocket( ip_socket[j].sock );
+								ip_socket[j].sock = INVALID_SOCKET;
 							}
 						}
 						socketindex = socketindex6;
@@ -2478,7 +2521,9 @@ void NET_TcpServerPacketEventLoop()
 						if(ret > 0)
 						{
 							cursize = ret;
-                        }
+						}else{
+							break;
+						}
 
 						if(conn->lastMsgTime == 0 || conn->remote.sock < 1)
 						{

@@ -46,19 +46,11 @@ typedef struct{
 	qboolean streamchat;
 	qboolean streamgamelog;
 	qboolean streamevents;
-	int rconPower; //unused for now
+	int uid;
 	char rconUsername[32];
 }rconUser_t;
 
 typedef struct{
-	char username[32];
-	char salt[129];
-	char sha256[65];
-	int power;
-}rconLogin_t;
-
-typedef struct{
-	rconLogin_t rconUsers[MAX_RCONLOGINS];
 	rconUser_t activeRconUsers[MAX_RCONUSERS];
 	//For redirect
 	int redirectUser;
@@ -70,7 +62,6 @@ typedef enum{
     SERVERDATA_AUTH_RESPONSE = 2,
     SERVERDATA_AUTH = 3,
 
-    SERVERDATA_CHANGEPASSWORD = 63,
     SERVERDATA_TURNONSTREAM = 64,
     SERVERDATA_GAMELOG = 65,
     SERVERDATA_CONLOG = 66,
@@ -93,7 +84,6 @@ void HL2Rcon_SetSourceRconAdmin_f( void );
 void HL2Rcon_UnsetSourceRconAdmin_f( void );
 void HL2Rcon_ListSourceRconAdmins_f( void );
 void HL2Rcon_ChangeSourceRconAdminPassword( const char* password );
-void HL2Rcon_SourceRconStreaming_enable( int type );
 qboolean HL2Rcon_AddSourceRconAdminToList(const char* username, const char* password, const char* salt, int power);
 void HL2Rcon_ClearSourceRconAdminList( void );
 void HL2Rcon_SourceRconDisconnect(netadr_t *from, int connectionId);

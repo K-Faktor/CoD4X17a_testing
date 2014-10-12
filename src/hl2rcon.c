@@ -26,15 +26,14 @@
 #include "qcommon.h"
 #include "qcommon_io.h"
 #include "cmd.h"
-#include "nvconfig.h"
 #include "msg.h"
 #include "sys_net.h"
 #include "server.h"
 #include "net_game_conf.h"
-#include "sha256.h"
 #include "punkbuster.h"
 #include "net_game.h"
 #include "g_sv_shared.h"
+#include "sv_auth.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -56,188 +55,7 @@ sourceRcon_t sourceRcon;
 #define HL2RCON_SOURCEOUTPUTBUF_LENGTH 4096
 
 
-void HL2Rcon_SetSourceRconAdmin_f( void ){
-
-	const char* username;
-	const char* password;
-	const char* sha256;
-	byte salt[129];
-	int power, i;
-	rconLogin_t* user;
-	rconLogin_t* free = NULL;
-	mvabuf;
-
-
-
-	if(Cmd_Argc() != 4){
-		Com_Printf("Usage: rconaddadmin <username, password, power>\n");
-		return;
-	}
-
-	username = Cmd_Argv(1);
-	password = Cmd_Argv(2);
-	power = atoi(Cmd_Argv(3));
-
-
-	if(!username || !*username || !password || strlen(password) < 6 || power < 1 || power > 100){
-		Com_Printf("Usage: rconaddadmin <username, password (at least 6 characters), power (and integer between 1 and 100)>\n");
-		return;
-	}
-
-	NV_ProcessBegin();
-
-	for(i = 0, user = sourceRcon.rconUsers; i < MAX_RCONLOGINS; i++, user++){
-
-		if(!Q_stricmp(user->username, username)){
-			Com_Printf("A rconadmin with this username is already registered\n");
-			return;
-		}
-
-		if(!free && !*user->username )
-			free = user;
-	}
-	if(!free){
-		Com_Printf("Too many registered rconadmins. Limit is: %d\n", MAX_RCONLOGINS);
-		return;
-	}
-
-	Com_RandomBytes(salt, sizeof(salt));
-
-	for(i = 0; i < sizeof(salt) -1; i++){
-		if(salt[i] > 126){
-		    salt[i] -= 125;
-		}
-		if(salt[i] < 21){
-		    salt[i] += 21;
-		}
-		if(salt[i] == ';')
-			salt[i]++;
-
-		if(salt[i] == '\\')
-			salt[i]++;
-
-		if(salt[i] == '%')
-			salt[i]++;
-
-		if(salt[i] == '"')
-			salt[i]++;
-	}
-
-	salt[sizeof(salt) -1] = 0;
-
-	sha256 = Com_SHA256(va("%s.%s", password, salt));
-
-	Q_strncpyz(free->username, username, sizeof(free->username));
-	Q_strncpyz(free->sha256, sha256, sizeof(free->sha256));
-	Q_strncpyz(free->salt, (char*)salt, sizeof(free->salt));
-	free->power = power;
-
-	NV_ProcessEnd();
-}
-
-
-void HL2Rcon_UnsetSourceRconAdmin_f( void ){
-
-	const char* username;
-	int i;
-	rconLogin_t* user;
-
-	if(Cmd_Argc() != 2){
-		Com_Printf("Usage: rcondeladmin < username >\n");
-		return;
-	}
-
-	username = Cmd_Argv(1);
-
-	NV_ProcessBegin();
-
-	for(i = 0, user = sourceRcon.rconUsers; i < MAX_RCONLOGINS; i++, user++){
-
-		if(!Q_stricmp(user->username, username)){
-			Com_Printf("Removed %s from the list of rconadmins\n", user->username);
-			Com_Memset(user, 0, sizeof(rconLogin_t));
-			NV_ProcessEnd();
-			return;
-		}
-	}
-	Com_Printf("No such admin: %s\n", username);
-}
-
-
-void HL2Rcon_ListSourceRconAdmins_f( void ){
-
-	int i;
-	rconLogin_t* user;
-
-	Com_Printf("------- SourceRconAdmins: -------\n");
-	for(i = 0, user = sourceRcon.rconUsers; i < MAX_RCONLOGINS; i++, user++){
-		if(*user->username)
-			Com_Printf("  %2d:   Name: %s, Power: %d\n", i+1, user->username, user->power);
-	}
-	Com_Printf("---------------------------------\n");
-}
-
-
-void HL2Rcon_ChangeSourceRconAdminPassword( const char* password ){
-
-	const char* sha256;
-	char salt[129];
-	rconLogin_t* user;
-	int i;
-	mvabuf;
-
-
-	if(sourceRcon.redirectUser < 1 || sourceRcon.redirectUser > MAX_RCONUSERS){
-		Com_Printf("This command can only be used from SourceRcon\n");
-		return;
-	}
-
-	if(!password || strlen(password) < 6){
-		Com_Printf("Error: password too short. (at least 6 characters)\n");
-		return;
-	}
-
-	NV_ProcessBegin();
-
-	user = &sourceRcon.rconUsers[sourceRcon.redirectUser -1];
-
-
-	Com_RandomBytes((byte*)salt, sizeof(salt));
-	salt[sizeof(salt) -1] = 0;
-
-	for(i = 0; i < sizeof(salt) -1; i++){
-		if(salt[i] > 126){
-		    salt[i] -= 125;
-		}
-		if(salt[i] < 21){
-		    salt[i] += 21;
-		}
-		if(salt[i] == ';')
-			salt[i]++;
-
-		if(salt[i] == '\\')
-			salt[i]++;
-
-		if(salt[i] == '%')
-			salt[i]++;
-
-		if(salt[i] == '"')
-			salt[i]++;
-	}
-
-	sha256 = Com_SHA256(va("%s.%s", password, salt));
-
-	Q_strncpyz(user->sha256, sha256, sizeof(user->sha256));
-	Q_strncpyz(user->salt, salt, sizeof(user->salt));
-
-	NV_ProcessEnd();
-
-	Com_Printf("Password changed to: %s\n", password);
-}
-
-
-
-void HL2Rcon_SourceRconStreaming_enable( int type ){
+void HL2Rcon_SourceRconStreaming_enable( int type, int uid ){
 
 	rconUser_t* user;
 	char* c;
@@ -252,7 +70,14 @@ void HL2Rcon_SourceRconStreaming_enable( int type ){
 
 	user = &sourceRcon.activeRconUsers[sourceRcon.redirectUser -1];
 
-	user->streamlog = type & 1;
+	if(Auth_GetClPowerByUID(uid) > 98 || !(type & 1))
+	{
+		user->streamlog = type & 1;
+
+	}else if(type & 1){
+		Com_Printf("Insufficient permissions to open console logfile!\n");
+
+	}
 	user->streamgamelog = type & 2;
 	user->streamchat = type & 4;
 	user->streamevents = type & 8;
@@ -280,41 +105,6 @@ void HL2Rcon_SourceRconStreaming_enable( int type ){
 	Com_Printf("Streaming turned on for: %s %s %s %s\n", c, cg, ch, ev);
 }
 
-void HL2Rcon_ClearSourceRconAdminList( )
-{
-    Com_Memset(sourceRcon.rconUsers, 0, sizeof(sourceRcon.rconUsers));
-}
-
-qboolean HL2Rcon_AddSourceRconAdminToList(const char* username, const char* password, const char* salt, int power){
-
-	rconLogin_t* user;
-	rconLogin_t* free = NULL;
-	int i;
-
-	if(!username || !*username || !password || strlen(password) < 6 || power < 1 || power > 100 || !salt || strlen(salt) != 128)
-		return qfalse;
-
-	for(i = 0, user = sourceRcon.rconUsers; i < MAX_RCONLOGINS; i++, user++){
-
-		if(!Q_stricmp(user->username, username)){
-			return qfalse;
-		}
-
-		if(!free && !*user->username )
-			free = user;
-	}
-	if(!free)
-		return qfalse;
-
-	Q_strncpyz(free->username, username, sizeof(free->username));
-	Q_strncpyz(free->sha256, password, sizeof(free->sha256));
-	Q_strncpyz(free->salt, salt, sizeof(free->salt));
-	free->power = power;
-	return qtrue;
-}
-
-
-
 void HL2Rcon_SourceRconDisconnect(netadr_t *from, int connectionId)
 {
 
@@ -339,12 +129,9 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int *connect
 	char* loginstring;
 	char* username;
 	char* password;
-	const char* sha256;
-	char hstring[256];
 	byte msgbuf[32];
 	msg_t sendmsg;
 	rconUser_t* user;
-	rconLogin_t* login;
 	int i;
 	char buf[MAX_STRING_CHARS];
 	char stringlinebuf[MAX_STRING_CHARS];
@@ -355,9 +142,12 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int *connect
 	MSG_BeginReading(msg);
 	packetlen = MSG_ReadLong(msg);
 
-	if(packetlen != msg->cursize - 4)//Not a source rcon packet
-		return TCP_AUTHNOTME;
+	if(packetlen != msg->cursize - 4){//Not a source rcon packet
 
+		Com_Printf("Not a source rcon packet: len %d size %d\n", packetlen, msg->cursize);
+
+		return TCP_AUTHNOTME;
+	}
 	packetid = MSG_ReadLong(msg);
 
 	packettype = MSG_ReadLong(msg);
@@ -392,22 +182,12 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int *connect
 		goto badrcon;
 	}
 
-	for(i = 0, login = sourceRcon.rconUsers; i < MAX_RCONLOGINS; i++, login++){
-		if(!Q_stricmp(login->username, username))
-			break;
-	}
-
-	if(i == MAX_RCONLOGINS){
+	if(Auth_Authorize(username, password) < 0)
+	{
 		goto badrcon;
 	}
-	Com_sprintf(hstring, sizeof(hstring), "%s.%s", password, login->salt);
 
-	sha256 = Com_SHA256(hstring);
-
-	if(Q_strncmp(login->sha256, sha256, 128))
-		goto badrcon;
-
-	Com_Printf("Rcon login from: %s Name: %s\n", NET_AdrToString (from), login->username);
+	Com_Printf("Rcon login from: %s Name: %s\n", NET_AdrToString (from), username);
 
 	Cmd_EndTokenizedString();
 
@@ -422,8 +202,9 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int *connect
 
 
 	user->remote = *from;
-	user->rconPower = login->power;
-	Q_strncpyz(user->rconUsername, login->username, sizeof(user->rconUsername));
+	user->uid = Auth_GetUID(username);
+//	user->rconPower = login->power;
+	Q_strncpyz(user->rconUsername, username, sizeof(user->rconUsername));
 	user->streamchat = 0;
 	user->streamlog = 0;
 	user->lastpacketid = packetid;
@@ -627,6 +408,65 @@ void HL2Rcon_SayToPlayers(int clientnum, int team, const char* chatline)
         SV_SayToPlayers(clientnum, team, line);
 }
 
+#define SV_OUTPUTBUF_LENGTH 4096
+
+void HL2Rcon_ExecuteConsoleCommand(const char* command, int uid)
+{
+	char sv_outputbuf[SV_OUTPUTBUF_LENGTH];
+	char buffer[960];
+	char cmd[48];
+	int power, powercmd, oldpower, oldinvokeruid, oldinvokerclnum, i;
+	
+	
+	if((power = Auth_GetClPowerByUID(uid)) < 100)
+	{
+		i = 0;
+		/* Get the current user's power 1st */
+		while ( command[i] != ' ' && command[i] != '\0' && command[i] != '\n' && i < 32 ){
+			i++;
+		}
+		if(i > 29 || i < 3) return;
+		
+		Q_strncpyz(cmd,command,i+1);
+		
+		//Prevent buffer overflow as well as prevent the execution of priveleged commands by using seperator characters
+		Q_strncpyz(buffer, command, sizeof(buffer));
+		Q_strchrrepl(buffer,';','\0');
+		Q_strchrrepl(buffer,'\n','\0');
+		Q_strchrrepl(buffer,'\r','\0');
+		// start redirecting all print outputs to the packet
+		
+		powercmd = Cmd_GetPower(cmd);
+		if(powercmd > power)
+		{
+			Com_BeginRedirect (sv_outputbuf, SV_OUTPUTBUF_LENGTH, HL2Rcon_SourceRconFlushRedirect);
+			Com_Printf("Insufficient permissions!\n");
+			Com_EndRedirect();
+			return;
+		}
+		
+		oldpower = Cmd_GetInvokerPower();
+		oldinvokeruid = Cmd_GetInvokerUID();
+		oldinvokerclnum = Cmd_GetInvokerClnum();
+		Cmd_SetCurrentInvokerInfo(uid, power, -1);
+		
+		Com_BeginRedirect (sv_outputbuf, SV_OUTPUTBUF_LENGTH, HL2Rcon_SourceRconFlushRedirect);
+		Cmd_ExecuteSingleCommand(0,0, buffer);
+		
+		Cmd_SetCurrentInvokerInfo(oldinvokeruid, oldpower, oldinvokerclnum);
+		
+	}else{
+		Com_BeginRedirect (sv_outputbuf, SV_OUTPUTBUF_LENGTH, HL2Rcon_SourceRconFlushRedirect);
+		Cmd_ExecuteSingleCommand(0,0, command);
+#ifdef PUNKBUSTER
+		if(!Q_stricmpn(command, "pb_sv_", 6)) PbServerForceProcess();
+#endif
+	}
+
+	Com_EndRedirect();
+}
+
+
 
 qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int connectionId){
 
@@ -637,7 +477,6 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int connectionId){
     int8_t clientnum;
     int32_t *updatelen;
     char* command;
-    char* password;
     char* chatline;
     char sv_outputbuf[HL2RCON_SOURCEOUTPUTBUF_LENGTH];
     msg_t msg2;
@@ -689,30 +528,11 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int connectionId){
 		    MSG_ReadByte(msg);
 
 		    Com_Printf("Rcon from: %s command: %s\n", NET_AdrToString(from), command);
-		    sourceRcon.redirectUser = connectionId+1;
-		    Com_BeginRedirect (sv_outputbuf, sizeof(sv_outputbuf), HL2Rcon_SourceRconFlushRedirect);
-		    Cmd_ExecuteSingleCommand(0,0, command);
-#ifdef PUNKBUSTER
-		    if(!Q_stricmpn(command, "pb_sv_", 6)) PbServerForceProcess();
-#endif
-		    Com_EndRedirect ();
-		    sourceRcon.redirectUser = 0;
-		    break;
-
-		case SERVERDATA_CHANGEPASSWORD:
-
-		    password = MSG_ReadString(msg, stringbuf, sizeof(stringbuf));
-
-		    //Pop the end of body byte
-		    MSG_ReadByte(msg);
 
 		    sourceRcon.redirectUser = connectionId+1;
-		    Com_BeginRedirect (sv_outputbuf, sizeof(sv_outputbuf), HL2Rcon_SourceRconFlushRedirect);
-		    HL2Rcon_ChangeSourceRconAdminPassword( password );
-		    Com_EndRedirect ();
+		    HL2Rcon_ExecuteConsoleCommand(command, user->uid);
 		    sourceRcon.redirectUser = 0;
 		    break;
-
 
 		case SERVERDATA_TURNONSTREAM:
 
@@ -723,7 +543,7 @@ qboolean HL2Rcon_SourceRconEvent(netadr_t *from, msg_t *msg, int connectionId){
 
 		    sourceRcon.redirectUser = connectionId+1;
 		    Com_BeginRedirect (sv_outputbuf, sizeof(sv_outputbuf), HL2Rcon_SourceRconFlushRedirect);
-		    HL2Rcon_SourceRconStreaming_enable( type );
+		    HL2Rcon_SourceRconStreaming_enable( type, user->uid );
 		    Com_EndRedirect ();
 		    sourceRcon.redirectUser = 0;
 		    break;
@@ -818,49 +638,4 @@ void HL2Rcon_EventClientEnterTeam(int cid, int team){
 
     HL2Rcon_SourceRconSendDataToEachClient( data, 3, SERVERDATA_EVENT);
 
-}
-
-qboolean HL2Rcon_InfoAddAdmin(const char* line)
-{
-        char password[65];
-        char salt[129];
-        char username[32];
-        int power;
-
-        power = atoi(Info_ValueForKey(line, "power"));
-        Q_strncpyz(password, Info_ValueForKey(line, "password") , sizeof(password));
-        Q_strncpyz(salt, Info_ValueForKey(line, "salt") , sizeof(salt));
-        Q_strncpyz(username, Info_ValueForKey(line, "username") , sizeof(username));
-
-        if(!HL2Rcon_AddSourceRconAdminToList(username, password, salt, power)){
-            Com_Printf("Error: duplicated username or bad power or too many admins\n");
-            return qfalse;
-        }
-        return qtrue;
-}
-
-void HL2Rcon_WriteAdminConfig(char* buffer, int size)
-{
-    char infostring[MAX_INFO_STRING];
-    int i;
-    rconLogin_t *rconadmin;
-	mvabuf;
-	
-    Q_strcat(buffer, size, "\n//RconAdmins\n");
-
-    for ( rconadmin = sourceRcon.rconUsers, i = 0; i < MAX_RCONLOGINS ; rconadmin++, i++ ){
-
-        *infostring = 0;
-
-	if(!*rconadmin->username)
-		continue;
-
-        Info_SetValueForKey(infostring, "type", "rconAdmin");
-        Info_SetValueForKey(infostring, "power", va("%i", rconadmin->power));
-        Info_SetValueForKey(infostring, "password", rconadmin->sha256);
-        Info_SetValueForKey(infostring, "salt", rconadmin->salt);
-        Info_SetValueForKey(infostring, "username", rconadmin->username);
-        Q_strcat(buffer, size, infostring);
-        Q_strcat(buffer, size, "\\\n");
-    }
 }
