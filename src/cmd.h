@@ -49,8 +49,9 @@ void Cbuf_AddText(const char* text);
 void Cbuf_InsertText( const char *text );
 
 qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function );
-qboolean Cmd_AddHCommand( const char *cmd_name, const char *helptext, xcommand_t function );
-qboolean Cmd_AddCommandGeneric( const char *cmd_name, const char *helptext, xcommand_t function, qboolean warn );
+qboolean Cmd_AddPCommand( const char *cmd_name, xcommand_t function, int power );
+qboolean Cmd_AddHCommand( const char *cmd_name, const char *helptext, xcommand_t function, int power );
+qboolean Cmd_AddCommandGeneric( const char *cmd_name, const char *helptext, xcommand_t function, qboolean warn, int power );
 qboolean Cmd_RemoveCommand( const char *cmd_name );
 qboolean Cmd_SetPower(const char *cmd_name, int power);
 int Cmd_GetPower(const char *cmd_name);

@@ -2248,7 +2248,7 @@ void Cvar_Init (void)
 {
 	Cmd_AddCommand ("toggle", Cvar_Toggle_f);
 	Cmd_SetCommandCompletionFunc( "toggle", Cvar_CompleteCvarName );
-	Cmd_AddCommand ("set", Cvar_Set_f);
+	Cmd_AddPCommand ("set", Cvar_Set_f, 98);
 	Cmd_SetCommandCompletionFunc( "set", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("sets", Cvar_SetS_f);
 	Cmd_SetCommandCompletionFunc( "sets", Cvar_CompleteCvarName );
@@ -2262,7 +2262,7 @@ void Cvar_Init (void)
 	Cmd_SetCommandCompletionFunc( "reset", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("setu", Cvar_SetU_f);
 	Cmd_SetCommandCompletionFunc( "setu", Cvar_CompleteCvarName );
-	Cmd_AddCommand ("cvarlist", Cvar_List_f);
+	Cmd_AddPCommand ("cvarlist", Cvar_List_f, 98);
 	cvar_cheats = Cvar_RegisterBool("cvar_cheats", qfalse, CVAR_INIT, "Enable cheating");
 	cheating_enabled = cvar_cheats->boolean;
 }

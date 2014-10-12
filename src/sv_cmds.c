@@ -1282,8 +1282,7 @@ static void Cmd_AddTranslatedCommand_f() {
     Q_strncpyz(psvs.translatedCmd[free].cmdname, cmdname, sizeof(psvs.translatedCmd[free].cmdname));
     Q_strncpyz(psvs.translatedCmd[free].cmdargument, string, sizeof(psvs.translatedCmd[free].cmdargument));
 
-    Cmd_AddCommand (psvs.translatedCmd[free].cmdname, Cmd_ExecuteTranslatedCommand_f);
-    Cmd_SetPower(psvs.translatedCmd[free].cmdname, 100);
+    Cmd_AddPCommand (psvs.translatedCmd[free].cmdname, Cmd_ExecuteTranslatedCommand_f, 100);
     Com_Printf("Added custom command: %s -> %s\n", psvs.translatedCmd[free].cmdname, psvs.translatedCmd[free].cmdargument);
 
 }
@@ -1742,26 +1741,6 @@ static void SV_Find_f( void ){
 }
 
 
-/*
-============
-SV_SetPermission_f
-Changes minimum-PowerLevel of a command
-============
-*/
-
-static void SV_SetPermission_f() {
-
-    if ( Cmd_Argc() != 3 || atoi(Cmd_Argv(2)) < 1 || atoi(Cmd_Argv(2)) > 100) {
-		Com_Printf( "Usage: setCmdMinPower <command> <minpower>\n" );
-		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
-        Com_Printf( "Where command is any command you can invoke from console / rcon but no cvars\n" );
-		return;
-    }
-    SV_RemoteCmdSetPermission(Cmd_Argv(1), atoi(Cmd_Argv(2)) );
-
-}
-
-
 static void SV_ShowConfigstring_f()
 {
     char buffer[8192];
@@ -1977,6 +1956,37 @@ void SV_DownloadMap_f()
 	}
 }
 
+void SV_ChangeGametype_f()
+{
+
+    char gametypestring[32];
+    char* find;
+
+    if(Cmd_Argc() != 2)
+    {
+        Com_Printf( "Usage: gametype <gametypename>\n" );
+        return;
+    }
+
+    Q_strncpyz(gametypestring, Cmd_Argv(1), sizeof(gametypestring));
+
+    if(strchr(gametypestring, ';'))
+    {
+        return;
+    }
+
+    find = strchr(gametypestring, '\n');
+
+    if(find)
+    {
+        *find = '\0';
+    }
+
+    Cvar_Set("g_gametype", gametypestring);
+    Cbuf_AddText("map_restart\n");
+
+}
+
 
 void SV_AddOperatorCommands(){
 	
@@ -1989,34 +1999,34 @@ void SV_AddOperatorCommands(){
 
 	Cmd_AddCommand ("killserver", SV_KillServer_f);
 	Cmd_AddCommand ("setPerk", SV_SetPerk_f);
-	Cmd_AddCommand ("map_restart", SV_MapRestart_f);
+	Cmd_AddPCommand ("map_restart", SV_MapRestart_f, 50);
 	Cmd_AddCommand ("fast_restart", SV_FastRestart_f);
-	Cmd_AddCommand ("rules", SV_ShowRules_f);
+	Cmd_AddPCommand ("rules", SV_ShowRules_f, 1);
 	Cmd_AddCommand ("heartbeat", SV_Heartbeat_f);
-	Cmd_AddCommand ("kick", Cmd_KickPlayer_f);
+	Cmd_AddPCommand ("kick", Cmd_KickPlayer_f, 35);
 	Cmd_AddCommand ("clientkick", Cmd_KickPlayer_f);
 	Cmd_AddCommand ("onlykick", Cmd_KickPlayer_f);
-	Cmd_AddCommand ("unban", Cmd_UnbanPlayer_f);
+	Cmd_AddPCommand ("unban", Cmd_UnbanPlayer_f, 80);
 	Cmd_AddCommand ("unbanUser", Cmd_UnbanPlayer_f);
-	Cmd_AddCommand ("permban", Cmd_BanPlayer_f);
-	Cmd_AddCommand ("tempban", Cmd_TempBanPlayer_f);
+	Cmd_AddPCommand ("permban", Cmd_BanPlayer_f, 80);
+	Cmd_AddPCommand ("tempban", Cmd_TempBanPlayer_f, 50);
 	Cmd_AddCommand ("bpermban", Cmd_BanPlayer_f);
 	Cmd_AddCommand ("btempban", Cmd_TempBanPlayer_f);
 	Cmd_AddCommand ("banUser", Cmd_BanPlayer_f);
 	Cmd_AddCommand ("banClient", Cmd_BanPlayer_f);
 	Cmd_AddCommand ("ministatus", SV_MiniStatus_f);
-	Cmd_AddCommand ("say", SV_ConSayChat_f);
+	Cmd_AddPCommand ("say", SV_ConSayChat_f, 70);
 	Cmd_AddCommand ("consay", SV_ConSayConsole_f);
-	Cmd_AddCommand ("screensay", SV_ConSayScreen_f);
-	Cmd_AddCommand ("tell", SV_ConTellChat_f);
+	Cmd_AddPCommand ("screensay", SV_ConSayScreen_f, 70);
+	Cmd_AddPCommand ("tell", SV_ConTellChat_f, 70);
 	Cmd_AddCommand ("contell", SV_ConTellConsole_f);
-	Cmd_AddCommand ("screentell", SV_ConTellScreen_f);
+	Cmd_AddPCommand ("screentell", SV_ConTellScreen_f, 70);
 	Cmd_AddCommand ("dumpuser", SV_DumpUser_f);
 	Cmd_AddCommand ("stringUsage", SV_StringUsage_f);
 	Cmd_AddCommand ("scriptUsage", SV_ScriptUsage_f);
 	
-	Cmd_AddCommand ("stoprecord", SV_StopRecord_f);
-	Cmd_AddCommand ("record", SV_Record_f);
+	Cmd_AddPCommand("stoprecord", SV_StopRecord_f, 70);
+	Cmd_AddPCommand("record", SV_Record_f, 50);
 	
 	if(Com_IsDeveloper()){
 		Cmd_AddCommand ("showconfigstring", SV_ShowConfigstring_f);
@@ -2034,20 +2044,21 @@ void SV_AddSafeCommands(){
 		return;
 	}
 	initialized = qtrue;
-	
-	Cmd_AddCommand ("systeminfo", SV_Systeminfo_f);
-	Cmd_AddCommand ("serverinfo", SV_Serverinfo_f);
-	Cmd_AddCommand ("map", SV_Map_f);
+
+	Cmd_AddPCommand ("systeminfo", SV_Systeminfo_f, 1);
+	Cmd_AddPCommand ("serverinfo", SV_Serverinfo_f, 1);
+	Cmd_AddPCommand ("map", SV_Map_f, 60);
 	Cmd_AddCommand ("map_rotate", SV_MapRotate_f);
 	Cmd_AddCommand ("addAdvertMsg", SV_AddAdvert_f);
 	Cmd_AddCommand ("addRuleMsg", SV_AddRule_f);
 	Cmd_AddCommand ("clearAllMsg", SV_ClearAllMessages_f);
-	Cmd_AddCommand ("dumpbanlist", SV_DumpBanlist_f);
+	Cmd_AddPCommand ("dumpbanlist", SV_DumpBanlist_f, 30);
 	Cmd_AddCommand ("writenvcfg", NV_WriteConfig);
-	Cmd_AddCommand ("setCmdMinPower", SV_SetPermission_f);
 	Cmd_AddCommand ("status", SV_Status_f);
 	Cmd_AddCommand ("addCommand", Cmd_AddTranslatedCommand_f);
 	Cmd_AddCommand ("downloadmap", SV_DownloadMap_f);
+	Cmd_AddPCommand ("gametype", SV_ChangeGametype_f, 80);
+
 }
 
 

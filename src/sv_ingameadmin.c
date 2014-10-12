@@ -42,56 +42,11 @@
 #define MAXPRINTMSG 1024
 #endif
 
-cvar_t* sv_rconsys;
-
 static client_t *redirectClient;
-static qboolean cmdSystemInitialized;
 
+void SV_RemoteCmdInit()
+{
 
-
-
-void SV_RemoteCmdInit(){
-
-    sv_rconsys = Cvar_RegisterBool("sv_rconsys", qtrue, CVAR_ARCHIVE, "Disable/enable the internal remote-command-system");
-
-    if(!sv_rconsys->boolean) return;
-
-    //Init the permission table with default values
-    Cmd_ResetPower();
-
-    Cmd_SetPower("cmdlist", 1);
-    Cmd_SetPower("serverinfo", 1);
-    Cmd_SetPower("systeminfo", 1);
-    Cmd_SetPower("ministatus", 1);
-    Cmd_SetPower("status", 30);
-    Cmd_SetPower("dumpuser", 40);
-    Cmd_SetPower("kick", 35);
-    Cmd_SetPower("tempban", 50);
-    Cmd_SetPower("unban", 50);
-    Cmd_SetPower("permban", 80);
-    Cmd_SetPower("btempban", 80);
-    Cmd_SetPower("bpermban", 70);
-    Cmd_SetPower("map", 60);
-    Cmd_SetPower("map_restart", 50);
-    Cmd_SetPower("adminlist", 90);
-    Cmd_SetPower("cmdpowerlist", 90);
-    Cmd_SetPower("tell", 60);
-    Cmd_SetPower("say", 60);
-    Cmd_SetPower("screentell", 70);
-    Cmd_SetPower("screensay", 70);
-    Cmd_SetPower("dumpbanlist", 30);
-    Cmd_SetPower("setcmdminpower", 95);
-    Cmd_SetPower("setadmin", 95);
-    Cmd_SetPower("unsetadmin", 95);
-    Cbuf_AddText("addCommand gametype \"set g_gametype $arg; map_restart\"\n");
-    Cmd_SetPower("gametype", 60);
-    Cmd_SetPower("authLogin", 1);
-    Cmd_SetPower("authChangePassword", 10);
-    Cmd_SetPower("authSetAdmin",95);
-    Cmd_SetPower("authUnsetAdmin",95);
-
-    //Now read the rest from file - Changed this will happen by executing nvconfig.cfg (nonvolatile config)
-    cmdSystemInitialized = qtrue;
 }
 
 
@@ -154,13 +109,6 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	int power;
 	client_t *cl;
 	qboolean critcmd;
-
-        if(!cmdSystemInitialized){
-            SV_SendServerCommand(redirectClient, "e \"Error: Remote control system is not initialized\n\"");
-            Com_Printf("Error: Remote control system is not initialized\n");
-            return qfalse;
-        }
-
 
 	if(clientnum < 0 || clientnum > 63) return qfalse;
 	cl = &svs.clients[clientnum];
@@ -252,26 +200,3 @@ void QDECL SV_PrintAdministrativeLog( const char *fmt, ... ) {
 	Com_PrintAdministrativeLog( msg );
 
 }
-
-
-/*
-============
-Cmd_RemoteSetPermission
-Changes minimum-PowerLevel of a command
-============
-*/
-void SV_RemoteCmdSetPermission(char* command, int power)
-{
-
-
-    NV_ProcessBegin();
-    if(Cmd_SetPower(command, power))
-    {
-        SV_PrintAdministrativeLog("changed required power of cmd: %s to new power: %i", command, power);
-        Com_Printf("changed required power of cmd: %s to new power: %i\n", command, power);
-    }else{
-        Com_Printf("Failed to change power of cmd: %s Maybe this is not a valid command.\n", command);
-    }
-    NV_ProcessEnd();
-}
-

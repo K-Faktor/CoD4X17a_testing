@@ -569,7 +569,7 @@ qboolean Auth_AddAdminToList(const char* username, const char* password, const c
 	return qtrue;
 }
 
-void Auth_Login_f(){
+static void Auth_Login_f(){
     
     client_t *invoker;
     int id,clientNum;
@@ -608,7 +608,46 @@ void Auth_Login_f(){
 
 
 
-void Auth_Init(){
+/*
+============
+Auth_SetCommandPower_f
+Changes minimum-PowerLevel of a command
+============
+*/
+
+static void Auth_SetCommandPower_f() {
+
+    const char* command;
+    int power;
+
+
+    if ( Cmd_Argc() != 3 || atoi(Cmd_Argv(2)) < 1 || atoi(Cmd_Argv(2)) > 100) {
+		Com_Printf( "Usage: AdminChangeCommandPower <command> <minpower>\n" );
+		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
+		Com_Printf( "Where command is any command you can invoke from console / rcon but no cvars\n" );
+		return;
+    }
+
+    NV_ProcessBegin();
+
+    command = Cmd_Argv(1);
+    power = atoi(Cmd_Argv(2));
+
+    if(Cmd_SetPower(command, power))
+    {
+        Com_Printf("changed required power of cmd: %s to new power: %i\n", command, power);
+    }else{
+        Com_Printf("Failed to change power of cmd: %s Maybe this is not a valid command.\n", command);
+    }
+    NV_ProcessEnd();
+
+}
+
+
+
+
+void Auth_Init()
+{
 
 	static qboolean	initialized;
 
@@ -619,13 +658,14 @@ void Auth_Init(){
 	
 	Auth_ClearAdminList();
 
-	Cmd_AddCommand ("AdminUnset", Auth_UnsetAdmin_f);
-	Cmd_AddCommand ("AdminSet", Auth_SetAdmin_f);
-	Cmd_AddCommand ("AdminSetWithPassword", Auth_SetAdminWithPassword_f);
-	Cmd_AddCommand ("AdminList", Auth_ListAdmins_f);
-	Cmd_AddCommand ("AdminChangePassword", Auth_ChangePasswordByMasterAdmin_f);
-	Cmd_AddCommand ("Login", Auth_Login_f);
-	Cmd_AddCommand ("ChangePassword", Auth_ChangeOwnPassword_f);
+	Cmd_AddPCommand("AdminUnset", Auth_UnsetAdmin_f, 95);
+	Cmd_AddPCommand("AdminSet", Auth_SetAdmin_f, 95);
+	Cmd_AddPCommand("AdminSetWithPassword", Auth_SetAdminWithPassword_f, 95);
+	Cmd_AddPCommand("AdminList", Auth_ListAdmins_f, 80);
+	Cmd_AddPCommand("AdminChangePassword", Auth_ChangePasswordByMasterAdmin_f, 95);
+	Cmd_AddPCommand("AdminChangeCommandPower", Auth_SetCommandPower_f, 98);
+	Cmd_AddPCommand("Login", Auth_Login_f, 1);
+	Cmd_AddPCommand("ChangePassword", Auth_ChangeOwnPassword_f, 10);
 }
 
 
@@ -811,3 +851,5 @@ qboolean SV_RemoteCmdAddAdmin(int uid, char* guid, int power)
 	}
 }
 */
+
+

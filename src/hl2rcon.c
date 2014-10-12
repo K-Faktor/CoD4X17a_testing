@@ -762,9 +762,9 @@ void HL2Rcon_Init(){
 	}
 	initialized = qtrue;
 
-	Cmd_AddCommand ("rcondeladmin", HL2Rcon_UnsetSourceRconAdmin_f);
-	Cmd_AddCommand ("rconaddadmin", HL2Rcon_SetSourceRconAdmin_f);
-	Cmd_AddCommand ("rconlistadmins", HL2Rcon_ListSourceRconAdmins_f);
+//	Cmd_AddCommand ("rcondeladmin", HL2Rcon_UnsetSourceRconAdmin_f);
+//	Cmd_AddCommand ("rconaddadmin", HL2Rcon_SetSourceRconAdmin_f);
+//	Cmd_AddCommand ("rconlistadmins", HL2Rcon_ListSourceRconAdmins_f);
 
 	NET_TCPAddEventType(HL2Rcon_SourceRconEvent, HL2Rcon_SourceRconAuth, HL2Rcon_SourceRconDisconnect, 9038723);
 

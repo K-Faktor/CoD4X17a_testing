@@ -2128,8 +2128,7 @@ void GScr_AddScriptCommand()
         return;
     }
 
-    Cmd_AddCommandGeneric(command, NULL, GScr_ScriptCommandCB, qfalse);
-    Cmd_SetPower(command, defaultpower);
+    Cmd_AddCommandGeneric(command, NULL, GScr_ScriptCommandCB, qfalse, defaultpower);
 
 }
 

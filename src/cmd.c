@@ -333,7 +333,7 @@ static cmd_function_t *cmd_functions;
 Cmd_AddCommand
 ============
 */
-qboolean Cmd_AddCommandGeneric( const char *cmd_name, const char* helptext, xcommand_t function, qboolean warn ) {
+qboolean Cmd_AddCommandGeneric( const char *cmd_name, const char* helptext, xcommand_t function, qboolean warn, int power ) {
 
 	cmd_function_t  *cmd;
 
@@ -359,19 +359,25 @@ qboolean Cmd_AddCommandGeneric( const char *cmd_name, const char* helptext, xcom
 	strcpy((char*)(cmd +1), cmd_name);
 	cmd->name = (char*)(cmd +1);
 	cmd->function = function;
+	cmd->minPower = power;
 	cmd->next = cmd_functions;
 	cmd_functions = cmd;
 	return qtrue;
 }
 
-qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function )
+qboolean Cmd_AddPCommand( const char *cmd_name, xcommand_t function, int power )
 {
-    return Cmd_AddCommandGeneric( cmd_name, NULL, function, qtrue );
+    return Cmd_AddCommandGeneric( cmd_name, NULL, function, qtrue, power);
 }
 
-qboolean Cmd_AddHCommand( const char *cmd_name, const char* helptext, xcommand_t function )
+qboolean Cmd_AddCommand( const char *cmd_name, xcommand_t function )
 {
-    return Cmd_AddCommandGeneric( cmd_name, NULL, function, qtrue );
+    return Cmd_AddCommandGeneric( cmd_name, NULL, function, qtrue, 100);
+}
+
+qboolean Cmd_AddHCommand( const char *cmd_name, const char* helptext, xcommand_t function, int power )
+{
+    return Cmd_AddCommandGeneric( cmd_name, NULL, function, qtrue, power );
 }
 
 
@@ -1250,9 +1256,9 @@ void Cmd_ResetInvokerInfo()
 
 void Cmd_Init( void ) {
 
-	Cmd_AddCommand( "cmdlist",Cmd_List_f );
-	Cmd_AddCommand( "cmdpowerlist", Cmd_ListPower_f );
-	Cmd_AddCommand( "exec",Cmd_Exec_f );
+	Cmd_AddPCommand( "cmdlist", Cmd_List_f, 1);
+	Cmd_AddPCommand( "cmdpowerlist", Cmd_ListPower_f, 95);
+	Cmd_AddPCommand( "exec",Cmd_Exec_f, 98 );
 	Cmd_AddCommand( "vstr",Cmd_Vstr_f );
 	Cmd_AddCommand( "echo",Cmd_Echo_f );
 	Cmd_AddCommand( "wait", Cmd_Wait_f );
