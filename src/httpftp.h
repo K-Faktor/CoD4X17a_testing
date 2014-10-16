@@ -11,6 +11,7 @@
 
 #include "q_shared.h"
 #include "msg.h"
+#include "sys_net.h"
 
 typedef enum
 {
@@ -51,6 +52,7 @@ typedef struct
 	int startTime;
 	int stage;
 	ftprotocols_t protocol;
+	netadr_t remote;
 }ftRequest_t;
 
 typedef enum

@@ -1323,6 +1323,13 @@ int HTTPServer_ReadMessage(netadr_t* from, msg_t* msg, ftRequest_t* request)
 	int newsize, i;
 	qboolean gotheader;
 	
+	if(request->remote.type == 0)
+	{
+		
+		Com_Memcpy(&request->remote, from, sizeof(request->remote));
+		
+	}
+	
 	if (request->recvmsg.maxsize - request->recvmsg.cursize < msg->cursize) 
 	{
 		if(request->finallen != -1)
@@ -1631,7 +1638,6 @@ void HTTPServer_ReadSessionId(ftRequest_t* request, char* sessionkey, int len)
 
 qboolean HTTPServer_Event(netadr_t* from, msg_t* msg, int connectionId)
 {
-	
 	char sessionkey[128];
 	httpPostVals_t values[MAX_POST_VALS];
 
@@ -1665,7 +1671,6 @@ qboolean HTTPServer_Event(netadr_t* from, msg_t* msg, int connectionId)
 /* Detecting the clientside protocol and process the 1st chunk of data if it is a http client */
 tcpclientstate_t HTTPServer_AuthEvent(netadr_t* from, msg_t* msg, int *connectionId)
 {
-	
 	ftRequest_t* request;
 	*connectionId = 0;
 	

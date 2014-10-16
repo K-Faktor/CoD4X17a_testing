@@ -113,7 +113,7 @@ tcpclientstate_t NET_TCPAuthPacketEvent(netadr_t* from, byte* bufData, int len, 
         msg.readonly = qtrue;
         msg.overflowed = qfalse;
 
-        Com_DPrintf("Packet event from: %s\n", NET_AdrToString(from));
+        Com_DPrintf("Auth Packet event from: %s\n", NET_AdrToString(from));
 
         for(i = 0; i < MAX_TCPEVENTS; i++)
         {
@@ -137,6 +137,9 @@ void NET_TCPPacketEvent(netadr_t* from, byte* bufData, int len, int connectionId
         int i;
         msg_t msg;
 
+		Com_DPrintf("Packet event from: %s\n", NET_AdrToString(from));
+
+	
         for(i = 0; i < MAX_TCPEVENTS; i++)
         {
             if(tcpevents[i].serviceId == serviceId)

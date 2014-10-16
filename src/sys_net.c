@@ -3158,3 +3158,9 @@ int NET_StringToAdr( const char *s, netadr_t *a, netadrtype_t family )
 		return 2;
 	}
 }
+
+const char* NET_GetHostAddress(char* adrstrbuf, int len)
+{
+	Com_sprintf(adrstrbuf, len, "%s:%hd\n", net_ip->string, net_port->integer);
+	return adrstrbuf;
+}

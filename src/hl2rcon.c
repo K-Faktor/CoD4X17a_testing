@@ -136,9 +136,6 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int *connect
 	char buf[MAX_STRING_CHARS];
 	char stringlinebuf[MAX_STRING_CHARS];
 
-	if(SV_PlayerBannedByip(from, buf, sizeof(buf))){
-		return TCP_AUTHBAD;
-	}
 	MSG_BeginReading(msg);
 	packetlen = MSG_ReadLong(msg);
 
@@ -155,6 +152,10 @@ tcpclientstate_t HL2Rcon_SourceRconAuth(netadr_t *from, msg_t *msg, int *connect
 	if(packettype != SERVERDATA_AUTH)//Not a source rcon auth-packet
 		return TCP_AUTHNOTME;
 
+	if(SV_PlayerBannedByip(from, buf, sizeof(buf))){
+		return TCP_AUTHBAD;
+	}
+	
 	MSG_Init(&sendmsg, msgbuf, sizeof(msgbuf));
 	MSG_WriteLong(&sendmsg, 10);
 	MSG_WriteLong(&sendmsg, 0);

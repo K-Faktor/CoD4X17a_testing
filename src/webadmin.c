@@ -278,19 +278,23 @@ void Webadmin_ConsoleCommand(xml_t* xmlobj, const char* command, int uid)
 }
 
 
-void Webadmin_BuildLoginForm(xml_t* xmlobj, qboolean badtry)
+void Webadmin_BuildLoginForm(xml_t* xmlobj, qboolean badtry, const char* banmsg)
 {
 	
-	if(badtry)
-	{
-		XO("p");
-			XA("Invalid Login");
-		XC;
-	}
 	XO("p");
 		XO1("div", "class", "col-lg-4 col-lg-offset-4");
-			XO3("form", "name", "input", "action", "webadmin", "method", "post");
+			XO3("form", "name", "input", "action", "/webadmin", "method", "post");
 				XA("<h4>Log In</h4><hr />");
+				if(badtry)
+				{
+					XA("<p><h4 style=\"color: #FF0000\">Invalid Login</h4></p>");
+				}
+				if(banmsg)
+				{
+					XA("<p><h4 style=\"color: #FF0000\">");
+					XA("Error: You can only login once every 10 seconds");
+					XA("</h4></p>");
+				}
 				XA("<label for=\"username\">Username</label> <input class=\"form-control\" type=\"text\" id=\"username\" name=\"username\">");
 				XA("<label for=\"password\">Password</label> <input class=\"form-control\" type=\"password\" id=\"password\" name=\"password\">");
 				XA("<br /><button class=\"btn btn-primary\" type=\"submit\">Log In</button>");
@@ -300,7 +304,7 @@ void Webadmin_BuildLoginForm(xml_t* xmlobj, qboolean badtry)
 	
 }
 
-void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidloginattempt, const char* url, httpPostVals_t* values)
+void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidloginattempt, const char* banmsg, const char* url, httpPostVals_t* values)
 {
 
 	xml_t xmlbase;
@@ -308,6 +312,7 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 	char actionval[64];
 	char colorbuf[2048];
 	const char *postval;
+	char netadrstr[128];
 	int uid;
 	
 	XML_Init(xmlobj, (char*)msg->data, msg->maxsize, "ISO-8859-1");
@@ -342,7 +347,7 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 				{
 					if(username == NULL || username[0] == '\0')
 					{
-						Webadmin_BuildLoginForm(xmlobj, invalidloginattempt);
+						Webadmin_BuildLoginForm(xmlobj, invalidloginattempt, banmsg);
 
 					}else {
 						uid = Auth_GetUID(username);
@@ -400,7 +405,10 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 						XA("<a href=\"/status\" class=\"btn btn-primary givesomespace\">Server Status</a>");
 					XC;
 				}
-
+			XO("p");
+				XA("Net: ");
+				XA(NET_GetHostAddress(netadrstr, sizeof(netadrstr)));
+			XC;
 			XC;
 		XC;
 	XC;
@@ -416,6 +424,7 @@ qboolean HTTPCreateWebadminMessage(ftRequest_t* request, msg_t* msg, char* sessi
 	char qpath[MAX_QPATH];
 	int len;
 	const char *session;
+	char banmsg[1024];
 	
 	buf = NULL;
 	
@@ -460,7 +469,7 @@ qboolean HTTPCreateWebadminMessage(ftRequest_t* request, msg_t* msg, char* sessi
 	
 	if (Q_stricmpn(request->url, "/webadmin", 9))
 	{
-		Webadmin_BuildMessage(msg, NULL, qfalse, request->url, values);
+		Webadmin_BuildMessage(msg, NULL, qfalse, NULL ,request->url, values);
 		return qtrue;
 	}
 	
@@ -468,6 +477,12 @@ qboolean HTTPCreateWebadminMessage(ftRequest_t* request, msg_t* msg, char* sessi
 	const char* username = NULL;
 	const char* password = NULL;
 
+	
+	if(SV_PlayerBannedByip(&request->remote, banmsg, sizeof(banmsg)))
+	{
+		Webadmin_BuildMessage(msg, NULL, qfalse, banmsg, request->url, values);
+		return qtrue;
+	}
 	
 	username = Auth_FindSessionID(sessionkey);
 	
@@ -484,6 +499,7 @@ qboolean HTTPCreateWebadminMessage(ftRequest_t* request, msg_t* msg, char* sessi
 			{
 				Com_Printf("^1Invalid login\n");
 				invalidlogin = qtrue;
+				SV_PlayerAddBanByip(&request->remote, "Invalid login attempt. You have to wait 20 seconds", 0, NULL, 0, Com_GetRealtime() + 10);
 				username = NULL;
 			}else {
 				Com_Printf("^2Successful login with username: %s\n", username);
@@ -505,7 +521,7 @@ qboolean HTTPCreateWebadminMessage(ftRequest_t* request, msg_t* msg, char* sessi
 		Com_Printf("Already logged in as: %s\n", username);
 	}
 	
-	Webadmin_BuildMessage(msg, username, invalidlogin, request->url, values);
+	Webadmin_BuildMessage(msg, username, invalidlogin, NULL, request->url, values);
 
 	return qtrue;
 }
