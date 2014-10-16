@@ -1257,14 +1257,68 @@ void Scr_Notify(gentity_t* ent, unsigned short constString, unsigned int numArgs
 {
     Scr_NotifyNum(ent->s.number, 0, constString, numArgs);
 }
-/*
-unsigned short constJunk;
 
-void NotifyJunk()
+
+void RuntimeError_Debug(char *msg, char *a3, int a4)
 {
-	if(constJunk == 0)
-		constJunk = Scr_AllocString("junk");
-	Scr_NotifyLevel(constJunk, 0);
+  int i;
 
+  Com_Printf("\n^1******* script runtime error *******\n%s: ", msg);
+  Scr_PrintPrevCodePos(0, a3, a4);
+  if ( scrVmPub.field_8 )
+  {
+    for(i = scrVmPub.field_8 - 1; i > 0; --i)
+	{
+        Com_Printf("^1called from:\n");
+        Scr_PrintPrevCodePos(0, scrVmPub.backtrace[i].field_0, scrVmPub.backtrace[i].field_4 == 0);
+	}
+    Com_Printf("^1started from:\n");
+    Scr_PrintPrevCodePos(0, scrVmPub.backtrace[0].field_0, 1);
+  }
+  Com_Printf("^1************************************\n");
 }
-*/
+
+
+
+void RuntimeError(char *a3, int arg4, char *message, char *a4)
+{
+	int errtype;
+
+
+	if ( !scrVarPub.field_6 && !scrVmPub.field_16 )
+	{
+		return;
+	}
+
+	if ( scrVmPub.field_14 )
+	{
+		Com_Printf("%s\n", message);
+		if ( !scrVmPub.field_16 )
+		{
+			return;
+		}
+	}else{
+		RuntimeError_Debug(message, a3, arg4);
+		if ( !scrVmPub.field_15 && !scrVmPub.field_16 )
+		{
+			return;
+		}
+	}
+
+	if(scrVmPub.field_16)
+	{
+		errtype = 5;
+	}else{
+		errtype = 4;
+	}
+
+	if ( a4 )
+	{
+	    Com_Error(errtype, "script runtime error\n(see console for details)\n%s\n%s", message, a4);
+	}
+	else
+	{
+	    Com_Error(errtype, "script runtime error\n(see console for details)\n%s", message);
+	}
+}
+

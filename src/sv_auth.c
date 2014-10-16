@@ -205,7 +205,7 @@ static void Auth_SetAdmin_f() {
     power = atoi(Cmd_Argv(2));
 	
     if ( Cmd_Argc() != 3 || power < 1 || power > 100) {
-        Com_Printf( "Usage: AdminSet <user> <power> <password>\n" );
+        Com_Printf( "Usage: AdminSet <user> <power>\n" );
         Com_Printf( "Where user is one of the following: online-playername | online-playerslot | uid\n" );
 		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
 		Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
@@ -466,7 +466,6 @@ void Auth_ChangeOwnPassword_f()
 {	
 	const char* name;
 	const char* password;
-	int clientNum;
 	int uid, id;
 	
 	
@@ -476,12 +475,11 @@ void Auth_ChangeOwnPassword_f()
 		return;
     }
 
-	clientNum = Cmd_GetInvokerClnum();
 	uid = Cmd_GetInvokerUID();
     
-	if(clientNum < 0 || uid < 1)
+	if(uid < 1)
     {
-        Com_Printf("This command can only be used from the ingame adminsystem\n");
+        Com_Printf("This command can not be used from this place\nYou have no account it seems");
 		return;
     }
 	
@@ -752,20 +750,20 @@ qboolean SV_RemoteCmdInfoAddAdmin(const char* infostring)
  */
 
 int Auth_GetClPowerByUID(int uid){
-	
+
 	int i;
-    authData_admin_t *user;
+	authData_admin_t *user;
 
 	if(uid < 1) return 1;
-   
-    for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++)
+
+	for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++)
 	{
 		if(user->uid == uid)
 		{
 			return user->power;
 		}
 	}
-    return 1;
+	return 1;
 }
 
 
@@ -778,8 +776,8 @@ int Auth_GetClPowerByUID(int uid){
 int Auth_GetClPower(client_t* cl){
 
 	if(cl->uid < 1) return 1;
-    if(cl->power > 1) return cl->power;
-    
+	if(cl->power > 1) return cl->power;
+
 	return Auth_GetClPowerByUID(cl->uid);
 }
 

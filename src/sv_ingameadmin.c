@@ -130,9 +130,9 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	Q_strchrrepl(buffer,'\r','\0');
 	// start redirecting all print outputs to the packet
 
-    power = Auth_GetClPowerByUID(cl->uid);
-    powercmd = Cmd_GetPower(cmd);
-	
+	power = Auth_GetClPower(cl);
+	powercmd = Cmd_GetPower(cmd);
+
     if(strstr(cmd, "login") || strstr(cmd, "password"))
     {
             printPtr = "hiddencmd";
