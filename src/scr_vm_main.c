@@ -274,10 +274,11 @@ void Scr_AddStockFunctions(){
 }
 
 
-
 void Scr_AddStockMethods(){
 	//PlayerCmd
 	Scr_AddMethod("getpower", PlayerCmd_GetPower, 0);
+	Scr_AddMethod("setpower", PlayerCmd_SetPower, 0);
+	Scr_AddMethod("setuid", PlayerCmd_SetUid, 0);
 	Scr_AddMethod("giveweapon", (void*)0x80abc48, 0);
 	Scr_AddMethod("takeweapon", (void*)0x80abbb4, 0);
 	Scr_AddMethod("takeallweapons", (void*)0x80abb0e, 0);
@@ -522,6 +523,8 @@ void Scr_AddStockMethods(){
 	Scr_AddMethod("setdamagestage", (void*)0x80ba890, 0);
 	Scr_AddMethod("getgeolocation", PlayerCmd_GetGeoLocation, 0);
 }
+
+
 
 void Scr_InitFunctions()
 {
@@ -1321,4 +1324,5 @@ void RuntimeError(char *a3, int arg4, char *message, char *a4)
 	    Com_Error(errtype, "script runtime error\n(see console for details)\n%s", message);
 	}
 }
+
 

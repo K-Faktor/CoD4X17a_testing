@@ -69,11 +69,26 @@ GetPing
 Returns the current measured scoreboard ping of this player.
 Usage: int = self getPing();
 
-
 GetPower
 ============================
 Returns the admin power for this player. Default is 1
 Usage: int = self getPower();
+
+GetUid
+============================
+Returns uid (if one exists) for this player else it returns -1.
+Usage: int = self getUid();
+
+SetUid
+============================
+Sets the uid for this player.
+Usage: self setUid( <int> );
+
+SetPower
+============================
+Sets the power for this player. (Not recommend to use. The overall behaviour is not known). Don't set non admins above level 9
+In range 2 to 100
+Usage: self setPower( <int> );
 
 
 GetGeoLocation

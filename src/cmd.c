@@ -1057,21 +1057,22 @@ void	Cmd_ExecuteString( const char *text )
 		}
 		else if(!Q_stricmp(arg0, "authChangePassword"))
 		{
-			Q_strncpyz(arg0, "changePassword", sizeof(arg0));			
+			Q_strncpyz(arg0, "changePassword", sizeof(arg0));
 		}
 		else if(!Q_stricmp(arg0, "authSetAdmin"))
 		{
-			Q_strncpyz(arg0, "adminSet", sizeof(arg0));			
+			Q_strncpyz(arg0, "AdminAddAdminWithPassword", sizeof(arg0));
 		}
 		else if(!Q_stricmp(arg0, "authUnsetAdmin"))
 		{
-			Q_strncpyz(arg0, "adminUnset", sizeof(arg0));			
+			Q_strncpyz(arg0, "AdminRemoveAdmin", sizeof(arg0));
 		}
 		else if(!Q_stricmp(arg0, "authListAdmins"))
 		{
-			Q_strncpyz(arg0, "adminList", sizeof(arg0));					
+			Q_strncpyz(arg0, "adminListAdmins", sizeof(arg0));
 		}
-		
+	}else if(!Q_stricmp(arg0, "cmdpowerlist")){
+		Q_strncpyz(arg0, "AdminListCommands", sizeof(arg0));
 	}
 	// check registered command functions	
 	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
@@ -1257,7 +1258,7 @@ void Cmd_ResetInvokerInfo()
 void Cmd_Init( void ) {
 
 	Cmd_AddPCommand( "cmdlist", Cmd_List_f, 1);
-	Cmd_AddPCommand( "cmdpowerlist", Cmd_ListPower_f, 95);
+	Cmd_AddPCommand( "AdminListCommands", Cmd_ListPower_f, 95);
 	Cmd_AddPCommand( "exec",Cmd_Exec_f, 98 );
 	Cmd_AddCommand( "vstr",Cmd_Vstr_f );
 	Cmd_AddCommand( "echo",Cmd_Echo_f );
