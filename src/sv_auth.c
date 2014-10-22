@@ -395,6 +395,17 @@ void Auth_ListAdmins_f( void ){
 	Com_Printf("---------------------------------\n");
 }
 
+authData_admin_t* Auth_GetAdminFromIndex( int index )
+{
+
+	if(index >= MAX_AUTH_ADMINS)
+	{
+		return NULL;
+	}
+	return &auth_admins.admins[index];
+
+}
+
 
 void Auth_ChangeAdminPassword( int uid, const char* password ){
 

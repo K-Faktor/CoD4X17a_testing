@@ -16,6 +16,8 @@
 #include "webadmin.h"
 #include "server.h"
 #include "cmd.h"
+#include "g_sv_shared.h"
+#include "g_shared.h"
 
 #include <string.h>
 
@@ -144,6 +146,40 @@ const char* Webadmin_GetUrlVal(const char* url, const char* search, char* output
 	return value;
 }
 
+void Webadmin_BuildAdminList(xml_t* xmlobj)
+{
+	int i;
+	char colorbuf[2048];
+	authData_admin_t* badmin;
+	mvabuf;
+
+	
+	for (i = 0, badmin = Auth_GetAdminFromIndex( i ); badmin != NULL; i++, badmin = Auth_GetAdminFromIndex( i ))
+	{
+		if(badmin->username[0] == '\0')
+		{
+			continue;
+		}
+		
+		XO("tr");
+
+			XO("td");//Name
+			XA(Webadmin_ConvertToHTMLColor(badmin->username, colorbuf, sizeof(colorbuf)));
+			XC;
+			
+			XO("td");//GUID
+			XA(va("%d", badmin->uid));
+			XC;
+
+			XO("td");//Power points
+			XA(va("%d", badmin->power));
+			XC;
+
+		XC;
+	}
+	
+}
+
 void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 {
 	int i, numcl;
@@ -151,53 +187,332 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 	char strbuf[MAX_STRING_CHARS];
 	char colorbuf[2048];
 	mvabuf;
+	char teamallies[32];
+	char teamaxis[32];
+	gclient_t *gclient;
+	qboolean teambased = qfalse;
+	qboolean ffabased = qfalse;
+
+
+
+	numcl = 0;
+	
+	for (cl = svs.clients, gclient = level.clients, i = 0; i < sv_maxclients->integer; i++, cl++, gclient++)
+	{
+		if (cl->state < CS_CONNECTED) {
+			continue;
+		}
+		
+		if(gclient->sess.sessionTeam == TEAM_RED || gclient->sess.sessionTeam == TEAM_BLUE)
+		{
+			teambased = qtrue;
+			break;
+		}
+		if(gclient->sess.sessionTeam == TEAM_FREE)
+		{
+			ffabased = qtrue;
+			break;
+		}
+	}
+
 	
 	XO1("table","class","table table-striped table-bordered cod4xtable");
 	XA("<th>CID</th><th>Name</th><th>UID/GUID</th><th>Score</th><th>Ping</th>");
+	
+	
+	if(teambased)
+	{
 		
-		for (numcl = 0, cl = svs.clients, i = 0; i < sv_maxclients->integer; i++, cl++)
+		
+		if(!Q_strncmp(g_TeamName_Axis->string,"MPUI_SPETSNAZ", 13))
+			Q_strncpyz(teamaxis, "Spetsnaz", sizeof(teamaxis));
+		else if(!Q_strncmp(g_TeamName_Axis->string,"MPUI_OPFOR", 10))
+			Q_strncpyz(teamaxis, "Opfor", sizeof(teamaxis));
+		else
+			Q_strncpyz(teamaxis, g_TeamName_Axis->string, sizeof(teamaxis));
+		
+		if(!Q_strncmp(g_TeamName_Allies->string,"MPUI_MARINES", 12))
+			Q_strncpyz(teamallies, "Marines", sizeof(teamallies));
+		else if(!Q_strncmp(g_TeamName_Allies->string,"MPUI_SAS", 8))
+			Q_strncpyz(teamallies, "S.A.S.", sizeof(teamallies));
+		else
+			Q_strncpyz(teamallies, g_TeamName_Allies->string, sizeof(teamallies));
+		
+		XO("tr"); XO1("td", "colspan", "5");
+		XA(teamaxis);
+		XC; XC;
+			for (cl = svs.clients, gclient = level.clients, i = 0; i < sv_maxclients->integer; i++, cl++, gclient++)
+			{
+				if (cl->state < CS_CONNECTED) {
+					continue;
+				}
+				
+				if(gclient->sess.sessionTeam != TEAM_RED)
+				{
+					continue;
+				}
+				
+				++numcl;
+				
+				XO("tr");
+
+					Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", i);//CID
+					XA(strbuf);
+				
+					XO("td");//Name
+					XA(Webadmin_ConvertToHTMLColor(cl->name, colorbuf, sizeof(colorbuf)));
+					XC;
+		
+					XO("td");//GUID
+						if(cl->uid > 0)
+						{
+							XA(va("%d", cl->uid));
+						}else{
+							if(showfullguid)
+								XA(cl->pbguid);
+							else
+								XA(&cl->pbguid[24]);
+						}
+						
+					XC;
+					
+					Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", gclient->pers.scoreboard.score);//Score
+					XA(strbuf);
+
+				
+					Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->ping);//Ping
+					XA(strbuf);
+				XC;
+			}
+			
+		XO("tr"); XO1("td", "colspan", "5");
+		XA(teamallies);
+		XC; XC;
+		for (cl = svs.clients, gclient = level.clients, i = 0; i < sv_maxclients->integer; i++, cl++, gclient++)
 		{
 			if (cl->state < CS_CONNECTED) {
 				continue;
 			}
+			
+			if(gclient->sess.sessionTeam != TEAM_BLUE)
+			{
+				continue;
+			}
+			
 			++numcl;
 			
 			XO("tr");
-
-				Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", i);//CID
-				XA(strbuf);
 			
-				XO("td");//Name
-				XA(Webadmin_ConvertToHTMLColor(cl->name, colorbuf, sizeof(colorbuf)));
-				XC;
-	
-				XO("td");//GUID
-					if(cl->uid > 0)
-					{
-						XA(va("%d", cl->uid));
-					}else{
-						if(showfullguid)
-							XA(cl->pbguid);
-						else
-							XA(&cl->pbguid[24]);
-					}
-					
-				XC;
-				
-				Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", -1);//Score
-				XA(strbuf);
-
+			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", i);//CID
+			XA(strbuf);
 			
-				Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->ping);//Ping
-				XA(strbuf);
+			XO("td");//Name
+			XA(Webadmin_ConvertToHTMLColor(cl->name, colorbuf, sizeof(colorbuf)));
+			XC;
+			
+			XO("td");//GUID
+			if(cl->uid > 0)
+			{
+				XA(va("%d", cl->uid));
+			}else{
+				if(showfullguid)
+					XA(cl->pbguid);
+				else
+					XA(&cl->pbguid[24]);
+			}
+			
+			XC;
+			
+			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", gclient->pers.scoreboard.score);//Score
+			XA(strbuf);
+			
+			
+			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->ping);//Ping
+			XA(strbuf);
 			XC;
 		}
 		
+		
+	}else if(ffabased){
+		
+		XO("tr"); XO1("td", "colspan", "5");
+		XA("Players");
+		XC; XC;
+		
+		for (cl = svs.clients, gclient = level.clients, i = 0; i < sv_maxclients->integer; i++, cl++, gclient++)
+		{
+			if (cl->state < CS_CONNECTED) {
+				continue;
+			}
+			
+			if(gclient->sess.sessionTeam != TEAM_FREE)
+			{
+				continue;
+			}
+			
+			++numcl;
+			
+			XO("tr");
+			
+			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", i);//CID
+			XA(strbuf);
+			
+			XO("td");//Name
+			XA(Webadmin_ConvertToHTMLColor(cl->name, colorbuf, sizeof(colorbuf)));
+			XC;
+			
+			XO("td");//GUID
+			if(cl->uid > 0)
+			{
+				XA(va("%d", cl->uid));
+			}else{
+				if(showfullguid)
+					XA(cl->pbguid);
+				else
+					XA(&cl->pbguid[24]);
+			}
+			
+			XC;
+			
+			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", gclient->pers.scoreboard.score);//Score
+			XA(strbuf);
+			
+			
+			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->ping);//Ping
+			XA(strbuf);
+			XC;
+		}
+	
+	}
+	XO("tr"); XO1("td", "colspan", "5");
+	XA("Spectators");
+	XC; XC;
+	for (cl = svs.clients, gclient = level.clients, i = 0; i < sv_maxclients->integer; i++, cl++, gclient++)
+	{
+		if (cl->state < CS_CONNECTED) {
+			continue;
+		}
+		
+		if(gclient->sess.sessionTeam != TEAM_SPECTATOR)
+		{
+			continue;
+		}
+		
+		++numcl;
+		
+		XO("tr");
+		
+		Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", i);//CID
+		XA(strbuf);
+		
+		XO("td");//Name
+		XA(Webadmin_ConvertToHTMLColor(cl->name, colorbuf, sizeof(colorbuf)));
+		XC;
+		
+		XO("td");//GUID
+		if(cl->uid > 0)
+		{
+			XA(va("%d", cl->uid));
+		}else{
+			if(showfullguid)
+				XA(cl->pbguid);
+			else
+				XA(&cl->pbguid[24]);
+		}
+		
+		XC;
+		
+		Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", gclient->pers.scoreboard.score);//Score
+		XA(strbuf);
+		
+		
+		Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->ping);//Ping
+		XA(strbuf);
+		XC;
+	}
+	
 	XC;
+	
+	
 	XA(va("%d players are on server", numcl));
 
 }
 
+
+void Webadmin_KickClient( xml_t* xmlobj, httpPostVals_t* values, int uid)
+{
+	const char* arg1;
+	const char* reason;
+	int cid;
+	
+	if(Auth_GetClPowerByUID(uid) < Cmd_GetPower("kick"))
+	{
+		XA("Insufficient permissions");
+		return;
+	}
+	
+	reason = Webadmin_GetPostVal(values, "reason");
+	
+	if(!reason)
+	{
+		reason = "The admin has no reason given";
+	}
+	
+	if( (arg1 = Webadmin_GetPostVal(values, "cid") ))
+	{
+		cid = atoi(arg1);
+		if (cid >= 0 && cid < sv_maxclients->integer)
+		{
+			SV_DropClient(&svs.clients[cid], reason);
+		}
+	}
+}
+
+
+void Webadmin_BanClient( xml_t* xmlobj, httpPostVals_t* values, int uid)
+{
+	const char* arg1;
+	const char* reason;
+	int cid, cluid;
+	mvabuf;
+
+	if(Auth_GetClPowerByUID(uid) < Cmd_GetPower("permban"))
+	{
+		XA("Insufficient permissions");
+		return;
+	}
+
+	if( (reason = Webadmin_GetPostVal(values, "reason")) )
+	{
+		if( (arg1 = Webadmin_GetPostVal(values, "cid")) )
+		{
+			cid = atoi(arg1);
+			if (cid >= 0 && cid < sv_maxclients->integer) {
+				if(uid > 0 || strlen(svs.clients[cid].pbguid) == 32)
+				{
+					SV_AddBan(svs.clients[cid].uid, uid, svs.clients[cid].pbguid, svs.clients[cid].name, (time_t)-1, (char*)reason);
+				}
+				SV_PlayerAddBanByip(&svs.clients[cid].netchan.remoteAddress, (char*)reason, svs.clients[cid].uid, svs.clients[cid].pbguid, uid, -1);
+				XA("Banned player"); 
+				XA(svs.clients[cid].name);
+			}
+		}else if( (arg1 = Webadmin_GetPostVal(values, "uid")) ){
+			cluid = atoi(arg1);
+			if (cluid > 0) {
+				SV_AddBan(cluid, uid, NULL, "N/A", (time_t)-1, (char*)reason);
+				XA(va("Banned player with uid %d", cluid)); 
+			}
+		}else if ( (arg1 = Webadmin_GetPostVal(values, "guid"))) {
+			if (strlen(arg1) == 32)
+			{
+				SV_AddBan(0, uid, (char*)arg1, "N/A", (time_t)-1, (char*)reason);
+				XA("Banned player with guid ");
+				XA(arg1);
+			}
+		}
+	}
+
+}
 
 static xml_t* xmlobjFlush;
 
@@ -379,9 +694,18 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 											Webadmin_ConsoleCommand(xmlobj, postval, uid);
 										XC;
 									}
+								
 								}else if (strcmp(actionval, "logout") == 0) {
 									Auth_WipeSessionId(username);
+									
+								}else if(strcmp(actionval, "banclient") == 0){
+									Webadmin_BanClient(xmlobj, values, uid);
+
+								}else if(strcmp(actionval, "kickclient") == 0){
+									Webadmin_KickClient(xmlobj, values, uid);
+								
 								}
+								
 							}
 						
 							XO5("form", "name", "input", "action", "webadmin?action=sendcmd", "method", "post", "class","form-control","id","con_form");

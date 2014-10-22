@@ -59,6 +59,7 @@ void Auth_Init();
 int Auth_GetUID(const char* username);
 const char* Auth_GetNameByUID( int uid );
 int Auth_GetClPowerByUID(int uid);
+authData_admin_t* Auth_GetAdminFromIndex( int index );
 
 
 qboolean Auth_InfoAddAdmin(const char* line);
