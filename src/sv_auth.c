@@ -205,13 +205,14 @@ static void Auth_SetAdmin_f() {
     power = atoi(Cmd_Argv(2));
 	
     if ( Cmd_Argc() != 3 || power < 1 || power > 100) {
-        Com_Printf( "Usage: AdminSet <user> <power> <password>\n" );
+        Com_Printf( "Usage: AdminAddAdmin <user> <power>\n" );
         Com_Printf( "Where user is one of the following: online-playername | online-playerslot | uid\n" );
-		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
-		Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
+	Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
+	Com_Printf( "online-playername can be a fraction of the playername. uid is a number > 0 and gets written with a leading \"@\" character\n" );
         Com_Printf( "Note: This command can also be used to change the power of an admin\n" );
-		Com_Printf("^1IMPORTANT: ^7This command is for the high privileged badmin only\n");
-		return;
+	Com_Printf("^1IMPORTANT: ^7This command is for the high privileged badmin only\n");
+	Com_Printf("Don't create non admin accounts (VIP) with a level of 10 or more points\n");
+	return;
     }
 	
     uid = SV_GetPlayerUIDByHandle(Cmd_Argv(1));
@@ -219,7 +220,7 @@ static void Auth_SetAdmin_f() {
 	
 	if(uid < 1)
 	{
-		Com_Printf("No such player with a valid UID found. Please consider using \"setAdminWithPassword\" command unless this was a misstake\n");
+		Com_Printf("No such player with a valid UID found. Please consider using \"AdminAddAdminWithPassword\" command unless this was a misstake\n");
 		return;
 	}
 	
@@ -282,7 +283,7 @@ void Auth_SetAdminWithPassword_f( void ){
 
 
 	if(Cmd_Argc() != 4){
-		Com_Printf("Usage: AdminSetWithPassword <username> <password> <power>\n", Cmd_Argv(0));
+		Com_Printf("Usage: AdminAddAdminWithPassword <username> <password> <power>\n", Cmd_Argv(0));
 		Com_Printf( "Where username is loginname for this user\n" );
 		Com_Printf( "Where password is the initial 6 characters long or longer password for this user which should get changed by the user on first login\n" );		
 		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
@@ -350,10 +351,10 @@ void Auth_UnsetAdmin_f( void ){
 	authData_admin_t* user;
 
 	if(Cmd_Argc() != 2){
-		Com_Printf("Usage: AdminUnset <user>\n");
+		Com_Printf("Usage: AdminRemoveAdmin <user>\n");
 		Com_Printf("Where user is one of the following: name of admin | uid\n" );
 		Com_Printf("Name has to be the full known admin name. uid is a number > 0 and gets written with a leading \"@\" character\n" );
-		Com_Printf("Note: Use the command \"AdminList\" to get a list of known admins\n");		
+		Com_Printf("Note: Use the command \"AdminListAdmins\" to get a list of known admins\n");		
 		Com_Printf("^1IMPORTANT: ^7This command is for the high privileged badmin only\n");
 		return;
 	}
@@ -460,7 +461,7 @@ void Auth_ChangePasswordByMasterAdmin_f()
 		Com_Printf("Usage: AdminChangePassword <user> <newPassword>\n");
 		Com_Printf("Where user is one of the following: name of admin | uid\n" );
 		Com_Printf("Name has to be the full known admin name. uid is a number > 0 and gets written with a leading \"@\" character\n" );
-		Com_Printf("Note: Use the command \"AdminList\" to get a list of known admins\n");		
+		Com_Printf("Note: Use the command \"AdminListAdmins\" to get a list of known admins\n");		
 		Com_Printf("^1IMPORTANT: ^7This command is for the high privileged badmin only\n");
 		return;
     }
@@ -477,7 +478,6 @@ void Auth_ChangeOwnPassword_f()
 {	
 	const char* name;
 	const char* password;
-	int clientNum;
 	int uid, id;
 	
 	
@@ -487,12 +487,11 @@ void Auth_ChangeOwnPassword_f()
 		return;
     }
 
-	clientNum = Cmd_GetInvokerClnum();
 	uid = Cmd_GetInvokerUID();
     
-	if(clientNum < 0 || uid < 1)
+	if(uid < 1)
     {
-        Com_Printf("This command can only be used from the ingame adminsystem\n");
+        Com_Printf("This command can not be used from this place\nYou have no account it seems\n");
 		return;
     }
 	
@@ -601,9 +600,15 @@ static void Auth_Login_f(){
 		Com_Error(ERR_FATAL,"Auth_Login_f: index out of bounds.\n");
 		return;
     }
-    
+
+    if(Cmd_GetInvokerUID() > 0)
+    {
+        Com_Printf("You have already an user id. You can not use this command (twice)\n");
+        return;
+    }
+
     invoker = &svs.clients[clientNum];
-    
+
     id = Auth_Authorize(Cmd_Argv(1),Cmd_Argv(2));
     if(id < 0 || id > MAX_AUTH_ADMINS){
 		//Com_PrintLogFile("Failed login attempt from slot %d with login %s. Client dropped.",clientNum,Cmd_Argv(1));
@@ -669,10 +674,10 @@ void Auth_Init()
 	
 	Auth_ClearAdminList();
 
-	Cmd_AddPCommand("AdminUnset", Auth_UnsetAdmin_f, 95);
-	Cmd_AddPCommand("AdminSet", Auth_SetAdmin_f, 95);
-	Cmd_AddPCommand("AdminSetWithPassword", Auth_SetAdminWithPassword_f, 95);
-	Cmd_AddPCommand("AdminList", Auth_ListAdmins_f, 80);
+	Cmd_AddPCommand("AdminRemoveAdmin", Auth_UnsetAdmin_f, 95);
+	Cmd_AddPCommand("AdminAddAdmin", Auth_SetAdmin_f, 95);
+	Cmd_AddPCommand("AdminAddAdminWithPassword", Auth_SetAdminWithPassword_f, 95);
+	Cmd_AddPCommand("AdminListAdmins", Auth_ListAdmins_f, 80);
 	Cmd_AddPCommand("AdminChangePassword", Auth_ChangePasswordByMasterAdmin_f, 95);
 	Cmd_AddPCommand("AdminChangeCommandPower", Auth_SetCommandPower_f, 98);
 	Cmd_AddPCommand("Login", Auth_Login_f, 1);
@@ -763,20 +768,20 @@ qboolean SV_RemoteCmdInfoAddAdmin(const char* infostring)
  */
 
 int Auth_GetClPowerByUID(int uid){
-	
+
 	int i;
-    authData_admin_t *user;
+	authData_admin_t *user;
 
 	if(uid < 1) return 1;
-   
-    for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++)
+
+	for(i = 0, user = auth_admins.admins; i < MAX_AUTH_ADMINS; i++, user++)
 	{
 		if(user->uid == uid)
 		{
 			return user->power;
 		}
 	}
-    return 1;
+	return 1;
 }
 
 
@@ -789,8 +794,8 @@ int Auth_GetClPowerByUID(int uid){
 int Auth_GetClPower(client_t* cl){
 
 	if(cl->uid < 1) return 1;
-    if(cl->power > 1) return cl->power;
-    
+	if(cl->power > 1) return cl->power;
+
 	return Auth_GetClPowerByUID(cl->uid);
 }
 

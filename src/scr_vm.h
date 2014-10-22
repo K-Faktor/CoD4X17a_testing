@@ -324,7 +324,10 @@ typedef struct
 typedef struct
 {
   int dword0;
-  int dword4;
+  char field_4;
+  char field_5;
+  char field_6;
+  char field_7;
   int dword8;
   int dwordC;
   int dword10;
@@ -335,6 +338,17 @@ typedef struct
   int dword24;
   int dword28;
 }scrVarPub_t;
+
+typedef struct
+{
+	const char *field_0;
+	int field_4;
+	int field_8;
+	int field_C;
+	int field_10;
+	int field_14;
+}scrVmBacktrace_t;
+
 
 
 typedef struct
@@ -350,6 +364,11 @@ typedef struct
   char field_17;
   int field_18;
   int numParams;
+  scrVmBacktrace_t backtrace[32];
+  int field_320;
+  int field_324;
+  int field_328;
+  int field_32C[4093];
 }scrVmPub_t;
 
 #pragma pack(pop)
@@ -483,7 +502,7 @@ void GScr_GetCvarFloat();
 void GScr_GetCvarInt();
 void GScr_GetCvar();
 void GScr_AddScriptCommand();
+void RuntimeError(char *a3, int arg4, char *message, char *a4);
 
 #endif
-
 

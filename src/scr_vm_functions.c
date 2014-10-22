@@ -39,16 +39,17 @@
 #include <string.h>
 #include <time.h>
 #include "plugin_handler.h"
+
+
 /*
 ============
 PlayerCmd_GetUid
 
 Returns the players Uid. Will only work with valid defined authserver or if another cod4-plugin is loaded with uid support.
-If server supports no UIDs this function will return -1
+If no UID is defined this function will return -1
 Usage: int = self getUid();
 ============
 */
-
 
 void PlayerCmd_GetUid(scr_entref_t arg){
 
@@ -87,6 +88,54 @@ void PlayerCmd_GetUid(scr_entref_t arg){
 }
 
 
+/*
+============
+PlayerCmd_SetUid
+
+Sets the players Uid.
+Usage: int = self setUid(uid <integer>);
+============
+*/
+
+void PlayerCmd_SetUid(scr_entref_t arg){
+
+    gentity_t* gentity;
+    int entityNum = 0;
+    int uid;
+    mvabuf;
+
+
+    if(HIWORD(arg)){
+
+        Scr_ObjectError("Not an entity");
+
+    }else{
+
+        entityNum = LOWORD(arg);
+        gentity = &g_entities[entityNum];
+
+        if(!gentity->client){
+            Scr_ObjectError(va("Entity: %i is not a player", entityNum));
+        }
+    }
+    if(Scr_GetNumParam() != 1){
+        Scr_Error("Usage: self setUid(<integer>)\n");
+    }
+
+    uid = Scr_GetInt(0);
+
+    if(uid >= 10000000)
+    {
+        Scr_Error("setUid: has to be in range between 0 and 9999999\n");
+    }
+
+    SV_SetUid(entityNum, uid + 100000000);
+
+    Scr_AddInt( uid + 100000000 );
+}
+
+
+
 void PlayerCmd_GetPower(scr_entref_t arg){
 
     gentity_t* gentity;
@@ -114,9 +163,48 @@ void PlayerCmd_GetPower(scr_entref_t arg){
     }
     cl = &svs.clients[entityNum];
 
-    power = Auth_GetClPowerByUID(cl->uid);
+    power = cl->power;
 
     Scr_AddInt(power);
+}
+
+
+void PlayerCmd_SetPower(scr_entref_t arg){
+
+    gentity_t* gentity;
+    int entityNum = 0;
+    int power;
+    client_t *cl;
+	mvabuf;
+
+
+    if(HIWORD(arg)){
+
+        Scr_ObjectError("Not an entity");
+
+    }else{
+
+        entityNum = LOWORD(arg);
+        gentity = &g_entities[entityNum];
+
+        if(!gentity->client){
+            Scr_ObjectError(va("Entity: %i is not a player", entityNum));
+        }
+    }
+    if(Scr_GetNumParam() != 1){
+        Scr_Error("Usage: self setPower(<integer>)\n");
+    }
+    cl = &svs.clients[entityNum];
+
+    power = Scr_GetInt(0);
+
+    if(power < 1 || power > 100)
+    {
+        Scr_Error("setPower: has to be in range between 1 and 100\n");
+    }
+
+    cl->power = power;
+
 }
 
 

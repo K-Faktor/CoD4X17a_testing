@@ -686,6 +686,7 @@ const char* SV_GetGuid(unsigned int clnum);
 qboolean SV_ExecuteRemoteCmd(int, const char*);
 qboolean SV_UseUids();
 int SV_GetUid(unsigned int);
+void SV_SetUid(unsigned int clnum, unsigned int uid);
 sharedEntity_t* SV_AddBotClient();
 sharedEntity_t* SV_RemoveBot();
 qboolean SV_AddBan(int, int, char*, char*, time_t, char*);

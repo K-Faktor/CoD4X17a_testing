@@ -1629,6 +1629,21 @@ int SV_GetUid(unsigned int clnum){
 
 }
 
+void SV_SetUid(unsigned int clnum, unsigned int uid){
+
+    if(clnum > 63)
+        return;
+
+    client_t *cl = &svs.clients[clnum];
+
+    if(cl->state < CS_CONNECTED)
+    {
+        return;
+    }
+    cl->uid = uid;
+
+}
+
 
 /*
 ==================

@@ -346,6 +346,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	SetJump(0x8111bea, Cmd_ExecuteSingleCommand);
 	SetJump(0x812257c, Com_Error);
 	SetCall(0x815ea33, Scr_Sys_Error_Wrapper);
+	SetJump(0x814f128, RuntimeError);
 
 	SetJump(0x80e2a9e, dError);
 	SetJump(0x80e2a9e, dMessage);
