@@ -595,3 +595,7 @@ P_P_F client_t* Plugin_GetClientForClientNum(int clientnum)
     return &svs.clients[clientnum];
 }
 
+P_P_F int Plugin_FS_SV_WriteFile( const char *qpath, const void *buffer, int size)
+{
+    return FS_SV_HomeWriteFile( qpath, buffer, size);
+}

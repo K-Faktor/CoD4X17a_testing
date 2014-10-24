@@ -82,6 +82,9 @@
     __cdecl int Plugin_FS_Write(const void *buffer, int len, fileHandle_t h);       // Write to file
     __cdecl qboolean Plugin_FS_FCloseFile(fileHandle_t f);                          // Cloase an open file
 
+    //Writes the provided buffer into the file named by qpath. This is the most easiest way to write a file
+    __cdecl int Plugin_FS_SV_WriteFile( const char *qpath, const void *buffer, int size);
+
 
     //      == Networking ==
 
@@ -189,4 +192,3 @@
 
     __cdecl gentity_t* Plugin_GetGentityForEntityNum(int entnum);
     __cdecl client_t* Plugin_GetClientForClientNum(int clientnum);
-

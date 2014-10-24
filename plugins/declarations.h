@@ -571,6 +571,14 @@ typedef struct
 	int dataLen;
 }voices_t;
 
+
+typedef struct
+{
+    int checksum;
+    byte bytedata[2000];
+    int longdata[1547];
+}statData_t;
+
 typedef struct client_s {//90b4f8c
 	clientState_t		state;
 	int			unksnapshotvar;		// must timeout a few frames in a row so debugging doesn't break
@@ -676,11 +684,11 @@ typedef struct client_s {//90b4f8c
 	short			clscriptid; //0xa0d22
 	int			canNotReliable; 
 	int			serverId; //0xa0d28
-	voices_t	voicedata[40];
+	voices_t		voicedata[40];
 	int			unsentVoiceData;//(0xa35f4)
 	byte			mutedClients[MAX_CLIENTS];
 	byte			hasVoip;//(0xa3638)
-	byte			stats[8192];		//(0xa3639)
+	statData_t		stats;		//(0xa3639)
 	byte			receivedstats;		//(0xa5639)
 	byte			dummy1;
 	byte			dummy2;
