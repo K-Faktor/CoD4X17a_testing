@@ -764,13 +764,14 @@ gothandle:
         Com_Printf("Error: You have exceeded the maximum allowed length of 126 characters for the reason\n");
         return;
     }
-	
-	if(cl.cl->power > Cmd_GetInvokerPower()){
-		Com_Printf("Error: You cannot ban an admin with higher power!\n");
-		return;
-	}
 
 	if(cl.cl){
+		
+		if(cl.cl->power > Cmd_GetInvokerPower()){
+			Com_Printf("Error: You cannot ban an admin with higher power!\n");
+			return;
+		}
+		
 		//Banning
 		SV_AddBan(cl.uid, Cmd_GetInvokerUID(), guid, cl.cl->name, (time_t)-1, banreason);
 		//Messages and kick
@@ -921,13 +922,14 @@ gothandle:
         return;
     }
 	
-	if(cl.cl->power > Cmd_GetInvokerPower()){
-		Com_Printf("Error: You cannot tempban an admin with higher power!\n");
-		return;
-	}
 
 	if(cl.cl){
-
+		
+		if(cl.cl->power > Cmd_GetInvokerPower()){
+			Com_Printf("Error: You cannot tempban an admin with higher power!\n");
+			return;
+		}
+		
 		SV_AddBan(cl.uid, Cmd_GetInvokerUID(), guid, cl.cl->name, expire, banreason);
 
 		if( cl.uid > 0 ){

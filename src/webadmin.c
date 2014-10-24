@@ -146,13 +146,21 @@ const char* Webadmin_GetUrlVal(const char* url, const char* search, char* output
 	return value;
 }
 
-void Webadmin_BuildAdminList(xml_t* xmlobj)
+void Webadmin_BuildAdminList(xml_t* xmlobj, int uid)
 {
 	int i;
 	char colorbuf[2048];
 	authData_admin_t* badmin;
 	mvabuf;
+	
+	if(Auth_GetClPowerByUID(uid) < Cmd_GetPower("adminlistadmins"))
+	{
+		XA("Insufficient permissions");
+		return;
+	}
 
+	XO1("table","class","table table-striped table-bordered cod4xtable");
+	XA("<th>Name</th><th>UID</th><th>Power</th>");
 	
 	for (i = 0, badmin = Auth_GetAdminFromIndex( i ); badmin != NULL; i++, badmin = Auth_GetAdminFromIndex( i ))
 	{
@@ -177,6 +185,7 @@ void Webadmin_BuildAdminList(xml_t* xmlobj)
 
 		XC;
 	}
+	XC;
 	
 }
 
@@ -217,7 +226,7 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 
 	
 	XO1("table","class","table table-striped table-bordered cod4xtable");
-	XA("<th>CID</th><th>Name</th><th>UID/GUID</th><th>Score</th><th>Ping</th>");
+	XA("<th>CID</th><th>Name</th><th>UID/GUID</th><th>Power</th><th>Score</th><th>Ping</th>");
 	
 	
 	if(teambased)
@@ -238,7 +247,7 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 		else
 			Q_strncpyz(teamallies, g_TeamName_Allies->string, sizeof(teamallies));
 		
-		XO("tr"); XO1("td", "colspan", "5");
+		XO("tr"); XO1("td", "colspan", "6");
 		XA(teamaxis);
 		XC; XC;
 			for (cl = svs.clients, gclient = level.clients, i = 0; i < sv_maxclients->integer; i++, cl++, gclient++)
@@ -275,7 +284,10 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 						}
 						
 					XC;
-					
+
+					Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->power);//Ping
+					XA(strbuf);			
+						
 					Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", gclient->pers.scoreboard.score);//Score
 					XA(strbuf);
 
@@ -285,7 +297,7 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 				XC;
 			}
 			
-		XO("tr"); XO1("td", "colspan", "5");
+		XO("tr"); XO1("td", "colspan", "6");
 		XA(teamallies);
 		XC; XC;
 		for (cl = svs.clients, gclient = level.clients, i = 0; i < sv_maxclients->integer; i++, cl++, gclient++)
@@ -323,6 +335,9 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 			
 			XC;
 			
+			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->power);//Ping
+			XA(strbuf);	
+			
 			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", gclient->pers.scoreboard.score);//Score
 			XA(strbuf);
 			
@@ -335,7 +350,7 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 		
 	}else if(ffabased){
 		
-		XO("tr"); XO1("td", "colspan", "5");
+		XO("tr"); XO1("td", "colspan", "6");
 		XA("Players");
 		XC; XC;
 		
@@ -374,6 +389,9 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 			
 			XC;
 			
+			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->power);//Ping
+			XA(strbuf);	
+			
 			Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", gclient->pers.scoreboard.score);//Score
 			XA(strbuf);
 			
@@ -384,7 +402,7 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 		}
 	
 	}
-	XO("tr"); XO1("td", "colspan", "5");
+	XO("tr"); XO1("td", "colspan", "6");
 	XA("Spectators");
 	XC; XC;
 	for (cl = svs.clients, gclient = level.clients, i = 0; i < sv_maxclients->integer; i++, cl++, gclient++)
@@ -421,6 +439,9 @@ void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 		}
 		
 		XC;
+		
+		Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", cl->power);//Ping
+		XA(strbuf);	
 		
 		Com_sprintf(strbuf, sizeof(strbuf), "<td>%d</td>", gclient->pers.scoreboard.score);//Score
 		XA(strbuf);
@@ -660,61 +681,67 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 				
 				if(!Q_strncmp(url, "/webadmin", 9))
 				{
+
 					if(username == NULL || username[0] == '\0')
 					{
 						Webadmin_BuildLoginForm(xmlobj, invalidloginattempt, banmsg);
 
 					}else {
-						uid = Auth_GetUID(username);
-							XO1("div","class","loginusername");
-								XO1("span","class","label label-primary");
-									XA("Logged in as: ");XA(username);XA(". &nbsp;");
-									XO2("a","href","/webadmin/?action=logout","style","color: #fff");
-										XA("Log Out");
+						if(!Q_strncmp(url +9, "/listadmins", 11))
+						{
+							Webadmin_BuildAdminList(xmlobj, uid);
+						}else {
+
+							uid = Auth_GetUID(username);
+								XO1("div","class","loginusername");
+									XO1("span","class","label label-primary");
+										XA("Logged in as: ");XA(username);XA(". &nbsp;");
+										XO2("a","href","/webadmin/?action=logout","style","color: #fff");
+											XA("Log Out");
+										XC;
 									XC;
 								XC;
+							XO1("div", "class", "col-lg-6 right_line");
+								XO("h3");XA("Server Status");XC;
+								XO("hr");XC;
+								Webadmin_BuildServerStatus(xmlobj, qtrue);
 							XC;
-						XO1("div", "class", "col-lg-6 right_line");
-							XO("h3");XA("Server Status");XC;
-							XO("hr");XC;
-							Webadmin_BuildServerStatus(xmlobj, qtrue);
-						XC;
-						
+							
 
-						XO1("div", "class", "col-lg-6 left_line");
-							XO("h3");XA("Command Console");XC;
-							XO("hr");XC;
-							if(Webadmin_GetUrlVal( url, "action", actionval, sizeof(actionval)))//nnjpls
-							{
-								if(strcmp(actionval, "sendcmd") == 0)
+							XO1("div", "class", "col-lg-6 left_line");
+								XO("h3");XA("Command Console");XC;
+								XO("hr");XC;
+								if(Webadmin_GetUrlVal( url, "action", actionval, sizeof(actionval)))//nnjpls
 								{
-									postval = Webadmin_GetPostVal(values, "consolecommand");
-									if(postval){
-										XO1("div","class","well");
-											Webadmin_ConsoleCommand(xmlobj, postval, uid);
-										XC;
-									}
-								
-								}else if (strcmp(actionval, "logout") == 0) {
-									Auth_WipeSessionId(username);
+									if(strcmp(actionval, "sendcmd") == 0)
+									{
+										postval = Webadmin_GetPostVal(values, "consolecommand");
+										if(postval){
+											XO1("div","class","well");
+												Webadmin_ConsoleCommand(xmlobj, postval, uid);
+											XC;
+										}
 									
-								}else if(strcmp(actionval, "banclient") == 0){
-									Webadmin_BanClient(xmlobj, values, uid);
+									}else if (strcmp(actionval, "logout") == 0) {
+										Auth_WipeSessionId(username);
+										
+									}else if(strcmp(actionval, "banclient") == 0){
+										Webadmin_BanClient(xmlobj, values, uid);
 
-								}else if(strcmp(actionval, "kickclient") == 0){
-									Webadmin_KickClient(xmlobj, values, uid);
-								
+									}else if(strcmp(actionval, "kickclient") == 0){
+										Webadmin_KickClient(xmlobj, values, uid);
+									
+									}
+									
 								}
-								
-							}
-						
-							XO5("form", "name", "input", "action", "webadmin?action=sendcmd", "method", "post", "class","form-control","id","con_form");
-								XA("<label for=\"consolecommand\">Send Command</label> <input type=\"text\" name=\"consolecommand\" id=\"consolecommand\">");
-								XA("<button class=\"givesomespace btn btn-primary btn-xs\" type=\"submit\">Send Command</button>");
+							
+								XO5("form", "name", "input", "action", "webadmin?action=sendcmd", "method", "post", "class","form-control","id","con_form");
+									XA("<label for=\"consolecommand\">Send Command</label> <input type=\"text\" name=\"consolecommand\" id=\"consolecommand\">");
+									XA("<button class=\"givesomespace btn btn-primary btn-xs\" type=\"submit\">Send Command</button>");
+								XC;
 							XC;
-						XC;
 
-
+						}
 					}
 				}else if(!Q_strncmp(url, "/status", 7)){	
 					XO("h3");XA("Server Status");XC;
