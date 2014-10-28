@@ -204,34 +204,6 @@ void Webadmin_AddAdmin(xml_t* xmlobj, int uid, int adminuid, char* password, int
 		return;
 	}
 	
-	XO1("table","class","table table-striped table-bordered cod4xtable");
-	XA("<th>Name</th><th>UID</th><th>Power</th>");
-	
-	for (i = 0, cnt = 0, badmin = Auth_GetAdminFromIndex( i ); badmin != NULL; i++, badmin = Auth_GetAdminFromIndex( i ))
-	{
-		if(badmin->username[0] == '\0')
-		{
-			continue;
-		}
-		
-		XO("tr");
-		
-		XO("td");//Name
-		XA(Webadmin_ConvertToHTMLColor(badmin->username, colorbuf, sizeof(colorbuf)));
-		XC;
-		
-		XO("td");//GUID
-		XA(va("%d", badmin->uid));
-		XC;
-		
-		XO("td");//Power points
-		XA(va("%d", badmin->power));
-		XC;
-		
-		XC;
-		++cnt;
-	}
-	XC;
 	XA(va("%d admins", cnt));
 	
 }
