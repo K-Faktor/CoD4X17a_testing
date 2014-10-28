@@ -148,11 +148,11 @@ const char* Webadmin_GetUrlVal(const char* url, const char* search, char* output
 
 void Webadmin_BuildAdminList(xml_t* xmlobj, int uid)
 {
-	int i;
+	int i, cnt;
 	char colorbuf[2048];
 	authData_admin_t* badmin;
 	mvabuf;
-	
+
 	if(Auth_GetClPowerByUID(uid) < Cmd_GetPower("adminlistadmins"))
 	{
 		XA("Insufficient permissions");
@@ -162,7 +162,7 @@ void Webadmin_BuildAdminList(xml_t* xmlobj, int uid)
 	XO1("table","class","table table-striped table-bordered cod4xtable");
 	XA("<th>Name</th><th>UID</th><th>Power</th>");
 	
-	for (i = 0, badmin = Auth_GetAdminFromIndex( i ); badmin != NULL; i++, badmin = Auth_GetAdminFromIndex( i ))
+	for (i = 0, cnt = 0, badmin = Auth_GetAdminFromIndex( i ); badmin != NULL; i++, badmin = Auth_GetAdminFromIndex( i ))
 	{
 		if(badmin->username[0] == '\0')
 		{
@@ -184,10 +184,58 @@ void Webadmin_BuildAdminList(xml_t* xmlobj, int uid)
 			XC;
 
 		XC;
+		++cnt;
 	}
 	XC;
+	XA(va("%d admins", cnt));
 	
 }
+
+void Webadmin_AddAdmin(xml_t* xmlobj, int uid, int adminuid, char* password, int power)
+{
+	int i, cnt;
+	char colorbuf[2048];
+	authData_admin_t* badmin;
+	mvabuf;
+	
+	if(Auth_GetClPowerByUID(uid) < Cmd_GetPower("adminaddadminwithpassword"))
+	{
+		XA("Insufficient permissions");
+		return;
+	}
+	
+	XO1("table","class","table table-striped table-bordered cod4xtable");
+	XA("<th>Name</th><th>UID</th><th>Power</th>");
+	
+	for (i = 0, cnt = 0, badmin = Auth_GetAdminFromIndex( i ); badmin != NULL; i++, badmin = Auth_GetAdminFromIndex( i ))
+	{
+		if(badmin->username[0] == '\0')
+		{
+			continue;
+		}
+		
+		XO("tr");
+		
+		XO("td");//Name
+		XA(Webadmin_ConvertToHTMLColor(badmin->username, colorbuf, sizeof(colorbuf)));
+		XC;
+		
+		XO("td");//GUID
+		XA(va("%d", badmin->uid));
+		XC;
+		
+		XO("td");//Power points
+		XA(va("%d", badmin->power));
+		XC;
+		
+		XC;
+		++cnt;
+	}
+	XC;
+	XA(va("%d admins", cnt));
+	
+}
+
 
 void Webadmin_BuildServerStatus(xml_t* xmlobj, qboolean showfullguid)
 {
@@ -689,6 +737,7 @@ void Webadmin_BuildMessage(msg_t* msg, const char* username, qboolean invalidlog
 					}else {
 						if(!Q_strncmp(url +9, "/listadmins", 11))
 						{
+							uid = Auth_GetUID(username);
 							Webadmin_BuildAdminList(xmlobj, uid);
 						}else {
 
