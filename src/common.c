@@ -75,6 +75,7 @@ cvar_t* com_developer_script;
 cvar_t* com_logfile;
 cvar_t* com_sv_running;
 cvar_t* com_securemodevar;
+cvar_t* sv_webadmin;
 qboolean com_securemode;
 
 char com_errorMessage[MAXPRINTMSG];
@@ -600,6 +601,7 @@ static void Com_InitCvars( void ){
     //AuthServer
     //MasterServerPort
     //AuthServerPort
+    sv_webadmin = Cvar_RegisterBool ("sv_webadmin", qtrue, 0, "Enable HTTP Web Admin");
     com_developer = Cvar_RegisterInt("developer", 0, 0, 2, 0, "Enable development options");
     com_developer_script = Cvar_RegisterBool ("developer_script", qfalse, 16, "Enable developer script comments");
     com_logfile = Cvar_RegisterEnum("logfile", logfileEnum, 0, 0, "Write to logfile");
@@ -902,7 +904,8 @@ void Com_Init(char* commandLine){
 
 
     HL2Rcon_Init( );
-    HTTPServer_Init( );
+	if(sv_webadmin->boolean)
+		HTTPServer_Init();
     Auth_Init( );
 
     AddRedirectLocations( );
