@@ -1428,6 +1428,18 @@ sharedEntity_t* SV_AddBotClient(){
         //Getting a new name for our bot
 	FS_SV_FOpenFileRead("botnames.txt", &file);
 
+
+//Find a free serverslot for our bot
+
+	for ( i = sv_privateClients->integer; i < sv_maxclients->integer; i++) {
+		cl = &svs.clients[i];
+		if (cl->state == CS_FREE) {
+			break;
+		}
+	}
+	if( i == sv_maxclients->integer )
+		return NULL;		//No free slot
+
 	if(!file){
 		cntnames = 0;
 	}else{
@@ -1441,7 +1453,7 @@ sharedEntity_t* SV_AddBotClient(){
 		FS_FCloseFile(file);
 	}
 	if(!cntnames){
-		Q_strncpyz(name,va("bot%d", rand() % 9999),sizeof(name));
+		Q_strncpyz(name,va("bot%d", i),sizeof(name));
 	}else{
 		Q_strncpyz(name,botnames[rand() % cntnames],sizeof(name));
 		for(i = 0; i < sizeof(name); i++){
@@ -1450,16 +1462,6 @@ sharedEntity_t* SV_AddBotClient(){
 		}
 	}
 
-//Find a free serverslot for our bot
-
-	for ( i = sv_privateClients->integer; i < sv_maxclients->integer; i++) {
-		cl = &svs.clients[i];
-		if (cl->state == CS_FREE) {
-			break;
-		}
-	}
-	if( i == sv_maxclients->integer )
-		return NULL;		//No free slot
 
 //Connect our bot
 
