@@ -2043,6 +2043,7 @@ void	serverStatus_Write(){
     char	ping[4];
     char	power[4];
     char	rank[4];
+    char        timestamp[16];
 	mvabuf;
 
 
@@ -2053,7 +2054,8 @@ void	serverStatus_Write(){
     if(!*sv_statusfile->string) return;
 
     XML_Init(&xmlbase,outputbuffer,sizeof(outputbuffer), "ISO-8859-1");
-    XML_OpenTag(&xmlbase,"B3Status",1,"Time",timestr);
+    Com_sprintf(timestamp,sizeof(timestamp),"%d",time(NULL));
+    XML_OpenTag(&xmlbase,"B3Status",2,"Time",timestr,"TimeStamp",timestamp);
 
         XML_OpenTag(&xmlbase,"Game",9,"CapatureLimit","", "FragLimit","", "Map",sv_mapname->string, "MapTime","", "Name","cod4", "RoundTime","", "Rounds","", "TimeLimit","", "Type",sv_g_gametype->string);
             Cvar_ForEach(serverStatus_WriteCvars, &xmlbase);
