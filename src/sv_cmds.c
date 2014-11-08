@@ -767,7 +767,7 @@ gothandle:
 
 	if(cl.cl){
 		
-		if(cl.cl->power > Cmd_GetInvokerPower()){
+		if(cl.cl->power > Cmd_GetInvokerPower() && Cmd_GetInvokerPower() > 1){
 			Com_Printf("Error: You cannot ban an admin with higher power!\n");
 			return;
 		}
@@ -925,7 +925,7 @@ gothandle:
 
 	if(cl.cl){
 		
-		if(cl.cl->power > Cmd_GetInvokerPower()){
+		if(cl.cl->power > Cmd_GetInvokerPower() && Cmd_GetInvokerPower() > 1){
 			Com_Printf("Error: You cannot tempban an admin with higher power!\n");
 			return;
 		}
@@ -1016,7 +1016,7 @@ static void Cmd_KickPlayer_f() {
         return;
     }
 	
-	if(cl.cl->power > Cmd_GetInvokerPower()){
+	if(cl.cl->power > Cmd_GetInvokerPower() && Cmd_GetInvokerPower() > 1){
 		Com_Printf("Error: You cannot kick an admin with higher power!\n");
 		return;
 	}
