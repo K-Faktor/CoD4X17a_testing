@@ -153,7 +153,7 @@ void XAssets_PatchLimits(){
 
 	if(DB_XAssetPool[XModel] == NULL || DB_XAssetPool[WeaponDef] == NULL || DB_XAssetPool[FxEffectDef] == NULL || DB_XAssetPool[GfxImage] == NULL)
 	{
-		Com_Error(ERR_FATAL, "Failed to get enought memory for Assets. Can not continue\n");
+		Com_Error(ERR_FATAL, "Failed to get enough memory for Assets. Can not continue\n");
 		return;
 	
 	}
