@@ -568,13 +568,13 @@ P_P_F void Plugin_BanClient( unsigned int clientnum, int duration, int invokerid
 	{
 		Com_Printf( "Banrecord added for player: %s uid: %i\n", cl->name, cl->uid);
 		SV_PrintAdministrativeLog( "Banned player: %s uid: %i until %s with the following reason: %s", cl->name, cl->uid, endtime, banreason);
-		Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a ban onto this gameserver\nYour ban will expire on: %s\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
+		Com_sprintf(dropmsg, sizeof(dropmsg), "You have been banned from this server\nYour ban will expire on: %s\nYour UID is: %i    Banning admin UID is: %i\nReason for this ban:\n%s",
 			endtime, cl->uid, invokerid, banreason);
 
 	}else{
 		Com_Printf( "Banrecord added for player: %s guid: %s\n", cl->name, cl->pbguid);
 		SV_PrintAdministrativeLog( "Banned player: %s guid: %s until %s with the following reason: %s", cl->name, cl->pbguid, endtime, banreason);
-		Com_sprintf(dropmsg, sizeof(dropmsg), "You have got a ban onto this gameserver\nYour ban will expire on: %s\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
+		Com_sprintf(dropmsg, sizeof(dropmsg), "You have been banned from this server\nYour ban will expire on: %s\nYour GUID is: %s    Banning admin UID is: %i\nReason for this ban:\n%s",
 			endtime, cl->pbguid, invokerid, banreason);
 
 		if(cl->authentication < 1)

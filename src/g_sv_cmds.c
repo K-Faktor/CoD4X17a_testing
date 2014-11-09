@@ -255,7 +255,7 @@ __cdecl void Cmd_CallVote_f( gentity_t *ent ) {
 
 		if ( kicknum != MAX_CLIENTS ) { // found a client # to kick, so override votestring with better one
 
-			Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s wants kick and tempban: %s", ent->client->pers.netname ,level.clients[kicknum].pers.netname );
+			Com_sprintf( level.voteDisplayString, sizeof( level.voteDisplayString ), "%s wants to kick and tempban: %s", ent->client->pers.netname ,level.clients[kicknum].pers.netname );
 
 			if(svs.clients[kicknum].power > 5)
 			{
