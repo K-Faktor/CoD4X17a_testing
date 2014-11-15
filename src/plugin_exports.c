@@ -32,6 +32,15 @@
  *                                         *
  *=========================================*/
 
+P_P_F short Plugin_ConfigString(int index)
+{
+	return sv.configstringIndex[index];
+}
+
+P_P_F const char* Plugin_SL_ConvertToString(int index)
+{
+	return SL_ConvertToString(index);
+}
 
 P_P_F void *Plugin_Malloc(size_t size)
 {
