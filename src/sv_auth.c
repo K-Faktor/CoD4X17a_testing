@@ -449,7 +449,7 @@ void Auth_ChangeAdminPassword( int uid, const char* password ){
 
 	NV_ProcessEnd();
 
-	Com_Printf("Password changed to: %s\n", password);
+	Com_Printf("Password changed\n");
 }
 
 
