@@ -123,6 +123,33 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 	Q_strncpyz(cmd,msg,i+1);
 
 
+	if(!Q_stricmpn(cmd, "auth", 4)){
+		if(!Q_stricmp(cmd, "authlogin"))
+		{
+			Q_strncpyz(cmd, "login", sizeof(cmd));
+		}
+		else if(!Q_stricmp(cmd, "authChangePassword"))
+		{
+			Q_strncpyz(cmd, "changePassword", sizeof(cmd));
+		}
+		else if(!Q_stricmp(cmd, "authSetAdmin"))
+		{
+			Q_strncpyz(cmd, "AdminAddAdminWithPassword", sizeof(cmd));
+		}
+		else if(!Q_stricmp(cmd, "authUnsetAdmin"))
+		{
+			Q_strncpyz(cmd, "AdminRemoveAdmin", sizeof(cmd));
+		}
+		else if(!Q_stricmp(cmd, "authListAdmins"))
+		{
+			Q_strncpyz(cmd, "adminListAdmins", sizeof(cmd));
+		}
+	}else if(!Q_stricmp(cmd, "cmdpowerlist")){
+		Q_strncpyz(cmd, "AdminListCommands", sizeof(cmd));
+	}else if(!Q_stricmp(cmd, "setCmdMinPower")){
+		Q_strncpyz(cmd, "AdminChangeCommandPower", sizeof(cmd));
+	}
+
 	//Prevent buffer overflow as well as prevent the execution of priveleged commands by using seperator characters
 	Q_strncpyz(buffer,msg,256);
 	Q_strchrrepl(buffer,';','\0');
@@ -155,8 +182,9 @@ qboolean SV_ExecuteRemoteCmd(int clientnum, const char *msg){
 
 	Com_BeginRedirect(sv_outputbuf, SV_OUTPUTBUF_LENGTH, SV_ReliableSendRedirect);
 
-	i = Cmd_GetInvokerPower();
-	j = Cmd_GetInvokerUID();
+	i = Cmd_GetInvokerUID();
+	j = Cmd_GetInvokerPower();
+
 	Cmd_SetCurrentInvokerInfo(cl->uid, power, clientnum);
 	
 	Cmd_ExecuteSingleCommand( 0, 0, buffer );
@@ -200,3 +228,4 @@ void QDECL SV_PrintAdministrativeLog( const char *fmt, ... ) {
 	Com_PrintAdministrativeLog( msg );
 
 }
+

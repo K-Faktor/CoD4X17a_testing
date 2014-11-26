@@ -1413,7 +1413,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 
 sharedEntity_t* SV_AddBotClient(){
 
-    int i, cntnames, read;
+    int i, p, cntnames, read;
     unsigned short qport;
     client_t *cl = NULL;
     const char* denied;
@@ -1429,7 +1429,7 @@ sharedEntity_t* SV_AddBotClient(){
 	FS_SV_FOpenFileRead("botnames.txt", &file);
 
 
-//Find a free serverslot for our bot
+	//Find a free serverslot for our bot
 
 	for ( i = sv_privateClients->integer; i < sv_maxclients->integer; i++) {
 		cl = &svs.clients[i];
@@ -1456,9 +1456,9 @@ sharedEntity_t* SV_AddBotClient(){
 		Q_strncpyz(name,va("bot%d", i),sizeof(name));
 	}else{
 		Q_strncpyz(name,botnames[rand() % cntnames],sizeof(name));
-		for(i = 0; i < sizeof(name); i++){
-			if(name[i] == '\n')
-				name[i] = 0;
+		for(p = 0; p < sizeof(name); p++){
+			if(name[p] == '\n')
+				name[p] = 0;
 		}
 	}
 

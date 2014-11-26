@@ -1054,25 +1054,35 @@ void	Cmd_ExecuteString( const char *text )
 		if(!Q_stricmp(arg0, "authlogin"))
 		{
 			Q_strncpyz(arg0, "login", sizeof(arg0));
+			Com_PrintWarning("\"authlogin\" is deprecated and will be removed soon. Use \"login\" instead\n");
 		}
 		else if(!Q_stricmp(arg0, "authChangePassword"))
 		{
 			Q_strncpyz(arg0, "changePassword", sizeof(arg0));
+			Com_PrintWarning("\"authchangePassword\" is deprecated and will be removed soon. Use \"changePassword\" instead\n");
 		}
 		else if(!Q_stricmp(arg0, "authSetAdmin"))
 		{
 			Q_strncpyz(arg0, "AdminAddAdminWithPassword", sizeof(arg0));
+			Com_PrintWarning("\"authSetAdmin\" is deprecated and will be removed soon. Use \"AdminAddAdminWithPassword\" instead\n");
 		}
 		else if(!Q_stricmp(arg0, "authUnsetAdmin"))
 		{
 			Q_strncpyz(arg0, "AdminRemoveAdmin", sizeof(arg0));
+			Com_PrintWarning("\"authUnsetAdmin\" is deprecated and will be removed soon. Use \"AdminRemoveAdmin\" instead\n");
 		}
 		else if(!Q_stricmp(arg0, "authListAdmins"))
 		{
 			Q_strncpyz(arg0, "adminListAdmins", sizeof(arg0));
+			Com_PrintWarning("\"authListAdmins\" is deprecated and will be removed soon. Use \"adminListAdmins\" instead\n");
 		}
 	}else if(!Q_stricmp(arg0, "cmdpowerlist")){
 		Q_strncpyz(arg0, "AdminListCommands", sizeof(arg0));
+		Com_PrintWarning("\"cmdpowerlist\" is deprecated and will be removed soon. Use \"AdminListCommands\" instead\n");
+	}
+	else if(!Q_stricmp(arg0, "setCmdMinPower")){
+		Q_strncpyz(arg0, "AdminChangeCommandPower", sizeof(arg0));
+		Com_PrintWarning("\"setCmdMinPower\" is deprecated and will be removed soon. Use \"AdminChangeCommandPower\" instead\n");
 	}
 	// check registered command functions	
 	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
