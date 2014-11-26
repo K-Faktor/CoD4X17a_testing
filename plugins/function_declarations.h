@@ -192,3 +192,8 @@
 
     __cdecl gentity_t* Plugin_GetGentityForEntityNum(int entnum);
     __cdecl client_t* Plugin_GetClientForClientNum(int clientnum);
+
+    __cdecl const char* Plugin_SL_ConvertToString(int index);
+
+    __cdecl void Plugin_SV_SetConfigstring(int index, const char *text);
+    __cdecl void Plugin_SV_GetConfigstring( int index, char *buffer, int bufferSize );
