@@ -1423,11 +1423,7 @@ sharedEntity_t* SV_AddBotClient(){
     netadr_t botnet;
     usercmd_t ucmd;
     fileHandle_t file;
-	mvabuf;
-
-        //Getting a new name for our bot
-	FS_SV_FOpenFileRead("botnames.txt", &file);
-
+    mvabuf;
 
 	//Find a free serverslot for our bot
 
@@ -1439,6 +1435,9 @@ sharedEntity_t* SV_AddBotClient(){
 	}
 	if( i == sv_maxclients->integer )
 		return NULL;		//No free slot
+
+        //Getting a new name for our bot
+	FS_SV_FOpenFileRead("botnames.txt", &file);
 
 	if(!file){
 		cntnames = 0;
@@ -1457,7 +1456,7 @@ sharedEntity_t* SV_AddBotClient(){
 	}else{
 		Q_strncpyz(name,botnames[rand() % cntnames],sizeof(name));
 		for(p = 0; p < sizeof(name); p++){
-			if(name[p] == '\n')
+			if(name[p] == '\n' || name[p] == '\r')
 				name[p] = 0;
 		}
 	}

@@ -42,13 +42,17 @@ typedef struct sec_file_s{
 #define SEC_UPDATE_INITIALBUFFSIZE 10240
 
 #define SEC_TYPE 'e'
-#define SEC_VERSION 1.7
 
+#ifdef COD4X17A
+    #define SEC_VERSION 1.7
+#else
+    #define SEC_VERSION 1.8
+#endif
 
 
 //#undef QUOTE
 #define SEC_UPDATE_HOST "update.iceops.in"
-#define SEC_UPDATE_PHP(B,T) "/?ver=1.7&build=" B "&type=" T
+#define SEC_UPDATE_PHP(B,T) "/?ver=" SEC_VERSION "&build=" B "&type=" T
 #define SEC_UPDATE_USER_AGENT "CoD4X AutoUpdater V. " SEC_UPDATE_VERSION
 //#define SEC_UPDATE_BOUNDARY "------------------------------------874ryg7v"
 #define SEC_UPDATE_PORT 80
@@ -58,7 +62,7 @@ typedef struct sec_file_s{
 #define SEC_UPDATE_GETVERSION "/?ver=%g&os=%s&build=%d&type=%c", SEC_VERSION, OS_STRING, BUILD_NUMBER, SEC_TYPE
 #define SEC_UPDATE_GETGROUNDVERSION "/?ver=%g&os=%s&build=%d&type=%c", SEC_VERSION, OS_STRING, 753, 'b'
 
-#if defined(OFFICIAL) || defined(OFFICIALTESTING) || defined(OFFICIALBETA) || defined(OFFICIALDEBUG)
+#if !defined(COD4X17A) || defined(OFFICIAL) || defined(OFFICIALTESTING) || defined(OFFICIALBETA) || defined(OFFICIALDEBUG)
     #define CAN_UPDATE
 #endif
 

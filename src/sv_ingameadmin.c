@@ -71,6 +71,11 @@ void SV_ReliableSendRedirect(char *sendbuf, qboolean lastcommand){
     int i;
     char outputbuf[244];
 
+    if(redirectClient->state < CS_PRIMED)
+    {
+        return;
+    }
+
     for(; remaining > 0;)
 	{	//We have to split the string into smaller packages of max 240 bytes
 		//This function tries to ensure that every package ends on the last possible linebreak for better formating
