@@ -654,8 +654,9 @@ void Com_InitGamefunctions()
     FS_CopyCvars();
     Com_CopyCvars();
     SV_CopyCvars();
+#ifndef COD4X17A
     XAssets_PatchLimits();  //Patch several asset-limits to higher values
-
+#endif
     SL_Init();
     Swap_Init();
 

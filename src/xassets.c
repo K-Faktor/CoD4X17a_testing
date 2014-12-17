@@ -23,14 +23,18 @@
 
 #include "q_shared.h"
 #include "qcommon_io.h"
+#include "cvar.h"
 #include "xassets.h"
 #include "sys_patch.h"
 #include "qcommon_mem.h"
 #include "cmd.h"
+#include "xassets/xmodel.h"
 
 #include <string.h>
 
 void XAssetUsage_f();
+void XAssetUsage2_f();
+void XModelList_f();
 
 void R_Init(){
 
@@ -64,6 +68,7 @@ void R_Init(){
         DB_LoadXAssets(&XZoneInfoStack[0],XAssetscount,0);
 
         Cmd_AddCommand("XAssetUsage", XAssetUsage_f);
+//        Cmd_AddCommand("XModelList", XModelList_f);
 }
 
 #define NUM_ASSETTYPES 33
@@ -113,13 +118,40 @@ typedef enum{
         RawFile,
         StringTable,
         NumXAssets
-}assets_names_t;
+}XAssetType_t;
+
+
+typedef void* XAssetHeader_t;
+
+typedef union
+{
+  XAssetType_t type;
+  void* nextHeader;
+}XAssetHeaderType_t;
+
+
+typedef struct
+{
+  XAssetHeaderType_t this;
+  XAssetHeader_t header;
+  unsigned short field_8;
+  unsigned short nextListIndex;
+  unsigned short field_C;
+  unsigned short field_E;
+}XAsset_t;
+
+
+unsigned short *db_hashTable = (unsigned short *)0x14121680;
+XAsset_t* g_assetEntryPool = (XAsset_t*)0x14131680;
+void* *DB_XAssetPool = (void*)DB_XAssetPool_ADDR;
+int *DB_XAssetPoolSize = (int*)g_poolsize_ADDR;
+char* *DB_GetXAssetTypeName = (char**)g_assetNames_ADDR;
 
 
 //Are that headers ? I'm not sure
 typedef struct XModelAssetsHeader_s{
         struct XModelAssetsHeader_s*	next;
-        char			data[216];
+        XModel_t xmodel;
 }XModelAssetsHeader_t;
 
 typedef struct WeaponDefHeader_s{
@@ -132,108 +164,229 @@ typedef struct XAssetsHeaderCommon_s{
 }XAssetsHeaderCommon_t;
 
 
+int XAssetStdCount[NumXAssets];
+int XAssetRequestedCount[NumXAssets];
+
+
+int DB_GetXAssetStdCount(XAssetType_t type)
+{
+	return XAssetStdCount[type];
+}
+
+
+#ifndef COD4X17A
+
+qboolean DB_XAssetNoAlloc(XAssetType_t i)
+{
+	if(i == Col_Map_sp)
+		return qtrue;
+	if(i == Col_Map_mp)
+		return qtrue;
+	if(i == Com_Map)
+		return qtrue;
+	if(i ==	Game_Map_sp)
+		return qtrue;
+	if(i == Game_Map_mp)
+		return qtrue;
+	if(i == MapEnts)
+		return qtrue;
+	if(i == GfxMaps)
+		return qtrue;
+	if(i == UIMaps)
+		return qtrue;
+	if(i == SNDDriversGlobals)
+		return qtrue;
+	if(i == AIType)
+		return qtrue;
+	if(i == MPType)
+		return qtrue;
+	if(i == Character)
+		return qtrue;
+	if(i == LocalizeEntry)
+		return qtrue;
+	if(i == XModelAlias)
+		return qtrue;
+	if(i == RawFile)
+		return qtrue;
+	if(i == menuDef_t)
+		return qtrue;
+	if(i == WeaponDef)
+		return qtrue;
+	if(i == StringTable)
+		return qtrue;
+		
+	return qfalse;
+}
+
+
+
+void XAssetsInitStdCount()
+{
+	XAssetStdCount[XModelPieces] = 64;
+	XAssetStdCount[PhysPreset] = 64;
+	XAssetStdCount[XAnimParts] = 4096;
+	XAssetStdCount[XModel] = 1000;
+	XAssetStdCount[Material] = 2048;
+	XAssetStdCount[TechinqueSet] = 1024;
+	XAssetStdCount[GfxImage] = 2400;
+	XAssetStdCount[snd_alias_list_t] = 16000;
+	XAssetStdCount[SndCurve] = 64;
+	XAssetStdCount[LoadedSound] = 1200;
+	XAssetStdCount[Col_Map_sp] = 1;
+	XAssetStdCount[Col_Map_mp] = 1;
+	XAssetStdCount[Com_Map] = 1;
+	XAssetStdCount[Game_Map_sp] = 1;
+	XAssetStdCount[Game_Map_mp] = 1;
+	XAssetStdCount[MapEnts] = 2;
+	XAssetStdCount[GfxMaps] = 1;
+	XAssetStdCount[GfxLightDef] = 32;
+	XAssetStdCount[UIMaps] = 0;
+	XAssetStdCount[Font_s] = 16;
+	XAssetStdCount[MenuList] = 128;
+	XAssetStdCount[menuDef_t] = 1280;
+	XAssetStdCount[LocalizeEntry] = 6144;
+	XAssetStdCount[WeaponDef] = 720;
+	XAssetStdCount[SNDDriversGlobals] = 1;
+	XAssetStdCount[FxEffectDef] = 400;
+	XAssetStdCount[FxImpactTable] = 4;
+	XAssetStdCount[AIType] = 0;
+	XAssetStdCount[MPType] = 0;
+	XAssetStdCount[Character] = 0;
+	XAssetStdCount[XModelAlias] = 0;
+	XAssetStdCount[RawFile] = 1024;
+	XAssetStdCount[StringTable] = 100;
+}
+
+cvar_t* r_xassetnum;
+
+void DB_ParseRequestedXAssetNum()
+{
+
+	char toparse[1024];
+	const char* typename;
+	char* scanpos;
+	char scanstring[64];
+	int i, count;
+
+	r_xassetnum = Cvar_RegisterString("r_xassetnum", "", CVAR_INIT, "The list of xassets with their count in the key=value key=value... format");
+
+	Com_Memcpy(XAssetRequestedCount, XAssetStdCount, sizeof(XAssetRequestedCount));
+	Com_sprintf(toparse, sizeof(toparse), " %s", r_xassetnum->string);
+	
+	for(i = 0;  i < NumXAssets; ++i)
+	{		
+
+		if(DB_XAssetNoAlloc(i) || i == menuDef_t || i == WeaponDef || i == StringTable)
+		{
+			continue;
+		}
+		
+		typename = DB_GetXAssetTypeName[ i ];
+		
+		Com_sprintf(scanstring, sizeof(scanstring), " %s=", typename);
+		
+		scanpos = strstr(toparse, scanstring);
+		if(scanpos == NULL)
+		{
+			continue;
+		}
+		
+		scanpos += strlen(scanstring);
+		
+		count = atoi(scanpos);
+		if(count < 1 || count > 65535)
+		{
+			continue;
+		}
+		
+		if(count <= DB_GetXAssetStdCount(i))
+		{
+			continue;
+		}
+		XAssetRequestedCount[i] = count;
+	}
+}
+
+
+void DB_CustomAllocOnce(XAssetType_t type)
+{
+	int count = DB_GetXAssetStdCount(type);
+	int typesize = DB_GetXAssetTypeSize(type);
+	void *alloc;
+
+	alloc = Z_Malloc(count * typesize);
+	if(alloc)
+	{
+		DB_XAssetPool[type] = alloc;
+		DB_XAssetPoolSize[type] = count;
+	}
+}
+
+void DB_RelocateXAssetMem()
+{
+	int i, typesize, count;
+	
+	void* newmem;
+	
+	for(i = 0;  i < NumXAssets; ++i)
+	{
+		if(DB_XAssetNoAlloc(i))
+		{
+			continue;
+		}
+
+		if(XAssetRequestedCount[i] <= DB_XAssetPoolSize[i])
+		{
+			//Only allocate if we need more than what is already allocated
+			continue;
+		}
+		
+		count = XAssetRequestedCount[i];
+		typesize = DB_GetXAssetTypeSize(i);
+		
+		newmem = Z_Malloc(count * typesize);
+		
+		if(newmem == NULL)
+		{
+			continue;
+		}
+
+		Com_Printf("^2Reallocate %d XAssets on request of type: %s\n", count, DB_GetXAssetTypeName[i]);
+		DB_XAssetPool[i] = newmem;
+		DB_XAssetPoolSize[i] = count;
+	}
+}
+
 
 void XAssets_PatchLimits(){
 
-        void* ptr;
+        void* ptrpool, *ptrsize;
 
         int size = NUM_ASSETTYPES * sizeof(void*);
 
-        void* *DB_XAssetPool = (void*)DB_XAssetPool_ADDR;
-        ptr = &DB_XAssetPool[0];
+        ptrpool = &DB_XAssetPool[0];
+	ptrsize = &DB_XAssetPoolSize[0];
 
-	if(!Sys_MemoryProtectWrite(ptr, size))
-	{
-		Com_Error(ERR_FATAL,"XAssets_PatchLimits: Failed to change memory to writeable\n");
-	}
-        DB_XAssetPool[XModel] = Z_Malloc(MAX_XMODELS*DB_GetXAssetTypeSize(XModel) +4);
-        DB_XAssetPool[WeaponDef] = Z_Malloc(MAX_WEAPON*DB_GetXAssetTypeSize(WeaponDef) +4);
-        DB_XAssetPool[FxEffectDef] = Z_Malloc(MAX_FX*DB_GetXAssetTypeSize(FxEffectDef) +4);
-        DB_XAssetPool[GfxImage] = Z_Malloc(MAX_GFXIMAGE*DB_GetXAssetTypeSize(GfxImage) +4);
-
-	if(DB_XAssetPool[XModel] == NULL || DB_XAssetPool[WeaponDef] == NULL || DB_XAssetPool[FxEffectDef] == NULL || DB_XAssetPool[GfxImage] == NULL)
-	{
-		Com_Error(ERR_FATAL, "Failed to get enough memory for Assets. Can not continue\n");
-		return;
-	
-	}
-
-	if(!Sys_MemoryProtectReadonly(ptr, size))
-	{
-		Com_Error(ERR_FATAL,"XAssets_PatchLimits: Failed to change memory to read only\n");
-	}
-
-	//Patch XAssets poolsize
-
-        int *DB_XAssetPoolSize = (int*)g_poolsize_ADDR;
-
-	ptr = &DB_XAssetPoolSize[0];
-
-	if(!Sys_MemoryProtectWrite(ptr, size))
+	if(!Sys_MemoryProtectWrite(ptrpool, size) || !Sys_MemoryProtectWrite(ptrsize, size))
 	{
 		Com_Error(ERR_FATAL,"XAssets_PatchLimits: Failed to change memory to writeable\n");
 	}
 
-        DB_XAssetPoolSize[XModel] = MAX_XMODELS;
-        DB_XAssetPoolSize[WeaponDef] = MAX_WEAPON;
-        DB_XAssetPoolSize[FxEffectDef] = MAX_FX;
-        DB_XAssetPoolSize[GfxImage] = MAX_GFXIMAGE;
+	XAssetsInitStdCount();
+	DB_ParseRequestedXAssetNum();
 
-	if(!Sys_MemoryProtectReadonly(ptr, size))
+	DB_CustomAllocOnce( menuDef_t );
+	DB_CustomAllocOnce( WeaponDef );
+	DB_CustomAllocOnce( StringTable );
+
+	DB_RelocateXAssetMem();
+
+	if(!Sys_MemoryProtectReadonly(ptrpool, size) || !Sys_MemoryProtectReadonly(ptrsize, size))
 	{
 		Com_Error(ERR_FATAL,"XAssets_PatchLimits: Failed to change memory to read only\n");
 	}
-
 }
-
-void XAssetUsage_f()
-{
-    int i, assettype, j, l;
-    void* *DB_XAssetPool = (void*)DB_XAssetPool_ADDR;
-    int *DB_XAssetPoolSize = (int*)g_poolsize_ADDR;
-    char* *g_assetNames = (char**)g_assetNames_ADDR;
-
-    XAssetsHeaderCommon_t *header;
-
-    Com_Printf("XAsset usage:\n");
-    Com_Printf("Name                 Used  Free \n");
-    Com_Printf("-------------------- ----- -----\n");
-
-    for(assettype = 0; assettype < NumXAssets; assettype++)
-    {
-
-	header = DB_XAssetPool[assettype];
-
-	for(i = 0; i < DB_XAssetPoolSize[assettype]; i++)
-	{
-	    if(header == NULL)
-	        break;
-
-	    else
-	        header = header->next;
-	}
-
-	Com_Printf("%s", g_assetNames[assettype]);
-
-	l = 20 - strlen(g_assetNames[assettype]);
-	j = 0;
-
-	do
-	{
-		Com_Printf (" ");
-		j++;
-	} while(j < l);
-
-
-	Com_Printf(" %5d %5d\n", DB_XAssetPoolSize[assettype] - i, i);
-
-
-    }
-    Com_Printf("\n");
-}
-
-
-
+#endif
 
 typedef struct
 {
@@ -468,3 +621,195 @@ const char* DB_ReferencedFFNameList()
 	return zoneFileList;
 }
 */
+
+
+
+
+
+void DB_EnumXAssets(XAssetType_t type, void (__cdecl *callback)(XAssetHeader_t *, void *), void* cbargs, qboolean a4)
+{
+  int index, sindex, i;
+  XAsset_t *listselector, *slistselect;
+/*
+  InterlockedIncrement(&db_hashCritSect);
+  while ( xasset_interlock )
+  {
+    Sys_Sleep(0);
+  }
+*/
+  for(i = 0; i < 32768; ++i)
+  {
+    for(index = db_hashTable[i]; index; index = listselector->nextListIndex)
+    {
+	listselector = &g_assetEntryPool[index];
+
+	if ( listselector->this.type != type )
+		continue;
+		
+	callback(listselector->header, cbargs);
+	if ( !a4 )
+		continue;
+	
+	for(sindex = listselector->field_C; sindex; sindex = slistselect->field_C)
+	{
+            slistselect = &g_assetEntryPool[sindex];
+            callback(slistselect->header, cbargs);
+	}
+    }
+  }
+/*
+  InterlockedDecrement();
+*/
+}
+
+void DB_PrintXAsset(XAssetHeader_t *header, void *none)
+{
+    XModel_t* xmodelhead = (XModel_t*)header;
+
+    Com_Printf("%s\n", xmodelhead->name);
+}
+
+void XModelList_f()
+{
+
+    Com_Printf("XModel list:\n");
+    Com_Printf("Name                          \n");
+    Com_Printf("------------------------------\n");
+
+    DB_EnumXAssets(XModel, DB_PrintXAsset, NULL, qtrue);
+
+    Com_Printf("\n");
+}
+
+
+void DB_CountXAssets(int *count, int len ,qboolean a4)
+{
+  int index, sindex, i;
+  XAsset_t *listselector, *slistselect;
+  XAssetType_t type;
+/*
+  InterlockedIncrement(&db_hashCritSect);
+  while ( xasset_interlock )
+  {
+    Sys_Sleep(0);
+  }
+*/
+  if((len / sizeof(int)) < NumXAssets)
+  {
+    return;
+  }
+
+  Com_Memset(count, 0, len);
+
+  for(i = 0; i < 32768; ++i)
+  {
+    for(index = db_hashTable[i]; index; index = listselector->nextListIndex)
+    {
+	listselector = &g_assetEntryPool[index];
+
+	type = listselector->this.type;
+
+	if(type < 0 || type >= NumXAssets)
+	{
+		continue;
+	}
+
+	++count[type];
+
+	if ( !a4 )
+		continue;
+	
+	for(sindex = listselector->field_C; sindex; sindex = slistselect->field_C)
+	{
+            slistselect = &g_assetEntryPool[sindex];
+	    ++count[type];
+	}
+    }
+  }
+/*
+  InterlockedDecrement();
+*/
+}
+
+
+void XAssetUsage_f()
+{
+    int assettype, j, l;
+    int countlist[NumXAssets];
+
+
+    Com_Printf("XAsset usage:\n");
+    Com_Printf("Name                 Used  Free \n");
+    Com_Printf("-------------------- ----- -----\n");
+
+    DB_CountXAssets(countlist, sizeof(countlist), qtrue);
+
+    for(assettype = 0; assettype < NumXAssets; assettype++)
+    {
+	Com_Printf("%s", DB_GetXAssetTypeName[assettype]);
+
+	l = 20 - strlen(DB_GetXAssetTypeName[assettype]);
+	j = 0;
+
+	do
+	{
+		Com_Printf (" ");
+		j++;
+	} while(j < l);
+
+	Com_Printf(" %5d %5d\n", countlist[assettype], DB_XAssetPoolSize[assettype] - countlist[assettype]);
+
+    }
+    Com_Printf("\n");
+}
+
+
+/*
+
+
+void XAssetUsage_f()
+{
+    int i, assettype, j, l;
+
+    XAssetsHeaderCommon_t *header;
+
+    Com_Printf("XAsset usage:\n");
+    Com_Printf("Name                 Used  Free \n");
+    Com_Printf("-------------------- ----- -----\n");
+
+    for(assettype = 0; assettype < NumXAssets; assettype++)
+    {
+
+	header = DB_XAssetPool[assettype];
+
+	for(i = 0; i < DB_XAssetPoolSize[assettype]; i++)
+	{
+	    if(header == NULL)
+	        break;
+
+	    else
+	        header = header->next;
+	}
+
+	Com_Printf("%s", DB_GetXAssetTypeName[assettype]);
+
+	l = 20 - strlen(DB_GetXAssetTypeName[assettype]);
+	j = 0;
+
+	do
+	{
+		Com_Printf (" ");
+		j++;
+	} while(j < l);
+
+
+	Com_Printf(" %5d %5d\n", DB_XAssetPoolSize[assettype] - i, i);
+
+
+    }
+    Com_Printf("\n");
+}
+
+*/
+
+
