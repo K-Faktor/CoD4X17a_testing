@@ -348,6 +348,7 @@ void __cdecl SV_AddServerCommand(client_t *client, int type, const char *cmd)
     MSG_WriteReliableCommandToBuffer(cmd, client->reliableCommands[ index ].command, sizeof( client->reliableCommands[ index ].command ));
     client->reliableCommands[ index ].cmdTime = svs.time;
     client->reliableCommands[ index ].cmdType = type;
+//    Com_Printf("ReliableCommand: %s\n", cmd);
 }
 
 
@@ -848,9 +849,11 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 
 
 	//Info_SetValueForKey( infostring, "gamename", com_gamename->string );
-
+#ifdef COD4X17A
 	Info_SetValueForKey(infostring, "protocol", va("%d", sv_protocol->integer));
-
+#else
+	Info_SetValueForKey(infostring, "protocol", "6");
+#endif
 	Info_SetValueForKey( infostring, "hostname", sv_hostname->string );
 
 	if(sv_authorizemode->integer == 1)		//Backward compatibility
@@ -1269,7 +1272,7 @@ __optimize3 __regparm2 static void SVC_RemoteCommand( netadr_t *from, msg_t *msg
 }
 
 #ifdef COD4X18UPDATE
-#define UPDATE_PROXYSERVER_NAME "192.168.178.3"
+#define UPDATE_PROXYSERVER_NAME "127.0.0.1"
 #define UPDATE_PROXYSERVER_PORT 27953
 
 typedef enum
@@ -2868,7 +2871,9 @@ void SV_LoadLevel(const char* levelname)
 
 #ifndef COD4X17A
 	char cs[MAX_STRING_CHARS];
-	Com_sprintf(cs, sizeof(cs), "cod%d xmodel=4000", PROTOCOL_VERSION);
+	char list[MAX_STRING_CHARS];
+	DB_BuildOverallocatedXAssetList(list, sizeof(list));
+	Com_sprintf(cs, sizeof(cs), "cod%d %s", PROTOCOL_VERSION, list);
 	SV_SetConfigstring(2, cs);
 #endif
 

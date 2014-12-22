@@ -732,6 +732,40 @@ void DB_CountXAssets(int *count, int len ,qboolean a4)
 }
 
 
+void DB_BuildOverallocatedXAssetList(char* configstring, int len)
+{
+    int i;
+    char cstring[64];
+    int countlist[NumXAssets];
+
+    DB_CountXAssets(countlist, sizeof(countlist), qtrue);
+
+    configstring[0] = '\0';
+
+    for(i = 0; i < NumXAssets; ++i)
+    {
+        if(DB_XAssetNoAlloc(i))
+        {
+            continue;
+        }
+
+        if(DB_GetXAssetStdCount(i) >= countlist[i])
+        {
+            continue;
+        }
+
+        if(countlist[i] < 1)
+        {
+            continue;
+        }
+
+        Com_sprintf(cstring, sizeof(cstring), "%s=%d ", DB_GetXAssetTypeName[i], countlist[i]);
+        Q_strcat(configstring, len, cstring);
+    }
+
+}
+
+
 void XAssetUsage_f()
 {
     int assettype, j, l;
@@ -761,6 +795,12 @@ void XAssetUsage_f()
 
     }
     Com_Printf("\n");
+
+    char configsting[1024];
+
+    DB_BuildOverallocatedXAssetList(configsting, sizeof(configsting));
+    Com_Printf("%s\n", configsting);
+
 }
 
 

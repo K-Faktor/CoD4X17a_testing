@@ -46,7 +46,7 @@
 #define	PORT_SERVER		28960
 
 #ifndef COD4X17A
-    #define	PROTOCOL_VERSION	7
+    #define	PROTOCOL_VERSION	8
 #else
     #define	PROTOCOL_VERSION	6
 #endif

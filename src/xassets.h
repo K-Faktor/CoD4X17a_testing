@@ -46,4 +46,6 @@ void Material_DirtyTechniqueSetOverrides();
 void BG_FillInAllWeaponItems();
 void DB_FreeUnusedResources();
 void DB_LoadXAssets_Hook(XZoneInfo*, unsigned int assetscount);
+void DB_BuildOverallocatedXAssetList(char* configstring, int len);
 #endif
+
