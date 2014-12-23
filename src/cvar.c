@@ -183,6 +183,8 @@ int Cvar_VariableIntegerValue( const char *var_name ) {
 	var = Cvar_FindVar (var_name);
 	if (!var)
 		return 0;
+	if(var->type == CVAR_BOOL)
+		return var->boolean;
 	if(var->type == CVAR_FLOAT)
 		return (int)var->value;
 	if(var->type == CVAR_INT)

@@ -472,6 +472,20 @@ char *MSG_ReadStringLine( msg_t *msg, char* bigstring, int len ) {
 	return bigstring;
 }
 
+float MSG_ReadFloat( msg_t *msg ) {
+	
+	float		*c;
+	
+	if ( msg->readcount+sizeof(int32_t) > msg->cursize ) {
+		//msg->readcount += sizeof(int32_t); /* Hmm what a bad bug is this ? O_o*/
+		return -1;
+	}	
+	c = (float*)&msg->data[msg->readcount];
+	
+	msg->readcount += sizeof(float);
+	return *c;
+}
+
 void MSG_ReadData( msg_t *msg, void *data, int len ) {
 	int		i;
 

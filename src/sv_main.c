@@ -152,7 +152,7 @@ int serverBansCount = 0;
 
 
 static netadr_t	master_adr[MAX_MASTER_SERVERS][2];
-
+static char masterServerSecret[64];
 
 /*
 =============================================================================
@@ -766,59 +766,27 @@ if a user is interested in a server to do a full status
 */
 __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 	int		i, count, humans;
-	qboolean	masterserver;
 	char		infostring[MAX_INFO_STRING];
 	char*		s;
 	mvabuf;
 
 
 	s = SV_Cmd_Argv(1);
-	masterserver = qfalse;
 
-	if(from->type == NA_IP)
-	{
-		for(i = 0; i < MAX_MASTER_SERVERS; i++)
-		{
-			if(NET_CompareAdr( from, &master_adr[i][0]))
-			{
-				masterserver = qtrue;
-				break;
-			}
-		}
-
-
-	}else{
-		for(i = 0; i < MAX_MASTER_SERVERS; i++)
-		{
-			if(NET_CompareAdr( from, &master_adr[i][1]))
-			{
-				masterserver = qtrue;
-				break;
-			}
-		}
-
+	// Allow getstatus to be DoSed relatively easily, but prevent
+	// excess outbound bandwidth usage when being flooded inbound
+	if ( SVC_RateLimit( &querylimit.infoBucket, 100, 100000 ) ) {
+	//	Com_DPrintf( "SVC_Info: overall rate limit exceeded, dropping request\n" );
+		return;
 	}
 
-	if(!masterserver)
-	{
-		// Allow getstatus to be DoSed relatively easily, but prevent
-		// excess outbound bandwidth usage when being flooded inbound
-		if ( SVC_RateLimit( &querylimit.infoBucket, 100, 100000 ) ) {
-		//	Com_DPrintf( "SVC_Info: overall rate limit exceeded, dropping request\n" );
-			return;
-		}
-
-
-		// Prevent using getstatus as an amplifier
-		if ( SVC_RateLimitAddress( from, 4, sv_queryIgnoreTime->integer*1000 )) {
-		//	Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( *from ) );
-			return;
-		}
-		infostring[0] = 0;
-	}else{
-		infostring[0] = 0;
-		Info_SetValueForKey( infostring, "server_id", va("%i", psvs.masterServer_id));
+	// Prevent using getstatus as an amplifier
+	if ( SVC_RateLimitAddress( from, 4, sv_queryIgnoreTime->integer*1000 )) {
+	//	Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( *from ) );
+		return;
 	}
+	infostring[0] = 0;
+
 
 	/*
 	 * Check whether Cmd_Argv(1) has a sane length. This was not done in the original Quake3 version which led
@@ -872,9 +840,8 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 	else
 	    Info_SetValueForKey( infostring, "pswrd", "0");
 
-        if(Cvar_GetVariantString("scr_team_fftype")){
-	    Info_SetValueForKey( infostring, "ff", va("%i", Cvar_GetVariantString("scr_team_fftype")));
-	}
+	
+	    Info_SetValueForKey( infostring, "ff", va("%d", Cvar_VariableIntegerValue("scr_team_fftype")));
 
         if(Cvar_GetVariantString("scr_game_allowkillcam")){
 	    Info_SetValueForKey( infostring, "ki", "1");
@@ -909,27 +876,255 @@ __optimize3 __regparm1 void SVC_Info( netadr_t *from ) {
 	NET_OutOfBandPrint( NS_SERVER, from, "infoResponse\n%s", infostring );
 }
 
+#if 0
 
-void SVC_SourceEngineQuery_Info( netadr_t* from )
+typedef struct
+{
+	int challenge;
+	int protocol;
+	char hostname[256];
+	char mapname[64];
+	char gamemoddir[64];
+	char gamename[64];
+	unsigned short steamappid;
+	int numplayers;
+	int maxclients;
+	int numbots;
+	char hostos;
+	qboolean joinpassword;
+	qboolean secure;
+	char gameversion[64];
+	unsigned int steamid_lower;
+	unsigned int steamid_upper;
+	unsigned int gameid_lower;
+	unsigned int gameid_upper;
+	unsigned short joinport;
+}queryinfo_t;
+
+typedef struct{
+	int challenge;
+	int receivedchunks;
+	int numchunks;
+	char splitmessage[8192];
+	int frameseq;
+}querysplitmsg_t;
+
+
+typedef struct{
+	int cid;
+	char name[32];
+	int score;
+	float connectedtime;
+}queryplayer_t;
+
+typedef struct{
+	int count;
+	queryplayer_t players[128];
+}queryplayers_t;
+
+typedef struct
+{
+	char name[64];
+	char value[256];
+}queryrule_t;
+
+typedef struct{
+	int count;
+	queryrule_t rules[256];
+}queryrules_t;
+
+//void CLC_SourceEngineQuery_Players(msg_t* msg, queryinfo_t* query)
+
+
+void CLC_SourceEngineQuery_Info(msg_t* msg, queryinfo_t* query)
+{
+	int extrafields;
+	char stringbuf[8192];
+	
+	//OBB-Header already read
+	MSG_ReadLong(msg);
+	//I message is already read
+	MSG_ReadByte(msg);
+	
+	//Start of message
+	query->protocol = MSG_ReadByte(msg);
+	MSG_ReadString(msg, query->hostname, sizeof(query->hostname));
+	MSG_ReadString(msg, query->mapname, sizeof(query->mapname));
+	MSG_ReadString(msg, query->gamemoddir, sizeof(query->gamemoddir));
+	MSG_ReadString(msg, query->gamename, sizeof(query->gamename));
+	query->steamappid = MSG_ReadShort(msg);
+	query->numplayers = MSG_ReadByte(msg);
+	query->maxclients = MSG_ReadByte(msg);
+	query->numbots = MSG_ReadByte(msg);
+	//Reading 'd' ?
+	MSG_ReadByte(msg);
+	//'l', 'm', 'w'
+	query->hostos = MSG_ReadByte(msg);
+	query->joinpassword = MSG_ReadByte(msg);
+	//Reading 0 ?
+	query->secure = MSG_ReadByte(msg);
+	MSG_ReadString(msg, query->gameversion, sizeof(query->gameversion));
+	
+	/* The extra datafields */
+	extrafields = MSG_ReadByte(msg);
+
+	if (extrafields & 0x80)
+	{
+		//Read the join port
+		query->joinport = MSG_ReadShort(msg);
+	}
+	if(extrafields & 0x10)
+	{
+		//Read the steam id
+		query->steamid_lower = MSG_ReadLong(msg);
+		query->steamid_upper = MSG_ReadLong(msg);		
+	}
+	if(extrafields & 0x40)
+	{
+		//Read the sourceTV stuff
+		MSG_ReadShort(msg);
+		MSG_ReadString(msg, stringbuf, sizeof(stringbuf));
+	}
+	if(extrafields & 0x20)
+	{
+		//Read the tags (future use)
+		MSG_ReadString(msg, stringbuf, sizeof(stringbuf));
+	}
+	if(extrafields & 0x01)
+	{
+		query->gameid_lower = MSG_ReadLong(msg);
+		query->gameid_upper = MSG_ReadLong(msg);			
+	}	
+	/* Finished with message of type "I" */
+
+	
+}
+
+void CLC_SourceEngineQuery_ReadChallenge(msg_t* msg, queryinfo_t* query)
+{
+	//OBB-Header already read
+	MSG_ReadLong(msg);
+	//A message is already read
+	MSG_ReadByte(msg);
+	
+	query->challenge = MSG_ReadLong(msg);
+}
+
+void CLC_SourceEngineQuery_ReadSplitMessage(msg_t* msg, querysplitmsg_t* query)
+{
+	int receivedindex;
+	int splitsize;
+	
+	/* reading the split header */
+	MSG_ReadLong(msg);
+	/* An unique number */
+	query->frameseq = MSG_ReadLong(msg);
+	/* Total number of packets */
+	query->numchunks = MSG_ReadByte(msg);
+	/* Packetnumber */
+	receivedindex = MSG_ReadByte(msg);
+	if(receivedindex > 31)
+	{
+		Com_PrintWarning("CLC_SourceEngineQuery_ReadSplitMessage: Received out of range splitmessage index packet\n");
+		return;
+	}
+	
+	query->receivedchunks |= (1 << receivedindex);
+	/* Splitsize */
+	splitsize = MSG_ReadShort(msg);
+	if(query->numchunks * splitsize >= sizeof(query->splitmessage))
+	{
+		Com_PrintWarning("CLC_SourceEngineQuery_ReadSplitMessage: Size of the splitmessage would exceed the splitbuffer size\n");
+		return;
+	}
+	if(receivedindex * splitsize >= (sizeof(query->splitmessage) - splitsize))
+	{
+		Com_PrintWarning("CLC_SourceEngineQuery_ReadSplitMessage: Received out of range splitmessage buffer packet\n");
+		return;
+	}
+	MSG_ReadData(msg, &query->splitmessage[receivedindex * splitsize], splitsize);
+}
+
+void CLC_SourceEngineQuery_ReadPlayer(msg_t* msg, queryplayers_t* query)
+{
+	int numcl, i;
+	//MSG_WriteLong(&playermsg, -1);
+	/* Write the Command-Header */
+	//MSG_WriteByte(&playermsg, 'D');
+	/* numClients is 0 for now */
+	query->count = MSG_ReadByte(msg);
+	
+	if(query->count > (  sizeof(query->players)/sizeof(query->players[0])))
+	{
+		Com_PrintWarning("CLC_SourceEngineQuery_ReadPlayer: Received out of range player count\n");
+		query->count = 0;
+		return;
+	}
+	
+	for ( i = 0; i < numcl ; i++)
+	{
+		query->players[i].cid = MSG_ReadByte(msg);
+		MSG_ReadString(msg, query->players[i].name, sizeof(query->players[i].name));
+		query->players[i].score = MSG_ReadLong(msg);
+		query->players[i].connectedtime = MSG_ReadFloat(msg);
+	}
+}
+
+void CLC_SourceEngineQuery_ReadRules(msg_t* msg, queryrules_t* query)
+{
+	int i;
+	//MSG_ReadLong(msg);
+	/* Write the Command-Header */
+	//MSG_ReadByte(msg);
+	/* count */
+	query->count = MSG_ReadShort(msg);
+	
+	if(query->count > ( sizeof(query->rules)/sizeof(query->rules[0])))
+	{
+		Com_PrintWarning("CLC_SourceEngineQuery_ReadPlayer: Received out of range player count\n");
+		query->count = sizeof(query->rules)/sizeof(query->rules[0]);
+	}
+	for ( i = 0; i < query->count ; i++)
+	{
+		MSG_ReadString(msg, query->rules[i].name, sizeof(query->rules[i].name));
+		MSG_ReadString(msg, query->rules[i].value, sizeof(query->rules[i].value));
+	}
+}
+#endif
+
+void SVC_SourceEngineQuery_Info( netadr_t* from, const char* challengeStr, const char* mymastersecret )
 {
 
 	msg_t msg;
 	int i, humans, bots;
 	byte buf[MAX_INFO_STRING];
 
-
-
-	// Allow getstatus to be DoSed relatively easily, but prevent
-	// excess outbound bandwidth usage when being flooded inbound
-	if ( SVC_RateLimit( &querylimit.infoBucket, 100, 100000 ) ) {
-	//	Com_DPrintf( "SVC_Info: overall rate limit exceeded, dropping request\n" );
-		return;
+	qboolean masterserver = qfalse;
+	
+	if(mymastersecret[0])
+	{	
+		if(strcmp(mymastersecret, masterServerSecret))
+		{
+			return;
+		}
+		masterserver = qtrue;
 	}
-
-	// Prevent using getstatus as an amplifier
-	if ( SVC_RateLimitAddress( from, 4, sv_queryIgnoreTime->integer*1000 )) {
-	//	Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( *from ) );
-		return;
+	
+	if(!masterserver)
+	{
+		// Allow getstatus to be DoSed relatively easily, but prevent
+		// excess outbound bandwidth usage when being flooded inbound
+		if ( SVC_RateLimit( &querylimit.infoBucket, 100, 100000 ) ) {
+			//	Com_DPrintf( "SVC_Info: overall rate limit exceeded, dropping request\n" );
+			return;
+		}
+		
+		
+		// Prevent using getstatus as an amplifier
+		if ( SVC_RateLimitAddress( from, 4, sv_queryIgnoreTime->integer*1000 )) {
+			//	Com_DPrintf( "SVC_Info: rate limit from %s exceeded, dropping request\n", NET_AdrToString( *from ) );
+			return;
+		}
 	}
 
 	MSG_Init(&msg, buf, sizeof(buf));
@@ -938,7 +1133,8 @@ void SVC_SourceEngineQuery_Info( netadr_t* from )
 	MSG_WriteByte(&msg, sv_protocol->integer);
 	MSG_WriteString(&msg, sv_hostname->string);
 	MSG_WriteString(&msg, sv_mapname->string);
-	if(fs_gameDirVar->string[0] == '\0'){
+	if(fs_gameDirVar->string[0] == '\0')
+	{
 		MSG_WriteString(&msg, "main");
 	}else{
 		MSG_WriteString(&msg, fs_gameDirVar->string);
@@ -982,7 +1178,30 @@ void SVC_SourceEngineQuery_Info( netadr_t* from )
 	}
 	MSG_WriteByte(&msg, 0);
 	MSG_WriteString(&msg, "1.7a");
+	/*The extra datafield for port*/
+	MSG_WriteByte(&msg, 0x80);
+	
+	MSG_WriteShort(&msg, NET_GetHostPort());
+	
+	if(challengeStr[0])
+	{
+		MSG_WriteString( &msg, challengeStr);
+		MSG_WriteString( &msg, sv_g_gametype->string );
+		
+		MSG_WriteByte( &msg, Cvar_VariableIntegerValue("scr_team_fftype"));
+		MSG_WriteByte( &msg, Cvar_VariableBooleanValue("scr_game_allowkillcam"));
+		MSG_WriteByte( &msg, Cvar_VariableBooleanValue("scr_hardcore"));
+		MSG_WriteByte( &msg, Cvar_VariableBooleanValue("scr_oldschool"));
+		MSG_WriteByte( &msg, sv_voice->boolean);
 
+		
+		if(masterserver)
+		{		
+			MSG_WriteLong( &msg, psvs.masterServer_id);
+			MSG_WriteLong( &msg, BUILD_NUMBER);
+
+		}
+	}
 	NET_SendPacket(NS_SERVER, msg.cursize, msg.data, from);
 
 }
@@ -1168,7 +1387,14 @@ void SVC_SourceEngineQuery_Rules( netadr_t* from, msg_t* recvmsg )
 	SVC_SourceEngineQuery_SendSplitMessage( from, &msg );
 
 }
+#ifndef COD4X17A
 
+void SV_RestartForUpdate(netadr_t* from, char*, char*)
+{
+
+}
+
+#endif
 
 /*
 ================
@@ -1553,6 +1779,11 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 
 	} else if (!Q_stricmp(c, "stats")) {
 		SV_ReceiveStats(from, msg);
+
+#else
+
+	} else if (!Q_stricmp(c, "updaterestartinfo")) {
+		SV_RestartForUpdate(from, Cmd_Argv(<#int arg#>));
 #endif
 
 #ifndef COD4X17A
@@ -1586,7 +1817,7 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 		SV_GetVoicePacket(from, msg);
 
 	} else if (!Q_strncmp("TSource Engine Query", (char *) &msg->data[4], 20)) {
-		SVC_SourceEngineQuery_Info( from );
+		SVC_SourceEngineQuery_Info( from, SV_Cmd_Argv(3), SV_Cmd_Argv(4));
 	} else if(msg->data[4] == 'V'){
 		SVC_SourceEngineQuery_Rules( from, msg );
 	} else if(msg->data[4] == 'U'){
@@ -1836,6 +2067,14 @@ void SV_MasterHeartbeat(const char *message)
 
 		// this command should be changed if the server info / status format
 		// ever incompatably changes
+		if(i == 7)
+		{
+			if(master_adr[i][0].type != NA_BAD)
+				NET_OutOfBandPrint( NS_SERVER, &master_adr[i][0], "heartbeat %s %s\n", message, masterServerSecret);
+			if(master_adr[i][1].type != NA_BAD)
+				NET_OutOfBandPrint( NS_SERVER, &master_adr[i][1], "heartbeat %s %s\n", message, masterServerSecret);
+			continue;
+		}
 		if(master_adr[i][0].type != NA_BAD)
 			NET_OutOfBandPrint( NS_SERVER, &master_adr[i][0], "heartbeat %s\n", message);
 		if(master_adr[i][1].type != NA_BAD)
@@ -2194,7 +2433,8 @@ void SV_ValidationResponse(netadr_t *from, msg_t* msg)
 }
 */
 void SV_InitServerId(){
-
+	int i;
+	char masterServerSecretBin[32];
 /*    int read;
     char buf[256];
     *buf = 0;
@@ -2227,6 +2467,13 @@ void SV_InitServerId(){
     psvs.masterServer_challengepassword[0] = '-';
     psvs.masterServer_challengepassword[1] = '1';
     psvs.masterServer_challengepassword[2] = '\0';
+	Com_RandomBytes((byte*)masterServerSecretBin, sizeof(masterServerSecretBin));
+	for (i=0; i < sizeof(masterServerSecretBin); ++i)
+	{
+		sprintf(&masterServerSecret[2*i], "%02x", masterServerSecretBin[i]);
+	}
+	masterServerSecret[sizeof(masterServerSecret) -1] = '\0';
+	
 }
 
 void SV_CopyCvars()

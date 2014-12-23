@@ -77,6 +77,7 @@ int MSG_ReadLong( msg_t *msg ) ;
 char *MSG_ReadString( msg_t *msg, char* bigstring, int len ) ;
 char *MSG_ReadStringLine( msg_t *msg, char* bigstring, int len ) ;
 void MSG_ReadData( msg_t *msg, void *data, int len ) ;
+float MSG_ReadFloat( msg_t *msg );
 void MSG_ClearLastReferencedEntity( msg_t *msg ) ;
 void MSG_WriteDeltaEntity(struct snapshotInfo_s* snap, msg_t* msg, int time, entityState_t* from, entityState_t* to, int arg_6);
 void MSG_WriteBit0( msg_t *msg ) ;

@@ -174,6 +174,7 @@ void Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize 
 cvar_t* Cvar_GetNext(cvar_t* cvar, short flags);
 void Cvar_WriteVariables(fileHandle_t fh);
 void Cvar_SetLatched(const char* name, const char* value);
+
 #define Cvar_GetInt Cvar_VariableIntegerValue
 #define Cvar_GetFloat Cvar_VariableValue
 #define Cvar_GetString Cvar_VariableString
