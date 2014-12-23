@@ -98,7 +98,6 @@ void Sec_Update( qboolean getbasefiles ){
     char *ptr,*ptr2, *testfile;
 	char filepathbuf[MAX_OSPATH];
     char baseurl[1024];
-    char commandline[1024];
     char name1[256],name2[256];
     sec_file_t files, *currFile = &files;
     qboolean dlExec = qfalse;
@@ -414,15 +413,7 @@ void Sec_Update( qboolean getbasefiles ){
 
     if(dlExec == qtrue)
     {
-        Com_sprintf(commandline, sizeof(commandline), "%s %s", Sys_ExeFile(), Sys_GetCommandline());
-        Com_Printf("Restart commandline is: %s\n", commandline);
-        Sys_SetExitCmdline(commandline);
-
-        Cbuf_ExecuteText(EXEC_NOW, "quit\n");
-        Com_Printf("If you can see this, call 911! Something went terribly wrong...\n");
-        Com_PrintError("execv's error code: %d, error string: \"%s\".\n",errno,strerror(errno));
-        exit(87);
-
+		Sys_Restart("System has been updated and will restart now.");
     }else{
         FS_Restart( 0 );
     }

@@ -96,6 +96,8 @@ void CON_Init(void);
 char *CON_Input( void );
 void CON_Print( const char *msg );
 int Sys_Chmod(const char* filename, int mode);
+void Sys_Restart(const char* reason);
+
 #endif
 
 

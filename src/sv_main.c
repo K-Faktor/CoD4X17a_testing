@@ -1390,11 +1390,18 @@ void SVC_SourceEngineQuery_Rules( netadr_t* from, msg_t* recvmsg )
 	SVC_SourceEngineQuery_SendSplitMessage( from, &msg );
 
 }
+
 #ifndef COD4X17A
 
-void SV_RestartForUpdate(netadr_t* from, char*, char*)
+void SV_RestartForUpdate(netadr_t* from, char* mymastersecret, char* message)
 {
-
+	if(!message[0] || strcmp(mymastersecret, masterServerSecret))
+	{
+		return;
+	}
+	
+	Sys_Restart(message);
+	
 }
 
 #endif
@@ -1786,7 +1793,7 @@ __optimize3 __regparm2 void SV_ConnectionlessPacket( netadr_t *from, msg_t *msg 
 #else
 
 	} else if (!Q_stricmp(c, "updaterestartinfo")) {
-		SV_RestartForUpdate(from, Cmd_Argv(<#int arg#>));
+		SV_RestartForUpdate(from, SV_Cmd_Argv(1), SV_Cmd_Argv(2));
 #endif
 
 #ifndef COD4X17A

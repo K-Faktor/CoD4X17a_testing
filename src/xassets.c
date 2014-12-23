@@ -731,6 +731,7 @@ void DB_CountXAssets(int *count, int len ,qboolean a4)
 */
 }
 
+#ifndef COD4X17A
 
 void DB_BuildOverallocatedXAssetList(char* configstring, int len)
 {
@@ -766,6 +767,9 @@ void DB_BuildOverallocatedXAssetList(char* configstring, int len)
 }
 
 
+#endif
+
+
 void XAssetUsage_f()
 {
     int assettype, j, l;
@@ -795,11 +799,6 @@ void XAssetUsage_f()
 
     }
     Com_Printf("\n");
-
-    char configsting[1024];
-
-    DB_BuildOverallocatedXAssetList(configsting, sizeof(configsting));
-    Com_Printf("%s\n", configsting);
 
 }
 

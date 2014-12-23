@@ -35,6 +35,7 @@
 #include "punkbuster.h"
 #include "server.h"
 #include "sec_main.h"
+#include "cmd.h"
 #include <libgen.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -464,3 +465,17 @@ int Sys_Main(char* commandLine){
 
 }
 
+void Sys_Restart(const char* reason)
+{
+	char commandline[1024];
+
+	SV_Shutdown( reason );
+	
+	Com_sprintf(commandline, sizeof(commandline), "%s %s", Sys_ExeFile(), Sys_GetCommandline());
+	Com_Printf("Restart commandline is: %s\n", commandline);
+	Sys_SetExitCmdline(commandline);
+
+	Cbuf_ExecuteText(EXEC_NOW, "quit\n");
+	Com_Printf("If you can see this, call 911! Something went terribly wrong...\n");
+	exit(87);
+}
