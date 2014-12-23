@@ -38,6 +38,8 @@
 
 #define NV_ProcessBegin NV_LoadConfig
 #define NV_ProcessEnd NV_WriteConfig
+#define NV_CONFIGFILE "nvconfig_v2.dat"
+#define NV_CONFIGFILEOLD "nvconfig.dat"
 
 static int nvEntered;
 
@@ -98,6 +100,7 @@ void NV_LoadConfig(){
     int read, i;
     int error = 0;
     char buf[256];
+    char filename[MAX_QPATH];
     *buf = 0;
     fileHandle_t file;
 
@@ -108,13 +111,22 @@ void NV_LoadConfig(){
 
     Auth_ClearAdminList();
 
-    FS_SV_FOpenFileRead("nvconfig.dat", &file);
+    Q_strncpyz(filename, NV_CONFIGFILE, sizeof(filename));
+
+    FS_SV_FOpenFileRead(filename, &file);
+    if(!file)
+    {
+        /* Legacy nvconfig fallback */
+        Q_strncpyz(filename, NV_CONFIGFILEOLD, sizeof(filename));
+        FS_SV_FOpenFileRead(filename, &file);
+    }
+
     if(!file){
-        Com_DPrintf("Couldn't open nvconfig.dat for reading\n");
+        Com_DPrintf("Couldn't open %s for reading\n", filename);
         nvEntered = qfalse;
         return;
     }
-    Com_Printf( "loading nvconfig.dat\n");
+    Com_Printf( "loading %s\n", filename);
 
     i = 0;
 
@@ -122,12 +134,12 @@ void NV_LoadConfig(){
         read = FS_ReadLine(buf,sizeof(buf),file);
         if(read == 0){
             FS_FCloseFile(file);
-            Com_Printf("Loaded nvconfig.dat %i errors\n", error);
+            Com_Printf("Loaded %s %i errors\n", filename, error);
             nvEntered = qfalse;
             return;
         }
         if(read == -1){
-            Com_Printf("Can not read from nvconfig.dat\n");
+            Com_Printf("Can not read from %s\n", filename);
             FS_FCloseFile(file);
             nvEntered = qfalse;
             return;
@@ -168,7 +180,7 @@ void NV_WriteConfig(){
     Cmd_WritePowerConfig( buffer, MAX_NVCONFIG_SIZE );
     Auth_WriteAdminConfig( buffer, MAX_NVCONFIG_SIZE );
 
-    FS_SV_WriteFile("nvconfig.dat", buffer, strlen(buffer));
+    FS_SV_WriteFile(NV_CONFIGFILE, buffer, strlen(buffer));
     Hunk_FreeTempMemory( buffer );
     Com_DPrintf("NV-Config Updated\n");
 }

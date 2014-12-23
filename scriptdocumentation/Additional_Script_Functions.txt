@@ -18,7 +18,7 @@ New Script_Callbacks
 ============================
 "CodeCallback_PlayerSayCmd(string <text>, bool <teamchat>)" --> This functionality has been dropped! Another solution to catch commands is now CodeCallback_ScriptCommand().
 
-"CodeCallback_PlayerSayAll(string <text>, bool <teamchat>)" --> "CodeCallback_PlayerSay(string <text>, bool <teamchat>)"
+"CodeCallback_PlayerSayAll(string <text>, bool <teamchat>)" --> This functionality has been dropped! Another solution to catch commands is now CodeCallback_ScriptCommand().
 Gets called after a player types into chat anything
 Both functions will put at 1st argument the text from player. The player entity will be available too with the "self" prefix
 The 2nd argument will be either true = teamchat or false = chat to all
@@ -45,12 +45,6 @@ All this functions have to be included into:
 Functions on Players
 
 ==========================================
-
-
-GetUid
-============================
-Returns the players Uid. Will only work with valid secondary authserver and in sv_authorizemode = 1
-Usage: int = self getUid();
 
 
 GetUserinfo
@@ -86,7 +80,7 @@ Usage: self setUid( <int> );
 
 SetPower
 ============================
-Sets the power for this player. (Not recommend to use. The overall behaviour is not known). Don't set non admins above level 9
+Sets the power for this player. (Not recommended to use. The overall behaviour is not known). Don't set non admins above level 9
 In range 2 to 100
 Usage: self setPower( <int> );
 
@@ -107,7 +101,7 @@ Three character country code will be used: USA, FRA, CAN, IND...
 
 type: 2
 The return type is string.
-Full countryname will be used: United Staates, France, Canada, India...
+Full countryname will be used: United States, France, Canada, India...
 
 type: 3
 The return type is string.

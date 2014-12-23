@@ -2050,7 +2050,7 @@ void GScr_SetCvar()
 {
   const char *newstringval;
   const char *var_name;
-  char buffer[1024];
+  char buffer[8192];
   mvabuf;
 
 

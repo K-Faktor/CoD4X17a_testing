@@ -636,7 +636,6 @@ void GScr_LoadGameTypeScript(void){
 
 
 /**************** Additional *************************/
-    script_CallBacks_new[SCR_CB_SAY] = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_PlayerSay", 0);
     script_CallBacks_new[SCR_CB_SCRIPTCOMMAND] = GScr_LoadScriptAndLabel("maps/mp/gametypes/_callbacksetup", "CodeCallback_ScriptCommand", 0);
 }
 

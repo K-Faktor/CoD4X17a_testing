@@ -139,7 +139,6 @@ extern pluginWrapper_t pluginFunctions; // defined in plugin_handler.c
 // --------------------------------//
 //  Plugin Handler's own functions //
 // --------------------------------//
-
 void PHandler_Load(char* );
 void PHandler_Unload(int id);
 void PHandler_UnloadByName(char *name);

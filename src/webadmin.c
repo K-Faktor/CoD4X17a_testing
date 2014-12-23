@@ -193,9 +193,7 @@ void Webadmin_BuildAdminList(xml_t* xmlobj, int uid)
 
 void Webadmin_AddAdmin(xml_t* xmlobj, int uid, int adminuid, char* password, int power)
 {
-	int i, cnt;
-	char colorbuf[2048];
-	authData_admin_t* badmin;
+/*
 	mvabuf;
 	
 	if(Auth_GetClPowerByUID(uid) < Cmd_GetPower("adminaddadminwithpassword"))
@@ -205,7 +203,7 @@ void Webadmin_AddAdmin(xml_t* xmlobj, int uid, int adminuid, char* password, int
 	}
 	
 	XA(va("%d admins", cnt));
-	
+*/
 }
 
 

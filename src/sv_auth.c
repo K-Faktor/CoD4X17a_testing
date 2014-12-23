@@ -235,6 +235,7 @@ static void Auth_SetAdmin_f() {
 				Q_strncpyz(user->username, name, sizeof(user->username));
 			}
 			Com_Printf("Updated an admin with name %s, uid %d and power %d\n", user->username, user->uid, user->power);
+			NV_ProcessEnd();
 			return;
 		}
 		
@@ -287,6 +288,7 @@ void Auth_SetAdminWithPassword_f( void ){
 		Com_Printf( "Where username is loginname for this user\n" );
 		Com_Printf( "Where password is the initial 6 characters long or longer password for this user which should get changed by the user on first login\n" );		
 		Com_Printf( "Where power is one of the following: Any number between 1 and 100\n" );
+		Com_Printf( "Note: Use the command \"adminsetadmin\" to change the power of an admin\n" );
 		Com_Printf("^1IMPORTANT: ^7This command is for the high privileged badmin only\n");
 		return;
 	}
@@ -449,7 +451,7 @@ void Auth_ChangeAdminPassword( int uid, const char* password ){
 
 	NV_ProcessEnd();
 
-	Com_Printf("Password changed to: %s\n", password);
+	Com_Printf("Password changed\n");
 }
 
 

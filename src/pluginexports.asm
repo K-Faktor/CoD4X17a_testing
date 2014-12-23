@@ -92,7 +92,6 @@ pexport NET_AdrToStringShort
 pexport NET_CompareBaseAdr
 pexport NET_CompareBaseAdrMask
 pexport NET_CompareAdr
-
 ralias Plugin_Milliseconds, Sys_Milliseconds
 
 
@@ -132,3 +131,8 @@ pexport G_LogPrintf
 pexport SV_GameClientNum
 pexport unzSetPassword
 pexport Cbuf_AddText
+
+pexport SV_GetConfigstring
+pexport SV_SetConfigstring
+
+pexport SL_ConvertToString

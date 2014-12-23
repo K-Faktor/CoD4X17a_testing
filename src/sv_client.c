@@ -1413,7 +1413,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 
 sharedEntity_t* SV_AddBotClient(){
 
-    int i, cntnames, read;
+    int i, p, cntnames, read;
     unsigned short qport;
     client_t *cl = NULL;
     const char* denied;
@@ -1423,7 +1423,18 @@ sharedEntity_t* SV_AddBotClient(){
     netadr_t botnet;
     usercmd_t ucmd;
     fileHandle_t file;
-	mvabuf;
+    mvabuf;
+
+	//Find a free serverslot for our bot
+
+	for ( i = sv_privateClients->integer; i < sv_maxclients->integer; i++) {
+		cl = &svs.clients[i];
+		if (cl->state == CS_FREE) {
+			break;
+		}
+	}
+	if( i == sv_maxclients->integer )
+		return NULL;		//No free slot
 
         //Getting a new name for our bot
 	FS_SV_FOpenFileRead("botnames.txt", &file);
@@ -1441,25 +1452,15 @@ sharedEntity_t* SV_AddBotClient(){
 		FS_FCloseFile(file);
 	}
 	if(!cntnames){
-		Q_strncpyz(name,va("bot%d", rand() % 9999),sizeof(name));
+		Q_strncpyz(name,va("bot%d", i),sizeof(name));
 	}else{
 		Q_strncpyz(name,botnames[rand() % cntnames],sizeof(name));
-		for(i = 0; i < sizeof(name); i++){
-			if(name[i] == '\n')
-				name[i] = 0;
+		for(p = 0; p < sizeof(name); p++){
+			if(name[p] == '\n' || name[p] == '\r')
+				name[p] = 0;
 		}
 	}
 
-//Find a free serverslot for our bot
-
-	for ( i = sv_privateClients->integer; i < sv_maxclients->integer; i++) {
-		cl = &svs.clients[i];
-		if (cl->state == CS_FREE) {
-			break;
-		}
-	}
-	if( i == sv_maxclients->integer )
-		return NULL;		//No free slot
 
 //Connect our bot
 

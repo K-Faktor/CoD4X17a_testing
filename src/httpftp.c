@@ -578,7 +578,6 @@ int HTTP_SendReceiveData(ftRequest_t* request)
 					if(request->socket < 0)
 					{	
 						request->socket = -1;
-						FT_FreeRequest(request);
 						return -1;
 					}
 					HTTP_BuildNewRequest( request, "GET", NULL, NULL);
