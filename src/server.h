@@ -742,6 +742,7 @@ extern cvar_t* sv_mapname;
 extern cvar_t* sv_floodProtect;
 extern cvar_t* sv_showAverageBPS;
 extern cvar_t* sv_hostname;
+extern cvar_t* sv_shownet;
 
 void __cdecl SV_StringUsage_f(void);
 void __cdecl SV_ScriptUsage_f(void);

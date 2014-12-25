@@ -2000,9 +2000,10 @@ Parse a client packet
 ===================
 */
 __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
-	int c;
+	int c, clnum;
 	int serverId;
-
+        static const char *clc_strings[256] = { "clc_move", "clc_moveNoDelta", "clc_clientCommand", "clc_EOF", "clc_nop"};
+    
 	msg_t decompressMsg;
 	byte buffer[NETCHAN_FRAGMENTBUFFER_SIZE +1];
 
@@ -2014,6 +2015,13 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 		SV_DropClient(cl, "SV_ExecuteClientMessage: Client sent oversize message");
 		return;
 	}
+
+        clnum = cl - svs.clients;
+	
+        if ( sv_shownet->integer == clnum ) {
+	    Com_Printf( "------------------\n" );
+	}
+
 	serverId = cl->serverId;
 
 	if ( serverId != sv_serverId && !cl->wwwDl_var01 && !cl->wwwDownloadStarted && !cl->wwwDl_var02 )
@@ -2023,6 +2031,17 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 			while(qtrue)
 			{
 				c = MSG_ReadBits(&decompressMsg, 3);
+
+
+				if ( sv_shownet->integer == clnum )
+				{
+				    if ( !clc_strings[c] )
+				    {
+					    Com_Printf( "%3i:BAD CMD %i\n", decompressMsg.readcount - 1, c );													
+				    } else {
+					    Com_Printf( "%3i:%s\n",  decompressMsg.readcount - 1, clc_strings[c] );
+				    }
+				}
 				if(c == clc_clientCommand)
 				{
 					if ( !SV_ClientCommand( cl, &decompressMsg, 1 ) || cl->state == CS_ZOMBIE)
@@ -2051,6 +2070,14 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 	while(qtrue)
 	{
 		c = MSG_ReadBits(&decompressMsg, 3);
+		if ( sv_shownet->integer == clnum )
+		{
+		    if ( !clc_strings[c] ) {
+			Com_Printf( "%3i:BAD CMD %i\n", decompressMsg.readcount - 1, c );
+		    } else {
+			Com_Printf( "%3i:%s\n",  decompressMsg.readcount - 1, clc_strings[c] );
+		    }
+		}		
 		if(c == clc_clientCommand){ //2
 				if ( !SV_ClientCommand( cl, &decompressMsg, 0 ) || cl->state == CS_ZOMBIE ) {
 					return; // we couldn't execute it because of the flood protection

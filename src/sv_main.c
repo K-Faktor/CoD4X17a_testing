@@ -116,6 +116,7 @@ cvar_t* sv_botsPressAttackBtn;
 cvar_t* sv_debugRate;
 cvar_t* sv_debugReliableCmds;
 cvar_t* sv_clientArchive;
+cvar_t* sv_shownet;
 
 serverStaticExt_t	svse;	// persistant server info across maps
 permServerStatic_t	psvs;	// persistant even if server does shutdown
@@ -2608,6 +2609,7 @@ void SV_InitCvarsOnce(void){
 	sv_debugRate = Cvar_RegisterBool("sv_debugRate", qfalse, 0, "Enable snapshot rate debugging info");
 	sv_debugReliableCmds = Cvar_RegisterBool("sv_debugReliableCmds", qfalse, 0, "Enable debugging information for reliable commands");
 	sv_clientArchive = Cvar_RegisterBool("sv_clientArchive", qtrue, 0, "Have the clients archive data to save bandwidth on the server");
+        sv_shownet = Cvar_RegisterInt("sv_shownet", -1, -1, 63, 0, "Enable network debugging for a client");
 }
 
 
