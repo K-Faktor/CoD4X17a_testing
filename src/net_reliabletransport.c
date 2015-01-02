@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 
+
 int ReliableMessagesGetAcknowledge(framedata_t *frame)
 {
 	int i;
@@ -30,26 +31,29 @@ void ReliableMessageWriteSelectiveAcklist(framedata_t *frame, msg_t* msg)
 	int i;
 	int inrange = 0;
 	int count = 0;
+	int lengthcnt;
 	int numbytepos;
-	//Function can write up to 41 bytes (count >= 5)
+	//Function can write up to 9 bytes (count >= 2)
 	numbytepos = msg->cursize;
 	//0 elements
 	MSG_WriteByte(msg, 0);
 	
-	for(i = 0; i < MAX_FRAMES; ++i){
+	for(i = frame->selackoffset; i < MAX_FRAMES; ++i){
 		if(frame->fragments[(i + frame->sequence) % MAX_FRAMES].ack == i + frame->sequence)
 		{
 			if(inrange == 0)
 			{
-				MSG_WriteLong(msg, i + frame->sequence);
+				MSG_WriteShort(msg, i);
 				count++;
+				lengthcnt = 0;
 			}
 			inrange = 1;
+			lengthcnt++;
 		}else{
 			if(inrange == 1)
 			{
-				MSG_WriteLong(msg, i + frame->sequence);
-				if(count >= 5)
+				MSG_WriteShort(msg, lengthcnt);
+				if(count >= 2)
 				{
 					break;
 				}
@@ -59,7 +63,12 @@ void ReliableMessageWriteSelectiveAcklist(framedata_t *frame, msg_t* msg)
 	}
 	if(inrange == 1)
 	{
-		MSG_WriteLong(msg, i + frame->sequence);
+		MSG_WriteShort(msg, lengthcnt);
+	}
+	if(i < MAX_FRAMES){
+		frame->selackoffset = i;
+	}else{
+		frame->selackoffset = 1;
 	}
 	msg->data[numbytepos] = count;
 }
@@ -87,7 +96,7 @@ void ReliableMessagesTransmitNextFragment(netreliablemsg_t *chan)
 			MSG_WriteShort(&buf, chan->qport);
 			MSG_WriteLong(&buf, -1);
 			MSG_WriteLong(&buf, chan->rxwindow.sequence);
-	//		ReliableMessageWriteSelectiveAcklist(&chan->rxwindow, &buf);
+			ReliableMessageWriteSelectiveAcklist(&chan->rxwindow, &buf);
 			MSG_WriteShort(&buf, chan->txwindow.windowsize);
 			MSG_WriteShort(&buf, 0);
 			NET_SendPacket( chan->sock, buf.cursize, buf.data, &chan->remoteAddress );	
@@ -102,12 +111,16 @@ void ReliableMessagesTransmitNextFragment(netreliablemsg_t *chan)
 	}
 	
 	sequence = chan->txwindow.frame;
-
+	if(chan->txwindow.fragments[sequence % MAX_FRAMES].ack == sequence)
+	{
+		//Already received by the remote end
+		return;
+	}
 	MSG_WriteLong(&buf, 0xfffffff0);
 	MSG_WriteShort(&buf, chan->qport);
 	MSG_WriteLong(&buf, sequence);
 	MSG_WriteLong(&buf, chan->rxwindow.sequence); //Acknowledge for the other end
-//	ReliableMessageWriteSelectiveAcklist(&chan->rxwindow, &buf);
+	ReliableMessageWriteSelectiveAcklist(&chan->rxwindow, &buf);
 	MSG_WriteShort(&buf, chan->txwindow.windowsize);
 	MSG_WriteShort(&buf, chan->txwindow.fragments[sequence % MAX_FRAMES].len); //Fragment size
 	MSG_WriteData(&buf, chan->txwindow.fragments[sequence % MAX_FRAMES].data, chan->txwindow.fragments[sequence % MAX_FRAMES].len);
@@ -127,9 +140,9 @@ void ReliableMessagesTransmitNextFragment(netreliablemsg_t *chan)
 //Assuming you have already read the port
 void ReliableMessagesReceiveNextFragment(netreliablemsg_t *chan, msg_t* buf)
 {
-	int sequence, acknowledge, startack, endack;
-	unsigned int numselectiveack, windowsize, fragmentsize;
-	int i;
+	int sequence, acknowledge;
+	unsigned int numselectiveack, windowsize, fragmentsize, length, startack;
+	int i, j;
 	
 	if(chan->remoteAddress.type <= NA_BAD){
 		return;
@@ -137,22 +150,6 @@ void ReliableMessagesReceiveNextFragment(netreliablemsg_t *chan, msg_t* buf)
 	
 	sequence = MSG_ReadLong(buf);
 	acknowledge = MSG_ReadLong(buf);
-/*
-	numselectiveack = MSG_ReadByte(buf);
-	if(numselectiveack > 5 )
-	{
-		Com_PrintError("Bad selective acknowledge count: %d\n", numselectiveack);	
-		return;
-	}
-	for(i = 0; i < numselectiveack; ++i)
-	{
-		startack = MSG_ReadLong(buf);
-		endack = MSG_ReadLong(buf);
-		Com_Printf("SACK: %d-%d\n",startack,endack);
-	}
-*/	
-	windowsize = MSG_ReadShort(buf);
-	fragmentsize = MSG_ReadShort(buf);
 
 	chan->rxwindow.packets++;
 	
@@ -175,6 +172,29 @@ void ReliableMessagesReceiveNextFragment(netreliablemsg_t *chan, msg_t* buf)
 		Com_PrintError("Invalid reliable acknowledge. acknowledge(%d) > sequence(%d)\n", acknowledge, chan->txwindow.sequence);
 		return;
 	}
+	
+	numselectiveack = MSG_ReadByte(buf);
+	if(numselectiveack > 2 )
+	{
+		Com_PrintError("Bad selective acknowledge count: %d\n", numselectiveack);	
+		return;
+	}
+	for(i = 0; i < numselectiveack; ++i)
+	{
+		startack = MSG_ReadShort(buf) + acknowledge;
+		length = MSG_ReadShort(buf);
+		if(startack + length >= acknowledge + MAX_FRAMES){
+			Com_PrintError("Selective acknowledge is out of windowsize\n");
+			return;
+		}
+		for(j = 0; j < length; ++j)
+		{
+			chan->txwindow.fragments[(startack +j) % MAX_FRAMES].ack = startack +j;
+		}
+	}
+
+	windowsize = MSG_ReadShort(buf);
+	fragmentsize = MSG_ReadShort(buf);
 	
 	Com_Printf("^5Received ACK %d SEQ: %d\n", acknowledge, sequence);
 	
@@ -236,6 +256,7 @@ int ReliableMessageReceive(netreliablemsg_t *chan, byte* outdata, int len)
 		writepos += chan->rxwindow.fragments[index].len;
 	}	
 	chan->rxwindow.sequence += numfragments;
+	chan->rxwindow.selackoffset = 1;
 		
 	return writepos;
 }

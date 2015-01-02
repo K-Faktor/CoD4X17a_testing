@@ -15,6 +15,7 @@ typedef struct
 {
 	int sequence;    //Highest numbered packet in queue 
 	int acknowledge; //Lowest numbered packet in queue
+	int selackoffset; //Used to send not always the same selective acknowledges
 	int frame;		 //Current numbered packet which is going to be sent next. Any value in range of acknowledge and sequence
 	int windowsize;  //Current size of our window
 	fragment_t *fragments;

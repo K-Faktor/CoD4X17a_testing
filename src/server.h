@@ -162,11 +162,11 @@ typedef struct client_s {//90b4f8c
 	qboolean		needupdate;
 	qboolean		updateconnOK;
 #ifdef COD4X17A
-	byte			dummy767[94];
+	byte			dummy767[102];
 #else
 	netreliablemsg_t relmsg;
 #endif	
-	byte			free[534];
+	byte			free[526];
 
 	char			name[64];
 
