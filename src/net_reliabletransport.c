@@ -268,9 +268,9 @@ int ReliableMessageReceive(netreliablemsg_t *chan, byte* outdata, int len)
 
 int ReliableMessageSend(netreliablemsg_t *chan, byte* indata, int len)
 {
-	int usedfragmentcnt, freefragmentcnt, numfragments, startsequence;
+	int usedfragmentcnt, freefragmentcnt;
 	int sentlen;
-	int i, index;
+	int i, index, slen;
 	
 	if(chan->remoteAddress.type <= NA_BAD){
 		return 0;
@@ -282,24 +282,27 @@ int ReliableMessageSend(netreliablemsg_t *chan, byte* indata, int len)
 	if(len < 0){
 		Com_Error(ERR_FATAL, "ReliableMessageSend: Invalid length: %d", len);
 	}
+	sentlen = 0;
 	
-	numfragments = len / MAX_FRAGMENT_SIZE;	
-	
-	if(freefragmentcnt < numfragments)
+	for(i = 0; i < freefragmentcnt; ++i)
 	{
-		numfragments = freefragmentcnt;
-	}
-	
-	startsequence = chan->txwindow.sequence;
-	chan->txwindow.sequence += numfragments;
-	
-	sentlen = numfragments * MAX_FRAGMENT_SIZE;
-	
-	for(i = 0; i < numfragments; ++i)
-	{
-		index = (startsequence + i) % MAX_FRAMES;
-		memcpy(chan->txwindow.fragments[index].data, indata + i * MAX_FRAGMENT_SIZE, MAX_FRAGMENT_SIZE);
-		chan->txwindow.fragments[index].len = MAX_FRAGMENT_SIZE;
+		if(len >= MAX_FRAGMENT_SIZE)
+		{
+			slen = MAX_FRAGMENT_SIZE;
+		}else if(len > 0){
+			slen = len;
+		}else{
+			return sentlen;
+		}
+		
+		index = chan->txwindow.sequence % MAX_FRAMES;
+		memcpy(chan->txwindow.fragments[index].data, indata + i * MAX_FRAGMENT_SIZE, slen);
+		chan->txwindow.fragments[index].len = slen;
+		
+		len -= slen;
+		sentlen += slen;
+		
+		chan->txwindow.sequence++;
 	}		
 	return sentlen;
 }
