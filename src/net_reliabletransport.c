@@ -188,6 +188,7 @@ void ReliableMessagesReceiveNextFragment(netreliablemsg_t *chan, msg_t* buf)
 			Com_PrintError("Selective acknowledge %d is out of windowsize acknowledge %d\n", startack + length, acknowledge);
 			return;
 		}
+		Com_Printf("SACK: %d %d\n", startack, length);
 		for(j = 0; j < length; ++j)
 		{
 			chan->txwindow.fragments[(startack +j) % MAX_FRAMES].ack = startack +j;
@@ -257,8 +258,10 @@ int ReliableMessageReceive(netreliablemsg_t *chan, byte* outdata, int len)
 		writepos += chan->rxwindow.fragments[index].len;
 	}	
 	chan->rxwindow.sequence += numfragments;
-	chan->rxwindow.selackoffset = 1;
-		
+	if(numfragments > 1)
+	{
+		chan->rxwindow.selackoffset = 1;
+	}
 	return writepos;
 }
 
