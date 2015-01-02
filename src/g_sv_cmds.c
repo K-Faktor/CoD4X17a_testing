@@ -489,7 +489,7 @@ __cdecl void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *cha
 		return;
 	}
 */
-	if(text[0] != 0x15 && !g_allowConsoleSay->boolean) 
+	if(text[0] != 0x15 && text[0] != 0x14 && !g_allowConsoleSay->boolean) 
 		return;
 
 	// echo the text to the console
