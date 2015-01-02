@@ -12,6 +12,7 @@
 
 
 
+
 int ReliableMessagesGetAcknowledge(framedata_t *frame)
 {
 	int i;
@@ -38,7 +39,7 @@ void ReliableMessageWriteSelectiveAcklist(framedata_t *frame, msg_t* msg)
 	//0 elements
 	MSG_WriteByte(msg, 0);
 	
-	for(i = frame->selackoffset; i < MAX_FRAMES; ++i){
+	for(i = 0/*frame->selackoffset*/; i < MAX_FRAMES; ++i){
 		if(frame->fragments[(i + frame->sequence) % MAX_FRAMES].ack == i + frame->sequence)
 		{
 			if(inrange == 0)
@@ -53,7 +54,7 @@ void ReliableMessageWriteSelectiveAcklist(framedata_t *frame, msg_t* msg)
 			if(inrange == 1)
 			{
 				MSG_WriteShort(msg, lengthcnt);
-				if(count >= 2)
+				if(count >= 20)
 				{
 					break;
 				}
@@ -113,6 +114,7 @@ void ReliableMessagesTransmitNextFragment(netreliablemsg_t *chan)
 	sequence = chan->txwindow.frame;
 	if(chan->txwindow.fragments[sequence % MAX_FRAMES].ack == sequence)
 	{
+		Com_Printf("Send: Skip over %d\n", sequence);
 		//Already received by the remote end
 		return;
 	}
@@ -174,7 +176,7 @@ void ReliableMessagesReceiveNextFragment(netreliablemsg_t *chan, msg_t* buf)
 	}
 	
 	numselectiveack = MSG_ReadByte(buf);
-	if(numselectiveack > 2 )
+	if(numselectiveack > 20 )
 	{
 		Com_PrintError("Bad selective acknowledge count: %d\n", numselectiveack);	
 		return;
@@ -347,7 +349,6 @@ void ReliableMessageSetCurrentTime(netreliablemsg_t *chan, int ftime)
 {
 	chan->time = ftime;
 }
-
 
 
 
