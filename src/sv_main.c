@@ -117,10 +117,8 @@ cvar_t* sv_debugRate;
 cvar_t* sv_debugReliableCmds;
 cvar_t* sv_clientArchive;
 cvar_t* sv_shownet;
-
 serverStaticExt_t	svse;	// persistant server info across maps
 permServerStatic_t	psvs;	// persistant even if server does shutdown
-
 
 #define SV_OUTPUTBUF_LENGTH 1024
 
@@ -151,9 +149,10 @@ serverBan_t serverBans[SERVER_MAXBANS];
 int serverBansCount = 0;
 */
 
+#define MASTERSERVERSECRETLENGTH 64
 
 static netadr_t	master_adr[MAX_MASTER_SERVERS][2];
-static char masterServerSecret[64];
+static char masterServerSecret[MASTERSERVERSECRETLENGTH +1];
 
 /*
 =============================================================================
@@ -1885,33 +1884,36 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 
 	client_t    *cl;
 	unsigned short qport;
-
+	int seq;
+	
 	if(!com_sv_running->boolean)
             return;
 
+	if ( msg->cursize < 4 ) 
+	{
+		return;
+	}
+	MSG_BeginReading( msg );
+	seq = MSG_ReadLong( msg );           // sequence number
+
 	// check for connectionless packet (0xffffffff) first
-	if ( msg->cursize >= 4 && *(int *)msg->data == -1 ) {
+	if ( seq == -1 )
+	{
 		SV_ConnectionlessPacket( from, msg );
 		return;
 	}
-
 	// SV_ResetSekeletonCache();
 
 	// read the qport out of the message so we can fix up
 	// stupid address translating routers
-	MSG_BeginReading( msg );
 
 #ifdef COD4X18UPDATE
-	int seq = MSG_ReadLong( msg );           // sequence number
 	if(seq == 0xfffffffe)
 	{
 		SV_ReceiveFromUpdateProxy( msg );
 		return;
 	}
-#else
-	MSG_ReadLong( msg );           // sequence number
 #endif
-
 	qport = MSG_ReadShort( msg );  // & 0xffff;
 
 	// find which client the message is from
@@ -1924,7 +1926,12 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 		NET_OutOfBandPrint( NS_SERVER, from, "disconnect" );
 		return;
 	}
-
+#ifndef COD4X17A	
+	if(seq == 0xfffffff0)
+	{
+		ReliableMessagesReceiveNextFragment( &cl->relmsg , msg );
+		return;
+	}
 #ifdef COD4X18UPDATE
 	if(cl->needupdate && cl->updateconnOK)
 	{
@@ -1933,7 +1940,7 @@ __optimize3 __regparm2 void SV_PacketEvent( netadr_t *from, msg_t *msg ) {
 		return;
 	}
 #endif
-
+#endif
 	// make sure it is a valid, in sequence packet
 	if ( !Netchan_Process( &cl->netchan, msg ) )
 	{
@@ -2447,7 +2454,7 @@ void SV_ValidationResponse(netadr_t *from, msg_t* msg)
 */
 void SV_InitServerId(){
 	int i;
-	char masterServerSecretBin[32];
+	byte masterServerSecretBin[(MASTERSERVERSECRETLENGTH -1) / 2];
 /*    int read;
     char buf[256];
     *buf = 0;
@@ -2609,7 +2616,7 @@ void SV_InitCvarsOnce(void){
 	sv_debugRate = Cvar_RegisterBool("sv_debugRate", qfalse, 0, "Enable snapshot rate debugging info");
 	sv_debugReliableCmds = Cvar_RegisterBool("sv_debugReliableCmds", qfalse, 0, "Enable debugging information for reliable commands");
 	sv_clientArchive = Cvar_RegisterBool("sv_clientArchive", qtrue, 0, "Have the clients archive data to save bandwidth on the server");
-        sv_shownet = Cvar_RegisterInt("sv_shownet", -1, -1, 63, 0, "Enable network debugging for a client");
+	sv_shownet = Cvar_RegisterInt("sv_shownet", -1, -1, 63, 0, "Enable network debugging for a client");
 }
 
 
@@ -3593,7 +3600,6 @@ __optimize3 __regparm1 qboolean SV_Frame( unsigned int usec ) {
 		SV_Map( mapname );
 		return qtrue;
 	}
-
 	SetAnimCheck(com_animCheck->boolean);
 
 

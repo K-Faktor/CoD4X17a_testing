@@ -41,6 +41,7 @@
 #include "hl2rcon.h"
 #include "sv_auth.h"
 
+
 #include <stdint.h>
 #include <stdarg.h>
 #include <string.h>
@@ -800,17 +801,20 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 #endif
 		return;
 	}
-#ifdef COD4X17A
-	svse.challenges[c].connected = qtrue;
-#endif
-	Com_Printf( "Going from CS_FREE to CS_CONNECTED for %s num %i guid %s from: %s\n", nick, clientNum, newcl->pbguid, NET_AdrToConnectionString(from));
 
-	// save the addressgamestateMessageNum
+	// save the address
 	// init the netchan queue
 	Netchan_Setup( NS_SERVER, &newcl->netchan, *from, qport,
 			 newcl->unsentBuffer, sizeof(newcl->unsentBuffer),
 			 newcl->fragmentBuffer, sizeof(newcl->fragmentBuffer));
 
+#ifdef COD4X17A
+	svse.challenges[c].connected = qtrue;
+#else
+	ReliableMessageSetup(&newcl->relmsg, qport, NS_SERVER, from);
+#endif
+	Com_Printf( "Going from CS_FREE to CS_CONNECTED for %s num %i guid %s from: %s\n", nick, clientNum, newcl->pbguid, NET_AdrToConnectionString(from));
+	
 	Q_strncpyz(newcl->xversion, Info_ValueForKey( userinfo, "xver"), sizeof(newcl->xversion));
 
 	newcl->state = CS_CONNECTED;
@@ -1107,7 +1111,10 @@ __cdecl void SV_DropClient( client_t *drop, const char *reason ) {
 			}
 		}
 	}
+#else
+	ReliableMessageDisconnect(&drop->relmsg);
 #endif
+
 	clientnum = drop - svs.clients;
 
 	if(!reason)
@@ -2002,8 +2009,9 @@ Parse a client packet
 __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 	int c, clnum;
 	int serverId;
-        static const char *clc_strings[256] = { "clc_move", "clc_moveNoDelta", "clc_clientCommand", "clc_EOF", "clc_nop"};
-    
+	static const char *clc_strings[256] = { "clc_move", "clc_moveNoDelta", "clc_clientCommand", "clc_EOF", "clc_nop"};
+
+
 	msg_t decompressMsg;
 	byte buffer[NETCHAN_FRAGMENTBUFFER_SIZE +1];
 
@@ -2015,13 +2023,13 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 		SV_DropClient(cl, "SV_ExecuteClientMessage: Client sent oversize message");
 		return;
 	}
-
-        clnum = cl - svs.clients;
 	
-        if ( sv_shownet->integer == clnum ) {
-	    Com_Printf( "------------------\n" );
+	clnum = cl - svs.clients;
+	
+	if ( sv_shownet->integer == clnum ) {
+		Com_Printf( "------------------\n" );
 	}
-
+	
 	serverId = cl->serverId;
 
 	if ( serverId != sv_serverId && !cl->wwwDl_var01 && !cl->wwwDownloadStarted && !cl->wwwDl_var02 )
@@ -2031,17 +2039,16 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 			while(qtrue)
 			{
 				c = MSG_ReadBits(&decompressMsg, 3);
-
-
+				
 				if ( sv_shownet->integer == clnum )
 				{
-				    if ( !clc_strings[c] )
-				    {
-					    Com_Printf( "%3i:BAD CMD %i\n", decompressMsg.readcount - 1, c );													
-				    } else {
-					    Com_Printf( "%3i:%s\n",  decompressMsg.readcount - 1, clc_strings[c] );
-				    }
+					if ( !clc_strings[c] ) {
+						Com_Printf( "%3i:BAD CMD %i\n", decompressMsg.readcount - 1, c );
+					} else {
+						Com_Printf( "%3i:%s\n",  decompressMsg.readcount - 1, clc_strings[c] );
+					}
 				}
+				
 				if(c == clc_clientCommand)
 				{
 					if ( !SV_ClientCommand( cl, &decompressMsg, 1 ) || cl->state == CS_ZOMBIE)
@@ -2070,14 +2077,15 @@ __optimize3 __regparm2 void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) 
 	while(qtrue)
 	{
 		c = MSG_ReadBits(&decompressMsg, 3);
+						
 		if ( sv_shownet->integer == clnum )
 		{
-		    if ( !clc_strings[c] ) {
-			Com_Printf( "%3i:BAD CMD %i\n", decompressMsg.readcount - 1, c );
-		    } else {
-			Com_Printf( "%3i:%s\n",  decompressMsg.readcount - 1, clc_strings[c] );
-		    }
-		}		
+			if ( !clc_strings[c] ) {
+					Com_Printf( "%3i:BAD CMD %i\n", decompressMsg.readcount - 1, c );
+			} else {
+				Com_Printf( "%3i:%s\n",  decompressMsg.readcount - 1, clc_strings[c] );
+			}
+		}
 		if(c == clc_clientCommand){ //2
 				if ( !SV_ClientCommand( cl, &decompressMsg, 0 ) || cl->state == CS_ZOMBIE ) {
 					return; // we couldn't execute it because of the flood protection

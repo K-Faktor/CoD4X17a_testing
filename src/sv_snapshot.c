@@ -587,7 +587,11 @@ void SV_SendClientMessages( void ) {
 			snapClients[i] = 0;		
 			continue; // not connected
 		}
-		
+#ifndef COD4X17A		
+		ReliableMessageSetCurrentTime(&c->relmsg, svs.time);
+		ReliableMessagesTransmitNextFragment(&c->relmsg);
+		Net_TestingFunction(&c->relmsg);
+#endif
 		if ( svs.time < c->nextSnapshotTime ) {
 			snapClients[i] = 0;	
 			continue; // not time yet

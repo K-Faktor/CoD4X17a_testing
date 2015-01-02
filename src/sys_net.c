@@ -2920,10 +2920,10 @@ __optimize3 __regparm1 qboolean NET_Event(int socket)
 
 		if((len = NET_GetPacket(&from, bufData, sizeof(bufData), socket)) > 0)
 		{
-			if(net_dropsim->value > 0 && net_dropsim->value <= 100)
+			if(net_dropsim->integer > 0 && net_dropsim->integer <= 100)
 			{
 				// com_dropsim->value percent of incoming packets get dropped.
-				if(rand() % 101 <= net_dropsim->value)
+				if(rand() % 101 <= net_dropsim->integer)
 					continue;          // drop this packet
 			}
 

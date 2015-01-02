@@ -37,6 +37,10 @@
 #include "cvar.h"
 #include "net_game_conf.h"
 
+#ifndef COD4X17A
+#include "net_reliabletransport.h"
+#endif
+
 #include <time.h>
 
 #define SERVER_STRUCT_ADDR 0x13e78d00
@@ -157,7 +161,13 @@ typedef struct client_s {//90b4f8c
 	int			protocol;
 	qboolean		needupdate;
 	qboolean		updateconnOK;
-	byte			free[628];
+#ifdef COD4X17A
+	byte			dummy767[94];
+#else
+	netreliablemsg_t relmsg;
+#endif	
+	byte			free[534];
+
 	char			name[64];
 
 	int			unknownUsercmd1;	//0x63c
