@@ -1,3 +1,4 @@
+#ifndef COD4X17A
 #include "q_shared.h"
 #include "qcommon.h"
 #include "msg.h"
@@ -402,3 +403,4 @@ void Net_TestingFunction(netreliablemsg_t *chan)
 		}
 	}
 }
+#endif

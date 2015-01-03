@@ -1199,9 +1199,10 @@ void SVC_SourceEngineQuery_Info( netadr_t* from, const char* challengeStr, const
 
 		
 		if(masterserver)
-		{		
+		{	
 			MSG_WriteLong( &msg, psvs.masterServer_id);
 			MSG_WriteLong( &msg, BUILD_NUMBER);
+			MSG_WriteString( &msg, masterServerSecret);
 
 		}
 	}
