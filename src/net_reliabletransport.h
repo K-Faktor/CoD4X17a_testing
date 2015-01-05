@@ -13,7 +13,8 @@ typedef struct
 
 typedef struct
 {
-	int sequence;    //Highest numbered packet in queue 
+	int sequence;    //Highest numbered packet in queue
+	int bufferlen;   //Length of the whole buffer
 	int acknowledge; //Lowest numbered packet in queue
 	int selackoffset; //Used to send not always the same selective acknowledges
 	int frame;		 //Current numbered packet which is going to be sent next. Any value in range of acknowledge and sequence
