@@ -102,29 +102,17 @@ int Scr_FS_ReadLine( void *buffer, int len, fileHandle_t f ) {
 }
 
 
-qboolean Scr_FS_AlreadyOpened( char* qpath, char* filename, size_t fnamelen){
+qboolean Scr_FS_AlreadyOpened( char* qpath){
 
-    int i = 0;
-    char qpathbuf[MAX_OSPATH];
+    int i;
 
-    Q_strncpyz(qpathbuf, qpath, sizeof(qpathbuf));
-
-    FS_ConvertPath(qpathbuf);
-
-    do{
-        Q_strncpyz(filename, &qpathbuf[i], fnamelen);
-
-        i = Q_strichr(&qpathbuf[i], '/');
-
-        i += 1;
-
-    }while(i > 0);
+    FS_ConvertPath(qpath);
+    FS_StripTrailingSeperator(qpath);
 
     for(i = 0; i < MAX_SCRIPT_FILEHANDLES; i++){
 
-        if(!Q_stricmp(filename, scr_fsh[i].filename)){
-            Com_PrintScriptRuntimeWarning("Script_FileOpen: Tried to open a file with the same name two times: %s\n", filename);
-            *filename = 0;
+        if(!Q_stricmp(qpath, scr_fsh[i].filename)){
+            Com_PrintScriptRuntimeWarning("Script_FileOpen: Tried to open a file with the same name two times: %s\n", qpath);
             return qtrue;
         }
 
@@ -250,8 +238,10 @@ fileHandle_t Scr_OpenScriptFile( char* qpath, scr_fileHandleType_t ft, fsMode_t 
         Com_Error( ERR_FATAL, "Filesystem call made without initialization" );
     }
 
+    Q_strncpyz(filename, qpath, sizeof(filename));
 
-    if(Scr_FS_AlreadyOpened(qpath, filename, sizeof(filename))){
+
+    if(Scr_FS_AlreadyOpened(filename)){
         return 0;
     }
 
@@ -260,7 +250,7 @@ fileHandle_t Scr_OpenScriptFile( char* qpath, scr_fileHandleType_t ft, fsMode_t 
 
         if(!scr_fsh[i].fh){
 
-            if(!Scr_FS_FOpenFile(qpath, mode, &scr_fsh[i])){
+            if(!Scr_FS_FOpenFile(filename, mode, &scr_fsh[i])){
                 return 0;
             }
             scr_fsh[i].type = ft;

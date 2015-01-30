@@ -237,5 +237,6 @@ __regparm3 void DB_BuildOSPath(const char *filename, int ffdir, int len, char *b
 int     FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode );
 void __cdecl FS_ReferencedIwds(char **outChkSums, char **outPathNames);
 void FS_AddIwdPureCheckReference(searchpath_t *search);
+void FS_StripTrailingSeperator( char *path );
 #endif
 

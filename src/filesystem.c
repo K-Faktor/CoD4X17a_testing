@@ -504,7 +504,7 @@ FS_StripTrailingSeperator
 Fix things up differently for win/unix/mac
 ====================
 */
-static void FS_StripTrailingSeperator( char *path ) {
+void FS_StripTrailingSeperator( char *path ) {
 
 	int len = strlen(path);
 

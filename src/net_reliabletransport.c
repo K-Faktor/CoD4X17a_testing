@@ -134,7 +134,7 @@ void ReliableMessagesTransmitNextFragment(netreliablemsg_t *chan)
 		Com_Printf("Sending SEQ: %d ACK: %d\n", sequence, chan->rxwindow.sequence);
 	}
 	++chan->txwindow.frame;
-	if(chan->txwindow.frame >= chan->txwindow.sequence)
+	if(chan->txwindow.frame >= chan->txwindow.acknowledge + chan->txwindow.windowsize)
 	{
 		chan->txwindow.frame = chan->txwindow.acknowledge;
 	}
@@ -160,6 +160,7 @@ void ReliableMessagesReceiveNextFragment(netreliablemsg_t *chan, msg_t* buf)
 	//if fragment out of window size?
 	if(sequence >= chan->rxwindow.sequence + chan->rxwindow.windowsize)
 	{
+		Com_PrintError("Illegible sequence - got: %d max: %d\n", sequence, chan->rxwindow.sequence + chan->rxwindow.windowsize);
 		return;
 	}
 	if(acknowledge > chan->txwindow.acknowledge + chan->txwindow.windowsize)
@@ -331,8 +332,8 @@ void ReliableMessageSetup(netreliablemsg_t *chan, int qport, int netsrc, netadr_
 	}
 	chan->txwindow.fragments = dyntxmem;
 	chan->rxwindow.fragments = dynrxmem;
-	chan->txwindow.windowsize = DEFAULT_BUFFER_SIZE;
-	chan->rxwindow.windowsize = DEFAULT_BUFFER_SIZE;
+	chan->txwindow.windowsize = 6;
+	chan->rxwindow.windowsize = 6;
 	chan->txwindow.bufferlen = DEFAULT_BUFFER_SIZE;
 	chan->rxwindow.bufferlen = DEFAULT_BUFFER_SIZE;	
 	

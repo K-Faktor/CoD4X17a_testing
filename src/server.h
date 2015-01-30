@@ -162,11 +162,11 @@ typedef struct client_s {//90b4f8c
 	qboolean		needupdate;
 	qboolean		updateconnOK;
 #ifdef COD4X17A
-	byte			dummy767[102];
+	byte			dummy767[110];
 #else
 	netreliablemsg_t relmsg;
 #endif	
-	byte			free[526];
+	byte			free[518];
 
 	char			name[64];
 
@@ -775,6 +775,7 @@ void __cdecl SV_FreeClient(client_t* drop);
 void __cdecl SV_FreeClientScriptId(client_t *cl);
 void __cdecl SV_LinkEntity(gentity_t*);
 void __cdecl SV_UnlinkEntity(gentity_t*);
+void serverStatus_Write();
 
 int SV_GetPlayerUIDByHandle(const char* handle);
 client_t* SV_GetPlayerClByHandle(const char* handle);

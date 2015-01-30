@@ -1918,6 +1918,11 @@ void SV_SendClientGameState( client_t *client ) {
 
 	SV_SetServerStaticHeader();
 
+	if(client->state < CS_PRIMED)
+	{
+		serverStatus_Write();
+	}
+
 	Com_DPrintf( "SV_SendClientGameState() for %s\n", client->name );
 	Com_DPrintf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name );
 	client->state = CS_PRIMED;

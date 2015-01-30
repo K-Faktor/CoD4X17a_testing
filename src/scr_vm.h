@@ -487,7 +487,7 @@ typedef struct{
 
 qboolean Scr_FS_CloseFile( scr_fileHandle_t* f );
 int Scr_FS_ReadLine( void *buffer, int len, fileHandle_t f );
-qboolean Scr_FS_AlreadyOpened( char* qpath, char* filename, size_t fnamelen);
+qboolean Scr_FS_AlreadyOpened(char* qpath);
 qboolean Scr_FS_FOpenFile( const char *filename, fsMode_t mode, scr_fileHandle_t* f );
 fileHandle_t Scr_OpenScriptFile( char* qpath, scr_fileHandleType_t ft, fsMode_t mode);
 qboolean Scr_CloseScriptFile( fileHandle_t fh);

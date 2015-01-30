@@ -1495,14 +1495,13 @@ Usage: FS_Remove(string <filename>)
 */
 
 void GScr_FS_Remove(){
-    char filename[MAX_QPATH];
 
     if(Scr_GetNumParam() != 1)
         Scr_Error("Usage: FS_Delete(<filename>)\n");
 
     char* qpath = Scr_GetString(0);
 
-    if(!Scr_FS_AlreadyOpened(qpath, filename, sizeof(filename)))
+    if(!Scr_FS_AlreadyOpened(qpath))
     {
             Scr_Error("FS_Remove: Tried to delete an opened file!\n");
             Scr_AddBool(qfalse);
