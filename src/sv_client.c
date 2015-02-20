@@ -956,7 +956,7 @@ void SV_UserinfoChanged( client_t *cl ) {
 	// name for C code
 	Q_strncpyz( cl->name, Info_ValueForKey (cl->userinfo, "name"), sizeof(cl->name) );
 
-	if(!Q_isprintstring(cl->name) || strstr(cl->name,"ID_") || strstr(cl->name,"///") || Q_PrintStrlen(cl->name) < 3){
+	if(!Q_isprintstring(cl->name) || strstr(cl->name,"ID_") || strstr(cl->name,"&&") || strstr(cl->name,"///") || Q_PrintStrlen(cl->name) < 3){
 		if(cl->state == CS_ACTIVE){
 			if(!Q_isprintstring(cl->name)) SV_SendServerCommand(cl, "c \"^5Playernames can not contain advanced ASCII-characters\"");
 			if(strlen(cl->name) < 3) SV_SendServerCommand(cl, "c \"^5Playernames can not be shorter than 3 characters\"");
