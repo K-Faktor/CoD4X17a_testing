@@ -380,6 +380,7 @@ static byte patchblock_DB_LOADXASSETS[] = { 0x8a, 0x64, 0x20, 0x8,
 	/* Kill the function DB_AddUserMapDir */
 	*(byte*)0x8204bc8 = 0xc3;
 	*(byte*)0x810f6b4 = 0xcc;
+	*(byte*)0x8176a31 = 0x51;
 }
 
 
