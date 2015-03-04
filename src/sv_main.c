@@ -3088,6 +3088,8 @@ void SV_PreLevelLoad(){
 	onExitLevelExecuted = qfalse;
 
 	SV_RemoveAllBots();
+	FS_ShutdownIwdPureCheckReferences();
+
 	SV_ReloadBanlist();
 
 	NV_LoadConfig();
@@ -3254,7 +3256,7 @@ void SV_MapRestart( qboolean fastRestart ){
 		}
 
 		// add the map_restart command
-		NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "fast_restart" );
+		NET_OutOfBandPrint( NS_SERVER, &client->netchan.remoteAddress, "fastrestart" );
 	}
 
 	SV_InitCvars();
