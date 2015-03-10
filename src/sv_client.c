@@ -1566,8 +1566,8 @@ void SV_RemoveAllBots(){
 	client_t *cl;
 
 	for(i=0, cl = svs.clients; i < sv_maxclients->integer; i++, cl++){
-		if(cl->netchan.remoteAddress.type == NA_BOT){
-			SV_DropClient(cl, NULL);
+		if(cl->netchan.remoteAddress.type == NA_BOT && cl->state > CS_FREE){
+			SV_DropClient(cl, "EXE_DISCONNECTED");
 		}
 	}
 }
