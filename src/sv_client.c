@@ -2668,11 +2668,10 @@ void SV_SendClientVoiceData(client_t *client)
 
 void SV_GetVoicePacket(netadr_t *from, msg_t *msg)
 {
-	unsigned int qport;
-
+	unsigned short qport;
 	client_t *cl;
 	
-	qport = MSG_ReadShort(msg);
+	qport = (unsigned short)MSG_ReadShort(msg);
 
 	cl = SV_ReadPackets(from, qport);
 	
@@ -2687,7 +2686,7 @@ void SV_GetVoicePacket(netadr_t *from, msg_t *msg)
 	}
 }
 
-client_t* SV_ReadPackets(netadr_t *from, unsigned int qport)
+client_t* SV_ReadPackets(netadr_t *from, unsigned short qport)
 {
 	int i;
 	client_t *cl;

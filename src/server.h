@@ -595,7 +595,7 @@ void SV_ExecuteClientCommand( client_t *cl, const char *s, qboolean clientOK, qb
 void SV_SendClientSnapshot( client_t *cl );
 
 qboolean SV_Acceptclient(int);
-client_t* SV_ReadPackets(netadr_t *from, unsigned int qport);
+client_t* SV_ReadPackets(netadr_t *from, unsigned short qport);
 void SV_GetVoicePacket(netadr_t *from, msg_t* msg);
 void SV_UserVoice(client_t* cl, msg_t* msg);
 void SV_PreGameUserVoice(client_t* cl, msg_t* msg);

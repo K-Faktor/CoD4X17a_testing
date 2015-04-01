@@ -328,7 +328,7 @@ void MSG_WriteBase64(msg_t* msg, byte* inbuf, int len)
     int mask;
     int b64data;
 
-    i = 0;
+    i = k = 0;
 
     while(i < len)
     {
