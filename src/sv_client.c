@@ -740,7 +740,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
         // save the userinfo
         Q_strncpyz(newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
-        PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, denied, sizeof(denied), &wait);
+        PHandler_Event(PLUGINS_ONPLAYERJOINREQ, clientNum, from, newcl->originguid, userinfo, newcl->authentication, denied, sizeof(denied), &wait);
 
         SV_PlayerIsBanned(newcl->uid, newcl->pbguid, from, denied, sizeof(denied));
 
@@ -759,6 +759,8 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 
         if(wait)
         	return;
+
+       	PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication);
 
 #ifdef COD4X17A
 #ifdef PUNKBUSTER

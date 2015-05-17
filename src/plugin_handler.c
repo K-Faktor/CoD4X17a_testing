@@ -45,6 +45,7 @@ char PHandler_Events[PLUGINS_ITEMCOUNT][32]={
 
     "OnInfoRequest",
     "OnPlayerDC",
+    "OnPlayerJoinReq",
     "OnPlayerConnect",
     "OnExitLevel",
     "OnMessageSent",

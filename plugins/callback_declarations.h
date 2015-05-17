@@ -42,7 +42,8 @@
 	PCL void OnTenSeconds();
 	PCL void OnUdpNetEvent(netadr_t* from, void* data, int size, qboolean* returnNow);
 	PCL void OnUdpNetSend(netadr_t* to, void* data, int len, qboolean* returnNow);
-	PCL void OnPlayerConnect(int clientnum, netadr_t* netaddress, char* pbguid, char* userinfo, int authstatus, char* deniedmsg,  int deniedmsgbufmaxlen, qboolean* wait);
+	PCL void OnPlayerJoinReq(int clientnum, netadr_t* netaddress, char* pbguid, char* userinfo, int authstatus, char* deniedmsg,  int deniedmsgbufmaxlen, qboolean* wait);
+	PCL void OnPlayerConnect(int clientnum, netadr_t* netaddress, char* pbguid, char* userinfo, int authstatus);
 	PCL void OnPlayerConnectAuthFail(netadr_t* netaddress, char* pbguid, char* userinfo, int* authstatus, qboolean *denied);
 	PCL void OnPlayerDC(client_t* client, const char* reason);
 	PCL void OnClientSpawn(gentity_t* ent);
