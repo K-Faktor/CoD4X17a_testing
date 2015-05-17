@@ -383,10 +383,12 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 	char			denied[MAX_STRING_CHARS];
 	const char		*denied2;
 	qboolean		canreserved;
+	qboolean		wait;
 
 	Q_strncpyz( userinfo, SV_Cmd_Argv(1), sizeof(userinfo) );
 	challenge = atoi( Info_ValueForKey( userinfo, "challenge" ) );
 	qport = atoi( Info_ValueForKey( userinfo, "qport" ) );
+	wait = qfalse;
 
 #ifdef COD4X17A
 
@@ -738,7 +740,7 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
         // save the userinfo
         Q_strncpyz(newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
-        PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, denied, sizeof(denied));
+        PHandler_Event(PLUGINS_ONPLAYERCONNECT, clientNum, from, newcl->originguid, userinfo, newcl->authentication, denied, sizeof(denied), wait);
 
         SV_PlayerIsBanned(newcl->uid, newcl->pbguid, from, denied, sizeof(denied));
 
@@ -754,6 +756,9 @@ __optimize3 __regparm1 void SV_DirectConnect( netadr_t *from ) {
 		svse.connectqueue[i].attempts = 0;
 		return;
         }
+
+        if(wait)
+        	return;
 
 #ifdef COD4X17A
 #ifdef PUNKBUSTER
